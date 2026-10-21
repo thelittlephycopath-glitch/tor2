@@ -1,27 +1,30 @@
-# Tor VPN Beta source build audit
+# Tor VPN Beta — deep build audit
 
 Audit date: 2026-10-21
-Source archive inspected: `vpn-main.zip` (root commit listed by archive: `57e304ba8c219ec48652c4bdd3b6f1da87a5cb9f`)
+Repository: https://github.com/thelittlephycopath-glitch/tor2
+Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 
-## Confirmed build-tooling defects fixed in this workspace
+## Confirmed issues fixed in this commit
 
-1. `scripts/reproducible_build.sh` attempted to edit and restore `build.gradle`, but this source tree uses `build.gradle.kts` and `settings.gradle.kts`. The stale `sed` and `git checkout build.gradle` steps were removed. The settings already support `ENFORCE_LOCAL_MAVEN=1` for the local Onionmasq artifact.
-2. `scripts/update-offline-help.sh` passed the shell function `sed_in_place` to `find -exec`, which cannot resolve a shell function as an executable. The rewrite steps now use null-delimited Bash loops.
-3. The offline-help updater supports both GNU sed on Linux and BSD sed on macOS.
+1. **Malformed Containerfile package-install chain.** The mkdir line lacked an `&&`, so apt-get clean could be interpreted as extra mkdir arguments. The chain is now explicit and apt metadata is cleaned.
+2. **Invalid Android SDK platform package.** The app declares compileSdk 37 while the container requested platforms;android-37.0. It now requests platforms;android-37.
+3. **Unstable Android SDK location.** ANDROID_HOME now uses /opt/android-sdk rather than relying on build-time PWD expansion.
+4. **Incorrect NDK toolchain PATH.** The old LLVM/PATH values referenced a relative version directory instead of the installed NDK path.
+5. **APK output directory not guaranteed.** The reproducible build script copied APKs into build/ after clean without ensuring the directory existed; it now creates it.
+6. **local.properties could remain renamed after a failed build.** An EXIT trap restores it after success or failure.
+7. **No end-to-end APK delivery workflow.** Added a manual GitHub Actions pipeline to build Onionmasq and Tor VPN, sign APKs with a temporary debug key, verify signatures, upload artifacts, and optionally publish private Release assets.
 
-## Checks and limitations
+## Verification status
 
-- ZIP integrity check passed.
-- `bash -n scripts/reproducible_build.sh scripts/update-offline-help.sh` passed after changes.
-- A Gradle build attempt stopped before Gradle configuration because this environment could not resolve `services.gradle.org` (`UnknownHostException`). This is an environment/network failure, not evidence of a Kotlin/Android compiler error.
-- No APK has been produced or verified yet.
+- Static review of the container recipe and reproducible build scripts completed.
+- A full Android build has not yet passed. The workflow must run to expose any remaining compiler, dependency, toolchain, or upstream availability issues.
+- Successful runs should publish direct APK assets to the repository Releases page and retain workflow artifacts for 14 days.
+- APKs are signed with an ephemeral debug key, not Tor Project's official release key. They will not update over an official Tor-signed installation.
 
-## Remaining requirements
+## Remaining audit scope
 
-- Gradle wrapper download/network access.
-- Android SDK platform 37, Android build tools, and the NDK/toolchain required by Onionmasq.
-- The matching `org.torproject:onionmasq` dependency, via the Tor Project Maven package with suitable access or a matching local Maven build.
+A static pass cannot certify every Kotlin, Rust, native networking, DNS, or runtime issue. Those require a successful full build, automated tests, emulator/device tests, and review of the published Cure53 audit findings. The workflow deliberately fails rather than publishing an APK if compilation, signing, or signature verification fails.
 
-## Safety
+## Security notes
 
-Tor VPN Beta is experimental and may leak information. These changes do not intentionally alter networking behavior or privacy protections.
+Tor VPN Beta is experimental and may leak information. These changes focus on build correctness and delivery and do not intentionally alter upstream networking behavior. Do not use these community builds for sensitive activity.
