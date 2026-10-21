@@ -35,8 +35,8 @@ RUN export RUST_VERSION="$(cat /tmp/msrv.txt)" && \
     rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android && \
     rustup show && rm /tmp/msrv.txt
 
-RUN cargo install bindgen-cli@0.71.1 --locked && \
-    cargo install cargo-ndk@3.5.4 --locked
+RUN cargo install --root /usr/local bindgen-cli@0.71.1 --locked && \
+    cargo install --root /usr/local cargo-ndk@3.5.4 --locked
 
 RUN cd "$ANDROID_HOME" && \
     wget --no-verbose --output-document=ndk.zip "https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_RELNAME}-linux.zip" && \
