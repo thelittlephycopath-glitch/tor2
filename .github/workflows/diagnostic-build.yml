@@ -1,0 +1,46 @@
+name: Diagnose Tor VPN Android build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: Build and capture compiler diagnostics
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build pinned Android/Rust toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --pull --file Containerfile --tag tor2-android-builder . 2>&1 | tee "${RUNNER_TEMP}/tor2-docker-build.log"
+
+      - name: Compile Tor VPN and Onionmasq with full diagnostics
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo"
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-cargo:/root/.cargo" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            env BUILD_AAB=0 bash scripts/reproducible_build.sh 2>&1 | tee "${RUNNER_TEMP}/tor2-compile.log"
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tor2-build-diagnostics
+          path: |
+            ${{ runner.temp }}/tor2-docker-build.log
+            ${{ runner.temp }}/tor2-compile.log
+          if-no-files-found: warn
+          retention-days: 7
