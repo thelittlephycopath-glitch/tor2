@@ -1,6 +1,8 @@
 name: Build Tor VPN Beta APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       publish_release:
@@ -118,7 +120,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tor2-build-${{ github.run_number }}
-          name: Tor VPN Beta â tor2 build ${{ github.run_number }}
+          name: Tor VPN Beta Ã¢ÂÂ tor2 build ${{ github.run_number }}
           body: |
             Community-built debug-signed APKs compiled from the source in this private repository.
 
