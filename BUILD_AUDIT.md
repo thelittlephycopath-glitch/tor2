@@ -7,20 +7,20 @@ Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 ## Confirmed issues fixed in this workspace
 
 1. **Malformed Containerfile package-install chain.** The mkdir line lacked an `&&`, so apt-get clean could be interpreted as extra mkdir arguments. The chain is now explicit and apt metadata is cleaned.
-2. **Invalid Android SDK platform package.** The app declares compileSdk 37 while the container requested platforms;android-37.0. It now requests platforms;android-37.
-3. **Unstable Android SDK location.** ANDROID_HOME now uses /opt/android-sdk rather than relying on build-time PWD expansion.
+2. **Stable SDK package mismatch.** CI logs confirmed that `sdkmanager` on the stable channel cannot find `platforms;android-37`. The app and container are now pinned to stable Android API 36, matching the configured target SDK, and duplicate SDK package requests were removed. The next CI run must verify that this gets past toolchain provisioning and that the source compiles against API 36.
+3. **Unstable Android SDK location.** `ANDROID_HOME` now uses `/opt/android-sdk` rather than relying on build-time PWD expansion.
 4. **Incorrect NDK toolchain PATH.** The old LLVM/PATH values referenced a relative version directory instead of the installed NDK path.
-5. **APK output directory not guaranteed.** The reproducible build script copied APKs into build/ after clean without ensuring the directory existed; it now creates it.
+5. **APK output directory not guaranteed.** The reproducible build script copied APKs into `build/` after clean without ensuring the directory existed; it now creates it.
 6. **Wrong return path after the Onionmasq sub-build.** The script was one directory level short of the repository root, which would make the following Gradle command run from the wrong directory. Corrected to return to the project root.
-7. **local.properties could remain renamed after a failed build.** An EXIT trap now restores it after success or failure.
-8. **No end-to-end APK delivery workflow.** Added a manual GitHub Actions pipeline to build Onionmasq and Tor VPN, sign APKs with a temporary debug key, verify signatures, upload artifacts, and optionally publish private Release assets.
+7. **`local.properties` could remain renamed after a failed build.** An EXIT trap now restores it after success or failure.
+8. **No end-to-end APK delivery workflow.** Added a GitHub Actions pipeline to build Onionmasq and Tor VPN, sign APKs with a temporary debug key, verify signatures, upload artifacts, and optionally publish Release assets.
 
 ## Verification status
 
 - Static review of the container recipe and reproducible build scripts completed.
-- A first CI attempt was cancelled after deeper review found the working-directory defect; it did not produce an APK.
-- A full Android build has not yet passed. The next workflow run must expose any remaining compiler, dependency, toolchain, or upstream availability problems.
-- Successful runs should publish direct APK assets to the repository Releases page and retain workflow artifacts for 14 days.
+- Two CI runs failed at the same confirmed point: SDK provisioning could not locate `platforms;android-37` on the stable SDK channel. The full build had not reached app compilation.
+- The container and app compile SDK have now been changed to API 36. The triggered workflow must verify SDK provisioning, Rust/Onionmasq compilation, Gradle compilation, signing, and artifact upload in sequence.
+- No verified APK exists until a workflow run completes successfully and its artifact/signature are checked.
 - APKs are signed with an ephemeral debug key, not Tor Project's official release key. They will not update over an official Tor-signed installation.
 
 ## Remaining audit scope
