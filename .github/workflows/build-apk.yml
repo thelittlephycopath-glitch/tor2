@@ -25,6 +25,26 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      # Persist Gradle/Cargo caches between runs. Cache keys include dependency
+      # and toolchain inputs, so dependency changes naturally create a new cache.
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/tor2-gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties', '**/gradle/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Restore Cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/tor2-cargo/registry
+            ${{ runner.temp }}/tor2-cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'scripts/oni**', 'scripts/reproducible_build.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Build pinned Android/Rust toolchain
         run: docker build --pull --file Containerfile --tag tor2-android-builder .
 
@@ -32,13 +52,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "${{ runner.temp }}/tor2-gradle" "${{ runner.temp }}/tor2-cargo"
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${{ runner.temp }}/tor2-gradle:/root/.gradle" \
+            --volume "${{ runner.temp }}/tor2-cargo:/root/.cargo" \
             --workdir /build/vpn \
             tor2-android-builder \
             bash scripts/reproducible_build.sh
 
-      - name: Sign APKs with a temporary debug key and verify
+      - name: Sign APKs with an ephemeral debug key and verify signatures
         shell: bash
         run: |
           set -euo pipefail
@@ -59,10 +82,10 @@ jobs:
                 -keystore "$key" -storepass android -alias androiddebugkey \
                 -keypass android -dname "CN=Android Debug,O=Android,C=US" \
                 -keyalg RSA -keysize 2048 -validity 10000
+              mkdir -p dist
               for apk in "${apks[@]}"; do
                 name="$(basename "${apk%-unsigned.apk}")-debug-signed.apk"
                 out="dist/$name"
-                mkdir -p dist
                 "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" sign \
                   --ks "$key" --ks-pass pass:android --key-pass pass:android \
                   --out "$out" "$apk"
@@ -71,7 +94,7 @@ jobs:
               rm -f "$key"
             '
 
-      - name: Upload APK files
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: tor2-debug-signed-apks
@@ -89,6 +112,6 @@ jobs:
             Community-built debug-signed APKs compiled from the source in this private repository.
 
             These are not official Tor Project releases and are not signed with Tor's release key.
-            This is an experimental beta. Do not rely on it for sensitive activity.
+            This is experimental VPN software. Do not rely on this build for sensitive activity.
           files: dist/*.apk
           fail_on_unmatched_files: true
