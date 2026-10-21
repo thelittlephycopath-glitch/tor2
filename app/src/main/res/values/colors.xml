@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="white_40">#66FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="connectingRainbowStart">#FC00FF</color>
+    <color name="connectingRainbowEnd">#00DBDE</color>
+    <color name="connectingDisabled">#7C7793</color>
+
+    <color name="primary">#C272FF</color>
+    <color name="on_primary">#610D85</color>
+    <color name="primary_container">#701498</color>
+    <color name="on_primary_container">#F5E3FF</color>
+    <color name="primary_variant">#A357D3</color>
+
+    <color name="secondary">#85BBF8</color>
+    <color name="on_secondary">#18242F</color>
+    <color name="secondary_container">#2E3781</color>
+    <color name="on_secondary_container">#DAECFF</color>
+
+    <color name="tertiary">#B6E368</color>
+    <color name="on_tertiary">#18242F</color>
+    <color name="tertiary_container">#376C12</color>
+    <color name="on_tertiary_container">#EBFFC4</color>
+
+    <color name="error">#F47B7B</color>
+    <color name="on_error">#742027</color>
+    <color name="error_container">#742027</color>
+    <color name="on_error_container">#FFD9D4</color>
+
+    <color name="warning">#FFCB52</color>
+
+    <color name="surface">#160F43</color>
+    <color name="on_surface">#FFFFFF</color>
+    <color name="on_surface_disabled">#61FFFFFF</color>
+    <color name="surface_variant">#D9D9D9</color>
+    <color name="on_surface_variant">#C4C8FF</color>
+    <color name="on_surface_variant_disabled">#61C4C8FF</color>
+    <color name="surface_container_highest">#342786</color>
+    <color name="surface_container_high">#31247C</color>
+    <color name="surface_container">#281C70</color>
+    <color name="surface_container_low">#21185C</color>
+    <color name="surface_container_lowest">#120C38</color>
+    <color name="surface_container_alpha_60">#66281C70</color>
+    <color name="surface_container_low_alpha_60">#6621185C</color>
+
+    <!-- additional layer color for containers in disabled state -->
+    <color name="disabled_state_layer">#1A1D1B20</color>
+
+    <!-- Error button interactive states -->
+    <color name="error_state_overlay_hovered">#1A742027</color> <!-- on_error at 10% opacity -->
+    <color name="error_state_overlay_focused">#1F742027</color> <!-- on_error at 12% opacity -->
+    <color name="error_state_overlay_pressed">#1F742027</color> <!-- on_error at 12% opacity -->
+    <color name="error_ripple">#1F742027</color> <!-- on_error at 12% opacity for ripple -->
+
+    <!-- Primary button interactive states -->
+    <color name="primary_pressed">#A357D3</color>
+    <color name="primary_state_overlay_disabled">#2C2552</color>
+    <color name="primary_state_overlay_hovered">#1A18242F</color> <!-- on_primary at 10% opacity -->
+    <color name="primary_state_overlay_focused">#1F18242F</color> <!-- on_primary at 12% opacity -->
+    <color name="primary_state_overlay_pressed">#1F18242F</color> <!-- on_primary at 12% opacity -->
+    <color name="primary_ripple">#1F18242F</color> <!-- on_primary at 12% opacity for ripple -->
+
+    <!-- Secondary button interactive states -->
+    <color name="secondary_state_overlay_hovered">#1A18242F</color> <!-- on_secondary at 10% opacity -->
+    <color name="secondary_state_overlay_focused">#1F18242F</color> <!-- on_secondary at 12% opacity -->
+    <color name="secondary_state_overlay_pressed">#1F18242F</color> <!-- on_secondary at 12% opacity -->
+    <color name="secondary_ripple">#1F18242F</color> <!-- on_secondary at 12% opacity for ripple -->
+
+    <!-- Surface container button interactive states -->
+    <color name="surface_state_overlay_hovered">#1AFFFFFF</color> <!-- on_surface at 10% opacity -->
+    <color name="surface_state_overlay_focused">#1FFFFFFF</color> <!-- on_surface at 12% opacity -->
+    <color name="surface_state_overlay_pressed">#1FFFFFFF</color> <!-- on_surface at 12% opacity -->
+    <color name="surface_ripple">#1FFFFFFF</color> <!-- on_surface at 12% opacity for ripple -->
+
+    <color name="inverse_surface">#C4C8FF</color>
+    <color name="inverse_on_surface">#18242F</color>
+
+    <color name="outline">#DAECFF</color>
+    <color name="outline_variant">#3C319C</color>
+
+    <color name="scrim">#18242F</color>
+
+    <color name="inverse_primary">#701498</color>
+
+    <!-- For interactive card states -->
+    <color name="card_overlay_pressed">#1F000000</color> <!-- 12% black -->
+    <color name="card_overlay_hovered">#0A000000</color> <!-- 4% black -->
+    <color name="card_overlay_focused">#1F000000</color> <!-- 12% black, same as pressed for simplicity, can be different -->
+
+    <!-- Checked states: Base is @color/primary (#C272FF) -->
+    <color name="super_toggle_checked_pressed_color">#CF7FFF</color> <!-- @color/primary + 12% overlay of @color/primary -->
+    <color name="super_toggle_checked_focused_color">#CF7FFF</color> <!-- @color/primary + 12% overlay of @color/primary -->
+    <color name="super_toggle_checked_hovered_color">#CC7BFF</color>  <!-- @color/primary + 8% overlay of @color/primary -->
+
+    <!-- Unchecked states: Base is @color/surface_container (#281C70) -->
+    <color name="super_toggle_unchecked_pressed_color">#423781</color> <!-- @color/surface_container + 12% overlay of @color/on_surface -->
+    <color name="super_toggle_unchecked_focused_color">#423781</color> <!-- @color/surface_container + 12% overlay of @color/on_surface -->
+    <color name="super_toggle_unchecked_hovered_color">#392E7B</color>  <!-- @color/surface_container + 8% overlay of @color/on_surface -->
+</resources>

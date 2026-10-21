@@ -1,0 +1,14 @@
+<b>Béta kiadás: A VPN, ami visszavág</b>
+<p>Tor VPN Béta visszaadja az irányítást a kezedbe, amikor mások megpróbálnak elvágni a világtól. Ez a korai hozzáférésű kiadás azoknak a felhasználóknak készült, akik szeretnének segíteni megformálni a jövő mobil biztonságát  és azt biztonságosan szeretnék.</p>
+<b>Mit tud a Tor VPN Béta?</b>
+<ul>
+  <li>Hálózati szintű biztonság: A Tor VPN elrejti valódi IP címed és lokációd az app és szolgáltatások elől, amit használsz–és bárki elől, aki figyeli a kapcsolatod.</li>
+  <li>Alkalmazásonként routeolás: Kiválaszthatod, hogy mely appok legyenek átroutolva a Tor-on. Minden app saját Tor áramkört és kilépő IP-t kap, megakadályozva a hálózati megfigyelőket abban, hogy összekössék az összes online aktivitásodat.</li>
+  <li>Alkalmazás szintű cenzúra állóság: Ha a hozzáférés blokkolt, a Tor VPN segíthet az alapvető appjaid újracsatlakoztatásában az internethez. (Béta korlátozás: Ez a korai verzió korlátozott anti-cenzúra képességeiben és a felhasználók kapcsolati hibával találkozhatnak.)</li>
+  <li>Arti-ra építve: Tor VPN a Tor a következő generációs Rust  implementációját használja. Ez biztonságosa memória kezelést, modern kód architektúrát és erősebb biztonságot jelenti, mint a legacy C-Tor eszközök.</li>
+<b>Kinek készül a Tor VPN Béta?</b>
+<p>Tor VPN Béta egy korai hozzáférésű kiadás, ami nem javasolt a magas kockázatú felhasználóknak, vagy szenzitív felhasználási célokra a béta periódus alatt.</p>
+<p>Tor VPN Béta korai alkalmazók számára megfelelő, akik segíteni szeretnék a mobil adatvédelem jövőjének megformálásában és biztonságosan meg tudják tenni. A felhasználók várhatnak benne hibákat és jelenteniük kell a hibákat. Ha készen állsz a tesztelésre, vidd el az appot a végsőkig és oszd meg tapasztalataid, nagyon örülnénk a segítségednek abban, hogy a mérleg nyelvét a szabadabb internet felé lendítsük.</p>
+<b>Fontos korlátozások (KÉRJÜK OLVASD EL)</b>
+<p>Tor VPN nem egy ezüst töltény: Néhány Android platform adat továbbra is képes azonosítani az eszközödet; semmilyen VPN nem tudja ezt teljesen megakadályozni. Ha extrém megfigyelési kockázattal rendelkezel, nem ajánljuk a Tor VPN Béta használatát.</p>
+<p>Nem minden Tor anti-cenzúra funkció implementált még. A felhasználók egy erősen cenzúrázott régióból elképzelhető, hogy nem is tudják használni a Tor VPN Béta-t a Tor-hoz vagy az internethez csatlakozáshoz.</p>

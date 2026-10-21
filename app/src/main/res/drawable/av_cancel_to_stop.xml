@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="143dp"
+            android:height="88dp"
+            android:viewportWidth="143"
+            android:viewportHeight="88">
+
+            <group>
+                <path
+                    android:name="round-shape"
+                    android:fillColor="@color/surface_container"
+                    android:pathData="M37,0L106,0A28,28 0,0 1,134 28L134,60A28,28 0,0 1,106 88L37,88A28,28 0,0 1,9 60L9,28A28,28 0,0 1,37 0z" />
+                <group>
+                    <path
+                        android:name="shop-shape-morph"
+                        android:fillColor="@android:color/transparent"
+                        android:pathData="M70.85,45C70.75,45 70.67,44.97 70.6,44.9C70.53,44.83 70.5,44.75 70.5,44.65L70.5,43.35C70.5,43.25 70.53,43.17 70.6,43.1C70.67,43.03 70.75,43 70.85,43L72.15,43C72.25,43 72.33,43.03 72.4,43.1C72.47,43.17 72.5,43.25 72.5,43.35L72.5,44.65C72.5,44.75 72.47,44.83 72.4,44.9C72.33,44.97 72.25,45 72.15,45L70.85,45Z" />
+                </group>
+            </group>
+
+        </vector>
+
+
+    </aapt:attr>
+
+    <target android:name="shop-shape-morph">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+
+                <!--duration 50 as we need quick change of visibility of central 2x2 square -->
+                <objectAnimator
+                    android:duration="50"
+                    android:propertyName="fillColor"
+                    android:valueFrom="@android:color/transparent"
+                    android:valueTo="@color/on_error" />
+
+                <objectAnimator
+                    android:duration="@integer/default_transition_anim_duration"
+                    android:interpolator="@android:anim/accelerate_interpolator"
+                    android:propertyName="pathData"
+                    android:valueFrom="M70.85,45C70.75,45 70.67,44.97 70.6,44.9C70.53,44.83 70.5,44.75 70.5,44.65L70.5,43.35C70.5,43.25 70.53,43.17 70.6,43.1C70.67,43.03 70.75,43 70.85,43L72.15,43C72.25,43 72.33,43.03 72.4,43.1C72.47,43.17 72.5,43.25 72.5,43.35L72.5,44.65C72.5,44.75 72.47,44.83 72.4,44.9C72.33,44.97 72.25,45 72.15,45L70.85,45Z"
+                    android:valueTo="M65.65,53C64.78,53 64.03,52.69 63.42,52.08C62.81,51.47 62.5,50.72 62.5,49.85L62.5,38.15C62.5,37.28 62.81,36.53 63.42,35.92C64.03,35.31 64.78,35 65.65,35L77.35,35C78.22,35 78.97,35.31 79.58,35.92C80.19,36.53 80.5,37.28 80.5,38.15L80.5,49.85C80.5,50.72 80.19,51.47 79.58,52.08C78.97,52.69 78.22,53 77.35,53L65.65,53Z"
+                    android:valueType="pathType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="round-shape">
+        <aapt:attr name="android:animation">
+            <set>
+
+                <objectAnimator
+                    android:duration="@integer/default_transition_anim_duration"
+                    android:interpolator="@android:anim/accelerate_interpolator"
+                    android:propertyName="pathData"
+                    android:valueFrom="M37,0L106,0A28,28 0,0 1,134 28L134,60A28,28 0,0 1,106 88L37,88A28,28 0,0 1,9 60L9,28A28,28 0,0 1,37 0z"
+                    android:valueTo="M49.5,0L93.5,0A24,24 0,0 1,117.5 24L117.5,64A24,24 0,0 1,93.5 88L49.5,88A24,24 0,0 1,25.5 64L25.5,24A24,24 0,0 1,49.5 0z"
+                    android:valueType="pathType" />
+
+
+                <objectAnimator
+                    android:duration="@integer/default_transition_anim_duration"
+                    android:propertyName="fillColor"
+                    android:valueFrom="@color/surface_container"
+                    android:valueTo="@color/error" />
+            </set>
+        </aapt:attr>
+
+    </target>
+
+
+</animated-vector>

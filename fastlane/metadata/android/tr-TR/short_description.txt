@@ -1,0 +1,1 @@
+Tor destekli uygulama yönlendirme, engelleme kaldırma ve ağ düzeyinde gizlilik.

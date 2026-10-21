@@ -1,0 +1,7 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <dimen name="connection_button_upper_guideline">174dp</dimen>
+    <dimen name="connection_button_lower_guideline">86dp</dimen>
+    <dimen name="connection_status_bar_horizontal_padding">8dp</dimen>
+    <dimen name="connection_status_bar_vertical_padding">8dp</dimen>
+    <dimen name="support_image_height">300dp</dimen>
+</resources>

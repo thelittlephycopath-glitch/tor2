@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/secondary_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <corners android:radius="80dp" />
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+
+    <item>
+        <selector>
+            <!-- Pressed state -->
+            <item android:state_pressed="true">
+                <layer-list>
+                    <item android:drawable="@drawable/round_exit_bg" />
+                    <!-- State overlay for pressed -->
+                    <item>
+                        <shape>
+                            <solid android:color="@color/secondary_state_overlay_pressed" />
+                            <corners android:radius="80dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Focused state -->
+            <item android:state_focused="true">
+                <layer-list>
+                    <item android:drawable="@drawable/round_exit_bg" />
+                    <!-- State overlay for focused -->
+                    <item>
+                        <shape>
+                            <solid android:color="@color/secondary_state_overlay_focused" />
+                            <corners android:radius="80dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Hovered state -->
+            <item android:state_hovered="true">
+                <layer-list>
+                    <item android:drawable="@drawable/round_exit_bg" />
+                    <!-- State overlay for hovered -->
+                    <item>
+                        <shape>
+                            <solid android:color="@color/secondary_state_overlay_hovered" />
+                            <corners android:radius="80dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Default state -->
+            <item android:drawable="@drawable/round_exit_bg" />
+        </selector>
+    </item>
+</ripple>
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <dimen name="connect_state_button_height">183dp</dimen>
+    <dimen name="connect_state_button_width">124dp</dimen>
+    <dimen name="connection_button_upper_guideline">184dp</dimen>
+    <dimen name="connection_button_lower_guideline">96dp</dimen>
+    <dimen name="bottom_nav_padding">3dp</dimen>
+    <dimen name="stat_top_margin">54dp</dimen>
+    <dimen name="stat_cards_padding">24dp</dimen>
+    <dimen name="stat_card_height">80dp</dimen>
+    <dimen name="stat_switch_height">88dp</dimen>
+</resources>

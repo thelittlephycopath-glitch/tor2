@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="handler"
+            type="org.torproject.vpn.ui.help.ReportBugClickHandler" />
+        <import type="android.view.View" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/cl_report_bug_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/default_padding"
+        app:layout_behavior="@string/bottom_sheet_behavior"
+        android:background="@drawable/bg_bottomsheet_container"
+        >
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="top"
+            android:paddingVertical="@dimen/activity_vertical_margin"
+            >
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/report_bug"
+                style="@style/bottom_sheet_title"
+                android:gravity="center_horizontal"
+                android:paddingTop="@dimen/compact_padding"/>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/ll_tor_forum"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:weightSum="1"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/compact_padding"
+                android:background="@drawable/bg_config_item"
+                android:onClick="@{handler::onTorForumClicked}"
+                >
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/bug_tor_forum"
+                    android:layout_weight="1"
+                    style="@style/list_item_style_medium"
+                    />
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_up_right"
+                    android:layout_gravity="center_vertical"
+                    />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/ll_gitlab"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:weightSum="1"
+                android:paddingHorizontal="@dimen/compact_padding"
+                android:background="@drawable/bg_config_item"
+                android:onClick="@{handler::onGitlabClicked}"
+                android:orientation="horizontal">
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/bug_gitlab"
+                    android:layout_weight="1"
+                    style="@style/list_item_style_medium"
+                    />
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_up_right"
+                    android:layout_gravity="center_vertical"
+                    />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

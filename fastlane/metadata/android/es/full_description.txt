@@ -1,0 +1,14 @@
+<b>Versión beta: La VPN que contraataca</b>
+<p>Tor VPN Beta te devuelve el control cuando otros intentan aislarte del mundo. Esta versión de acceso anticipado está dirigida a usuarios que desean contribuir al futuro de la privacidad móvil y pueden hacerlo de forma segura.</b>
+  <b>¿Qué hace Tor VPN Beta?</b>
+<ul>
+  <li>Privacidad a nivel de red: Tor VPN oculta tu dirección IP y ubicación reales a las aplicaciones y servicios que usas, y a cualquiera que vigile tu conexión.</li>
+  <li>Enrutamiento por aplicación: Tú eliges qué aplicaciones se enrutan a través de Tor. Cada aplicación obtiene su propio circuito Tor e IP de salida, lo que impide que los observadores de la red conecten tus distintas actividades en línea.
+  <li>Resistencia a la censura a nivel de aplicación: Cuando el acceso está bloqueado, Tor VPN puede ayudarte a reconectar tus aplicaciones esenciales a internet. (Limitación de la beta: Esta versión de acceso anticipado tiene capacidades anticensura limitadas y los usuarios podrían experimentar problemas de conexión).</li>
+  <li>Desarrollada en Arti: Tor VPN utiliza la implementación Rust de última generación de Tor. Esto implica un manejo de memoria más seguro, una arquitectura de código moderna y una base de seguridad más sólida que las antiguas herramientas C-Tor.</li>
+<b>¿Para quién es Tor VPN Beta?</b>
+<p>Tor VPN Beta es una versión de acceso anticipado y no es apta para usuarios de alto riesgo ni casos de uso sensibles durante el periodo beta.</p>
+<p>Tor VPN Beta es para usuarios pioneros que desean contribuir a la privacidad móvil y pueden hacerlo de forma segura. Los usuarios deben estar preparados para encontrar errores e informar de problemas. Si estás listo para probar, llevar la aplicación al límite y compartir tus comentarios, nos encantaría que nos ayudaras a inclinar la balanza hacia una internet más libre.</p>
+<b>Limitaciones importantes (POR FAVOR, LEE)</b>
+<p>Tor VPN no es una solución milagrosa: Algunos datos de la plataforma Android aún pueden identificar tu dispositivo; Ninguna VPN puede evitar esto por completo. Si te enfrentas a riesgos extremos de vigilancia, te recomendamos no usar Tor VPN Beta.</p>
+<p>Aún no se han implementado todas las funciones anticensura de Tor. Es posible que los usuarios en regiones con alta censura no puedan usar Tor VPN Beta para conectarse a Tor o a internet.</p>

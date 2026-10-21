@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="org.torproject.vpn.ui.home.model.ConnectFragmentViewModel" />
+
+        <import type="android.view.View" />
+
+        <import type="org.torproject.vpn.vpn.ConnectionState" />
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="16dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        tools:background="@color/surface">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_up_stat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingVertical="@dimen/stat_card_padding_vertical"
+            android:layout_marginTop="@dimen/stat_top_margin"
+            android:background="@drawable/round_down_stat_bg"
+            android:contentDescription="@string/up_content_description"
+            android:visibility="@{viewModel.connectionState == ConnectionState.CONNECTED ? View.VISIBLE: View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed">
+
+            <ImageView
+                android:id="@+id/ic_up_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/ll_up_traffic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/ll_up_traffic"
+                app:srcCompat="@drawable/ic_trend_up"
+                android:importantForAccessibility="no"
+                />
+
+            <LinearLayout
+                android:id="@+id/ll_up_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:paddingEnd="40dp"
+                android:layout_marginTop="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/ic_up_traffic"
+                app:layout_constraintTop_toTopOf="parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_up_label"
+                    style="@style/label_in_stats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/up"
+                    android:importantForAccessibility="no"/>
+
+                <TextView
+                    android:id="@+id/tv_up_traffic"
+                    style="@style/stats_kbits_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="@{viewModel.dataUsageUpstream}"
+                    android:contentDescription="@{viewModel.dataUsageUpstream}"
+                    tools:text="2.12kbits" />
+
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/tv_up_traffic_delta"
+                style="@style/stats_kbits_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/bg_rounded_secondary"
+                android:text="@{viewModel.dataUsageDiffUpstream}"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="2.12kbits" />
+
+            <androidx.constraintlayout.helper.widget.Flow
+                android:id="@+id/flow_up_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="ll_up_traffic,tv_up_traffic_delta"
+                app:flow_horizontalGap="40dp"
+                app:flow_horizontalStyle="spread_inside"
+                app:flow_wrapMode="chain"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ic_up_traffic"
+                app:layout_constraintTop_toTopOf="parent"  />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_down_stat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingVertical="@dimen/stat_card_padding_vertical"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/round_up_stat_bg"
+            android:visibility="@{viewModel.connectionState == ConnectionState.CONNECTED ? View.VISIBLE: View.GONE}"
+            android:contentDescription="@string/down_content_description"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cl_up_stat"
+            app:layout_constraintVertical_chainStyle="packed">
+
+            <ImageView
+                android:id="@+id/ic_down_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/ll_down_traffic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/ll_down_traffic"
+                app:srcCompat="@drawable/ic_trend_down"
+                android:importantForAccessibility="no"
+                />
+            <LinearLayout
+                android:id="@+id/ll_down_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="40dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/ic_down_traffic"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="spread"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_down_label"
+                    style="@style/label_in_stats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/down"
+                    android:importantForAccessibility="no"/>
+
+                <TextView
+                    android:id="@+id/tv_down_traffic"
+                    style="@style/stats_kbits_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="@{viewModel.dataUsageDownstream}"
+                    android:contentDescription="@{viewModel.dataUsageDownstream}"
+                    tools:text="2.12kbits" />
+
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_down_traffic_delta"
+                style="@style/stats_kbits_number"
+                android:background="@drawable/bg_rounded_tertiary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:text="@{viewModel.dataUsageDiffDownstream}"
+                app:layout_constraintBottom_toBottomOf="@+id/ll_down_traffic"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/ll_down_traffic"
+                tools:text="2.12kbits" />
+            <androidx.constraintlayout.helper.widget.Flow
+                android:id="@+id/flow_down_traffic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="ll_down_traffic,tv_down_traffic_delta"
+                app:flow_horizontalGap="40dp"
+                app:flow_horizontalStyle="spread_inside"
+                app:flow_wrapMode="chain"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ic_down_traffic"
+                app:layout_constraintTop_toTopOf="parent"  />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_apps_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingVertical="@dimen/stat_card_padding_vertical"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/interactive_card_background"
+            android:transitionName="apps_container_transform"
+            android:onClick="@{() -> viewModel.appCardClicked()}"
+            android:visibility="@{viewModel.appCardVisibility ? View.VISIBLE: View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cl_down_stat">
+
+            <ImageView
+                android:id="@+id/ic_protect_app"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_protect_all_apps_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/tv_stat_title"
+                app:srcCompat="@drawable/ic_squares_four"
+                app:tint="@color/primary"
+                android:importantForAccessibility="no" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switch_protect_apps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:checked="@{viewModel.allAppsProtected}"
+                android:onClick="@{() -> viewModel.onProtectAppsChanged()}"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_protect_all_apps_label"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/tv_stat_title" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_protect_all_apps_label"
+                style="@style/stats_kbits_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="8dp"
+                android:text="@{viewModel.appProtectionLabel}"
+                android:contentDescription="@{viewModel.appProtectionLabel}"
+                tools:text="a very long string that completely overflows"
+                android:maxLines="2"
+                android:ellipsize="end"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/ic_protect_app"
+                app:layout_constraintEnd_toStartOf="@id/view2"
+                app:layout_constraintTop_toBottomOf="@+id/tv_stat_title" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tv_stat_title"
+                style="@style/stats_card_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="@string/apps"
+                app:layout_constraintBottom_toTopOf="@+id/tv_protect_all_apps_label"
+                app:layout_constraintStart_toStartOf="@+id/tv_protect_all_apps_label"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <View
+                android:id="@+id/view2"
+                android:layout_width="2dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="12dp"
+                android:background="@color/outline"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/switch_protect_apps"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_connection_card"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingVertical="@dimen/stat_card_padding_vertical"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/interactive_card_background"
+            android:transitionName="connection_container_transform"
+            android:onClick="@{() -> viewModel.connectionCardClicked()}"
+            android:visibility="@{viewModel.connectionCardVisibility ? View.VISIBLE: View.GONE}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cl_apps_card">
+
+            <ImageView
+                android:id="@+id/ic_connection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_connection_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/tv_connection_title"
+                app:srcCompat="@drawable/ic_connect"
+                app:tint="@color/primary"
+                android:importantForAccessibility="no"
+                />
+
+            <ImageView
+                android:id="@+id/ic_connection_settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
+                android:src="@drawable/ic_gear"
+                app:layout_constraintBottom_toBottomOf="@+id/tv_connection_label"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/tv_connection_title"
+                android:importantForAccessibility="no"
+                />
+
+            <TextView
+                android:id="@+id/tv_connection_label"
+                style="@style/stats_kbits_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="8dp"
+                android:text="@{viewModel.connectionHint}"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="a very long string that overflows the ui"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/view3"
+                app:layout_constraintStart_toEndOf="@+id/ic_connection"
+                app:layout_constraintTop_toBottomOf="@+id/tv_connection_title" />
+
+            <TextView
+                android:id="@+id/tv_connection_title"
+                style="@style/stats_card_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="@string/connection"
+                app:layout_constraintBottom_toTopOf="@+id/tv_connection_label"
+                app:layout_constraintStart_toStartOf="@+id/tv_connection_label"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <View
+                android:id="@+id/view3"
+                android:layout_width="2dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="12dp"
+                android:background="@color/outline"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/ic_connection_settings"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

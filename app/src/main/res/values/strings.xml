@@ -1,0 +1,265 @@
+<resources>
+    <string name="app_name">Tor VPN</string>
+
+    <string name="action_save">Save</string>
+    <string name="action_configure">Configure</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_reconnect">Reconnect</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_protect_all_apps">Protect all apps</string>
+    <string name="action_protect_this_app">Protect this app</string>
+    <string name="label_not_protected">None protected</string>
+    <string name="label_some_protected">Some protected</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_settings">Open Settings</string>
+    <string name="action_learn">Learn more</string>
+    <!-- notifications actions -->
+    <string name="action_start">Start VPN</string>
+    <string name="action_stop">Stop VPN</string>
+    <!-- actions required for screen readers -->
+    <string name="action_refresh_circuits">Refresh circuits</string>
+    <string name="action_copy_logs">Copy logs</string>
+
+    <string name="state_connected">Connected</string>
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_disconnecting">Disconnecting</string>
+    <string name="state_disconnected">Disconnected</string>
+
+    <!-- app routing screen -->
+    <string name="app_routing_tor_apps">Tor-powered apps</string>
+    <string name="app_routing_browsers">Browsers</string>
+    <string name="app_routing_other_apps">Other apps</string>
+    <string name="app_routing_system_apps">System apps</string>
+    <string name="app_routing_show_apps">Show %1$s apps</string>
+    <string name="app_routing_hide_apps">Hide %1$s apps</string>
+
+    <string name="notification_channel_description">Shows updates about Tor VPN.</string>
+    <string name="notification_channel_name">Tor VPN notifications</string>
+
+    <string name="error_notification_channel_name">Error notifications</string>
+    <string name="error_notification_channel_description">Shows errors about Tor VPN</string>
+
+    <!-- configuration screen -->
+    <string name="apps">Apps</string>
+    <string name="apps_description">Choose apps to route through Tor</string>
+    <string name="apps_description_all_protected">All apps protected</string>
+    <string name="tor_logs">Tor Logs</string>
+    <string name="tor_logs_description">View and copy your Tor logs</string>
+    <string name="always_on_vpn">Always-on VPN</string>
+    <string name="always_on_vpn_description">Open Android System Settings</string>
+    <string name="copied_clipboard">Copied to clipboard</string>
+    <string name="general">General</string>
+    <string name="general_description">Configure general settings</string>
+
+
+    <string name="about_tor_vpn">About Tor VPN</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="open_source_licenses">Open source licenses</string>
+    <string name="app_icon">App icon</string>
+    <string name="default_icon_and_name">Default icon and name</string>
+    <string name="no_bridge">Not using bridges</string>
+    <string name="connect_automatically">Connect automatically</string>
+    <string name="connect_automatically_description">Connect to the Tor network automatically when launched</string>
+
+    <string name="title_guide">This app is highly\nexperimental</string>
+    <string name="guide_bullet_head_1">Report Bugs</string>
+    <string name="guide_bullet_head_2">But don\'t do anything risky</string>
+    <string name="guide_bullet_text_1">Don\'t forget to report any bugs you find back to our developers.</string>
+    <string name="guide_bullet_text_2">This is a pre-release version of the app, and is not safe to use for sensitive activities.</string>
+    <string name="error_private_dns_title">Change your Private DNS settings to connect</string>
+    <string name="error_private_dns_message">Tor VPN does not support using a specific hostname for Private DNS.This bypasses Tor and can reveal the sites you visit to your DNS provider.\n\nIn Settings, set Private DNS to Automatic or Off.</string>
+    <string name="error_private_dns_hint">Private DNS updated</string>
+    <string name="notification_private_dns_message">Tor VPN does not support Private DNS provider hostnames.</string>
+    <!-- Download or upload per second, e.g. 0.54 KB/s -->
+    <string name="stats_delta">%1$s/s</string>
+
+    <string name="error_something_went_wrong">Something went wrong</string>
+    <string name="error_detail_message">Tor VPN couldn’t connect to the Tor network.</string>
+    <string name="error_view_logs">View Tor logs</string>
+    <string name="connection">Connection</string>
+    <string name="connection_description">Configure how to connect to Tor</string>
+    <string name="kill_switch">Kill switch</string>
+    <string name="kill_switch_description">Block apps from connecting to the internet if the Tor network can\'t be reached</string>
+    <string name="quickstart">Auto-Connect</string>
+    <string name="quickstart_description">Connect to the Tor network automatically when launched</string>
+    <string name="exit_location">Exit location</string>
+    <string name="exit_location_description">Websites and apps will think you’re connecting from the same country as your exit relay, which is the final hop in each of your Tor circuits.</string>
+    <string name="exit_location_automatic">Random per circuit</string>
+    <string name="exit_location_safest">Safest</string>
+    <string name="up">Up</string>
+    <string name="down">Down</string>
+    <string name="circuit_app_description">Circuit for %1$s</string>
+    <string name="this_browser">This browser</string>
+    <string name="this_app">This app</string>
+    <string name="tor_powered_app">Tor-powered app</string>
+    <string name="description_independent_tor_powered_app">This app uses its own Tor connection, independent of the Tor VPN. View and configure its connection in %1$s instead.</string>
+    <string name="action_open_app">Open %1$s</string>
+    <string name="guard">Guard</string>
+
+    <!-- logging related -->
+    <string name="bootstrap_at">Bootstrap at: %1$s</string>
+    <string name="new_connection">%1$s->%2$s: NEW connection to %3$s (app %4$d)</string>
+    <string name="new_connection_hop">%1$s->%2$s: hop %3$d: %4$s (%5$s)</string>
+    <string name="failed_connection">%1$s->%2$s: FAILED connection to %3$s: %4$s (app %5$d)</string>
+    <string name="failed_connection_closed">%1$s->%2$s: FAILED: %3$s</string>
+    <string name="closed_connection">%1$s->%2$s: closed connection</string>
+    <string name="refresh_all_circuits">Refresh all circuits?</string>
+    <string name="reload_all_circuits_description">New circuits will be established for all of your apps. Some apps and websites might not recognize you as a result, and could log you out of their services.</string>
+    <string name="reload_app_circuits">Refresh this circuit?</string>
+    <string name="reload_app_circuits_description">New circuits will be established for this app only. Some apps and websites might not recognize you as a result, and could log you out of their services.</string>
+    <string name="action_reload_circuits">Reload circuits</string>
+    <string name="routed_over_country">Routed over %1$s</string>
+    <string name="unknown">Unknown</string>
+    <string name="guide_got_it">Got it</string>
+
+    <string name="connect_direct_to_tor">Connect directly to Tor</string>
+
+    <string name="idle_toolbar_title">Tor VPN</string>
+    <string name="circuits">Circuits</string>
+    <string name="debugging">Debugging</string>
+    <string name="use_a_bridge">Use bridges</string>
+    <string name="use_a_bridge_info">Bridges help you securely access the Tor network in places where Tor is blocked. Depending on where you are, one bridge may work better than another.</string>
+    <string name="current_bridge">Current bridge</string>
+    <string name="bridge_options">Bridge options</string>
+    <string name="bridge_option_no_bridge">No bridges</string>
+    <string name="bridge_option_no_bridge_description">Connects directly to the Tor network</string>
+    <string name="bridge_option_obfs4_built">obfs4 (built-in)</string>
+    <!-- content description for bridge settings image button in connection screen -->
+    <string name="bridge_settings">Bridge settings</string>
+    <string name="bridges_added">Bridges added</string>
+    <string name="bridges">Bridges</string>
+    <string name="built_in_bridges">Your bridges</string>
+    <string name="snowflake">Snowflake (built-in)</string>
+    <string name="obfs4_built_in">obfs4 (built-in)</string>
+    <string name="snowflake_built_in">Snowflake (built-in)</string>
+    <string name="none">None</string>
+    <string name="bridge_type_added_by_you">%1$s (added by you)</string>
+    <string name="multiple_added_by_you">Multiple bridges (added by you)</string>
+    <string name="obfs4_description">Disguises your traffic as random data</string>
+    <string name="snowflake_description">Disguises your traffic as a video call</string>
+    <string name="add_new_bridge">Add new bridges</string>
+    <string name="add_bridge">Add bridges</string>
+    <string name="bridge_address">Enter bridge address</string>
+    <string name="bridge_address_description">Paste bridge addresses you already know</string>
+    <string name="bridge_address_dialog_description">Add one or more bridges provided by a trusted person or organization. In addition to vanilla bridges, Tor VPN supports the following pluggable transports:</string>
+    <string name="bridge_addresses">Bridge addresses</string>
+    <string name="action_paste_bridges">Paste your bridge addresses here</string>
+    <string name="added_by_you">Added by you</string>
+    <string name="get_new_bridges">Find more bridges</string>
+    <string name="new_bridges">Give me new bridges</string>
+    <string name="fetching_bridges">Fetching your bridges…</string>
+    <string name="new_bridges_result">Here are your bridges</string>
+    <string name="get_new_bridges_description">Since bridge addresses aren\'t public, you\'ll need to request one from the Tor Project.</string>
+    <string name="ask_bridge_bot">Request bridges</string>
+    <string name="telegram">Telegram</string>
+    <string name="signal">Signal</string>
+    <string name="whatsapp">WhatsApp</string>
+    <string name="web">Web</string>
+    <string name="email_providers">Gmail or Riseup</string>
+    <string name="telegram_bot_subtitle">Message %s</string>
+    <string name="email_bot_subtitle">Email %s</string>
+    <string name="web_bot_subtitle">Visit %s</string>
+    <string name="remove_bridge">Remove bridge address</string>
+    <string name="help">Help</string>
+    <string name="qs_error">Connection error</string>
+    <string name="qs_show_error">Show error</string>
+
+    <!-- appearance screen -->
+    <string name="appearance">Appearance</string>
+    <string name="name_and_icon">Name and icon</string>
+    <string name="launcher_hint">Choose an icon and name to be displayed on your home screen and app drawer. Notifications will continue to use the default icon and name.</string>
+
+
+    <string name="app_name_garden">Garden</string>
+    <string name="app_name_weather">Weather</string>
+    <string name="app_name_pingpong">Ping Pong</string>
+    <string name="warnings">Warnings</string>
+    <string name="new_circuits_warnings">New circuits warnings</string>
+    <string name="new_circuits_warnings_description">Warn before reloading circuits.</string>
+    <string name="view_faq">View our FAQ</string>
+    <string name="view_support_docs">View support docs</string>
+    <string name="report_bug">Report a bug</string>
+    <string name="contact_support">Contact support</string>
+    <string name="help_description_wip">Tor VPN is a work in progress, and some features may not work as expected.</string>
+    <string name="help_description_bug_report">If you encounter an issue that’s not answered by our FAQ, please open a bug report or contact support.</string>
+    <string name="bug_tor_forum">On the Tor Forum</string>
+    <string name="bug_gitlab">On GitLab</string>
+    <string name="email">Email</string>
+
+    <!-- Bridge Bot -->
+    <string name="bridge_bot">Bridge Bot</string>
+    <string name="bot_msg_welcome">Welcome, weary traveler</string>
+    <string name="bot_msg_results">Here are your bridges</string>
+    <string name="error_fetching_bridges">Error fetching bridges</string>
+    <string name="error_no_bridges_found">No bridges found</string>
+    <string name="start_again">Start again</string>
+    <string name="use_bridges">Save bridges</string>
+    <string name="change">Change</string>
+    <string name="the_internet">The internet</string>
+    <string name="obfs4_bridge">obfs4 bridge</string>
+    <string name="about">About</string>
+    <string name="about_description">Find out more about Tor VPN</string>
+    <string name="version">Version</string>
+    <string name="last_updated">Updated</string>
+    <string name="about_description_long">Tor VPN is a new app made by %1$s, developers of Tor, Tor Browser and Tails — the world’s strongest tools for privacy and freedom online.</string>
+    <string name="about_support_title">Made by a nonprofit</string>
+    <string name="about_support_description">We rely on supporters like you to help us keep Tor robust and secure for millions of people worldwide.</string>
+    <string name="about_support_action">Donate now</string>
+    <string name="tor_project">the Tor Project</string>
+    <string name="no_internet">No internet</string>
+    <plurals name="n_invalid_bridges">
+        <item quantity="one">Incorrectly formatted bridge address on line %2$d</item>
+        <item quantity="other">%1$d Incorrectly formatted bridges, first at line %2$d</item>
+    </plurals>
+    <plurals name="n_bridges">
+        <item quantity="one">%1$s bridge</item>
+        <item quantity="many">%1$s bridges</item>
+        <item quantity="other">%1$s bridges</item>
+    </plurals>
+
+    <!-- Content Description -->
+    <string name="up_content_description">Upload</string>
+    <string name="down_content_description">Download</string>
+    <string name="current_state">Current state: </string>
+    <string name="advanced">Advanced</string>
+    <string name="beta_intro">Welcome to the beta. Before you get started, there are some things you should know:</string>
+    <string name="beta_test_thoroughly">Test thoroughly</string>
+    <string name="beta_test_description">This is an early access release intended for testing and feedback.</string>
+    <string name="beta_risks">Know the risks</string>
+    <string name="beta_risks_description">Beta releases may leak information and should not be used for sensitive activities.</string>
+    <string name="how_to_report_bugs">How to report bugs</string>
+    <string name="external_link">External link</string>
+    <string name="start_testing">Start testing</string>
+    <string name="learn_more">Learn more</string>
+    <string name="beta_report_bugs">Report bugs</string>
+    <string name="beta_report_bugs_description">You can help by reporting any bugs you find back to our developers.</string>
+
+    <string name="accessibility_back_button">Back</string>
+    <string name="error_no_email_client">No email client found.</string>
+    <string name="error_loading_apps">Couldn\'t load app list</string>
+    <string name="error_loading_apps_body">Showing cached results instead. Some apps may be missing or outdated.</string>
+    <string name="retry">Retry</string>
+    <string name="duplicate_addresses">Duplicate bridge addresses removed.</string>
+    <string name="enable_verbose_logs_description">Verbose logs may include private information such as the addresses of sites you have connected to. This can be useful to diagnose specific issues.</string>
+    <string name="enable_verbose_logs">Enable verbose logs?</string>
+    <string name="enable">Enable</string>
+    <string name="disable_verbose_logs_description">Disabling verbose logs will permanently delete any logs that have been captured up to this point. This action cannot be undone.</string>
+    <string name="disable_verbose_logs">Disable and delete verbose logs?</string>
+    <string name="disable">Disable</string>
+    <string name="verbose_logs_settings_description">Include extra detail for troubleshooting</string>
+    <string name="verbose_logs">Verbose logs</string>
+    <string name="error_app_open">Could not open app</string>
+
+    <!-- AppRouting -->
+    <string name="action_search">Search</string>
+    <string name="action_clear">Clear</string>
+    <string name="search_hint">Search apps</string>
+    <string name="search_error_title">No matching results</string>
+    <string name="search_error_message">Try another search</string>
+    <string name="category_header_results">Results</string>
+    <string name="category_header_recent">Recent searches</string>
+    <string name="voice_recognition">Voice recognition</string>
+    <string name="action_clear_all">Clear all</string>
+</resources>

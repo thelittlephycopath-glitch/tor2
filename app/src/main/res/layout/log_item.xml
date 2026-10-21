@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface_container_low"
+        android:paddingVertical="@dimen/compact_padding"
+        android:paddingHorizontal="@dimen/default_padding"
+        android:id="@+id/container">
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/text_mono_small"
+            android:textColor="@color/on_surface_variant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:id="@+id/tv_timestamp"
+            android:paddingBottom="4dp"
+            tools:text="06/30/22, 16:45:56.230" />
+        <androidx.appcompat.widget.AppCompatTextView
+            style="@style/text_mono_small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="[Notice] Opening Socks listener on 127.0.0.1:9160"
+            android:id="@+id/tv_log"/>
+    </LinearLayout>
+</layout>

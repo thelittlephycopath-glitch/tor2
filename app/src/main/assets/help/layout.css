@@ -1,0 +1,68 @@
+body {
+  background-color: #160F43;
+  color: #FFFFFF;
+  padding-right: 16px;
+  padding-left: 16px;
+  letter-spacing: 0.25px;
+  font-weight: 400;
+  font-size: 14px;
+  font-family: 'InterVariable';
+  line-height: 1.3em;
+}
+
+ul {
+   padding-left: 20px;
+}
+
+strong {
+    font-weight: 500;
+}
+
+a {
+  color: #CA85FF;
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 0px;
+    font-weight: 400;
+    letter-spacing: 0px;
+    font-size: 24px;
+    line-height: 1.3em;
+}
+
+h2 {
+    margin-top: 10px;
+    margin-bottom: 0px;
+    font-weight: 500;
+    letter-spacing: 0px;
+    font-size: 22px;
+    line-height: 1.3em;
+}
+
+h3 {
+    margin-top: 6px;
+    margin-bottom: 0px;
+    font-weight: 500;
+    letter-spacing: 0.15px;
+    font-size: 16px;
+    line-height: 1.3em;
+}
+
+code {
+    background: #2E3781;
+    border-radius: 4px;
+    border: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    color: #FFFFFF;
+    word-break: break-all;
+    line-height: 1.3em;
+}
+
+@font-face {
+    font-family: 'InterVariable';
+    src: url("file:///android_asset/help/inter_variable.ttf");
+}

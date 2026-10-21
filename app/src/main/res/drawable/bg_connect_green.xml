@@ -1,0 +1,60 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="175dp"
+    android:height="116dp"
+    android:viewportWidth="175"
+    android:viewportHeight="116">
+
+    <group>
+
+        <clip-path android:pathData="M40 16H135C148.255 16 159 26.7452 159 40V76C159 89.2548 148.255 100 135 100H40C26.7452 100 16 89.2548 16 76V40C16 26.7452 26.7452 16 40 16Z" />
+
+        <group
+            android:pivotX="87.5"
+            android:pivotY="58"
+            android:rotation="90"
+            android:scaleX="2"
+            android:scaleY="2"
+            android:translateX="1"
+            android:translateY="0">
+
+            <path android:pathData="M16 16V100H159V16">
+
+                <aapt:attr name="android:fillColor">
+
+                    <gradient
+                        android:endX="123.25"
+                        android:endY="58"
+                        android:startX="51.75"
+                        android:startY="58"
+                        android:type="linear">
+
+                        <item
+                            android:color="#7DE8C8"
+                            android:offset="0" />
+
+                        <item
+                            android:color="#3CDDAC"
+                            android:offset="1" />
+
+                        <item
+                            android:color="#52E0B6"
+                            android:offset="1" />
+
+                    </gradient>
+
+                </aapt:attr>
+
+            </path>
+
+        </group>
+
+    </group>
+
+    <group>
+
+        <clip-path android:pathData="M0 0V116H175V0M40 16H135C148.255 16 159 26.7452 159 40V76C159 89.2548 148.255 100 135 100H40C26.7452 100 16 89.2548 16 76V40C16 26.7452 26.7452 16 40 16Z" />
+
+    </group>
+
+</vector>

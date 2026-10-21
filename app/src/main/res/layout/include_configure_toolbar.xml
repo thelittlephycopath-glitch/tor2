@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.appbar.CollapsingToolbarLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar_layout"
+    style="@style/collapsing_toolbar_style"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+    app:title="@string/action_configure"
+    app:contentScrim="@color/surface_container"
+    app:toolbarId="@+id/toolbar">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_collapseMode="pin"
+        app:popupTheme="@style/Theme.TorVPN.PopupOverlay" />
+
+</com.google.android.material.appbar.CollapsingToolbarLayout>

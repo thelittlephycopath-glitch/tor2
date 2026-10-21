@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="org.torproject.vpn.ui.bridgesettings.BridgeSettingsFragment">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="org.torproject.vpn.ui.bridgesettings.model.BridgeSettingsFragmentViewModel" />
+
+        <import type="android.view.View" />
+
+        <variable
+            name="handler"
+            type="org.torproject.vpn.ui.bridgesettings.ClickHandler" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/bridgeSettingsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:transitionName="connection_container_transform"
+        android:background="@color/surface"
+        >
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/Theme.TorVPN.AppBarOverlay"
+            app:elevation="0dp"
+            android:fitsSystemWindows="true"
+            app:liftOnScroll="true">
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"
+                    app:title="@string/bridges"
+                    app:navigationIcon="?attr/homeAsUpIndicator"
+                    app:popupTheme="@style/Theme.TorVPN.PopupOverlay"
+                    app:navigationContentDescription="@string/accessibility_back_button"/>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/ns_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:clipToPadding="false">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/ll_content_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/activity_horizontal_margin">
+
+                <TextView
+                    android:id="@+id/tv_bridge_info"
+                    style="@style/connection_bridge_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/activity_horizontal_margin"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                    android:text="@string/use_a_bridge_info" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/paragraph_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                    android:paddingVertical="@dimen/default_padding"
+                    android:text="@string/bridge_options" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <RadioGroup
+                        android:id="@+id/rg_bridge_options"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent">
+
+                        <org.torproject.vpn.ui.base.view.RadioButtonItemView
+                            android:id="@+id/radio_disabled"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@{viewModel.noBridgeAccessibilityDescription}"
+                            app:title="@string/bridge_option_no_bridge"
+                            app:subtitle="@string/bridge_option_no_bridge_description"
+                            app:showEditIcon="false" />
+
+                        <org.torproject.vpn.ui.base.view.RadioButtonItemView
+                            android:id="@+id/radio_obfs4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@{viewModel.obfs4AccessibilityDescription}"
+                            app:title="@string/obfs4_built_in"
+                            app:subtitle="@string/obfs4_description"
+                            app:showEditIcon="false" />
+
+                        <org.torproject.vpn.ui.base.view.RadioButtonItemView
+                            android:id="@+id/radio_snowflake"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@{viewModel.snowflakeAccessibilityDescription}"
+                            app:title="@string/snowflake"
+                            app:subtitle="@string/snowflake_description"
+                            app:showEditIcon="false" />
+
+                        <org.torproject.vpn.ui.base.view.RadioButtonItemView
+                            android:id="@+id/radio_manual"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@{viewModel.manualAccessibilityDescription}"
+                            android:visibility="@{viewModel.manualSelectionVisibility}"
+                            app:title="@string/added_by_you"
+                            app:subtitle="@{viewModel.manualAccessibilityDescription}"
+                            app:showEditIcon="true" />
+
+                    </RadioGroup>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <org.torproject.vpn.ui.base.view.IconTextEntryView
+                    android:id="@+id/bridge_entry"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:onClick="@{handler::onManualBridgeSelectionClicked}"
+                    android:visibility="@{viewModel.addManualSelectionVisibility}"
+                    app:drawable="@drawable/plus"
+                    app:secondaryText="@string/bridge_address_description"
+                    android:background="@drawable/bg_config_item_square"
+                    app:text="@string/add_new_bridge" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/paragraph_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/default_padding"
+                    android:text="@string/get_new_bridges" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/connection_bridge_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/default_padding"
+                    android:text="@string/get_new_bridges_description" />
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/default_padding">
+
+                    <org.torproject.vpn.ui.bridgesettings.view.BridgeRequestEntryView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{handler::onTorBridgeBotClicked}"
+                        android:visibility="visible"
+                        android:background="@drawable/bg_config_item_square"
+                        android:paddingHorizontal="@dimen/compact_padding"
+                        app:drawable="@drawable/bridge_bot_icon"
+                        app:external="false"
+                        app:secondaryText="@string/ask_bridge_bot"
+                        app:text="@string/bridge_bot" />
+
+                    <org.torproject.vpn.ui.bridgesettings.view.BridgeRequestEntryView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{handler::onEmailBridgeBotClicked}"
+                        android:background="@drawable/bg_config_item_square"
+                        android:paddingHorizontal="@dimen/compact_padding"
+                        app:drawable="@{viewModel.emailDrawable}"
+                        app:secondaryText="@{viewModel.formattedEmailBotSubtitle}"
+                        app:text="@string/email_providers"
+                        tools:drawable="@drawable/ic_dummy_app"
+                        tools:secondaryText="Email bridges@torproject.org" />
+
+                    <org.torproject.vpn.ui.bridgesettings.view.BridgeRequestEntryView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{handler::onWebBridgeBotClicked}"
+                        android:background="@drawable/bg_config_item_square"
+                        android:paddingHorizontal="@dimen/compact_padding"
+                        app:drawable="@{viewModel.webbrowserDrawable}"
+                        app:secondaryText="@{viewModel.formattedWebBotSubtitle}"
+                        app:text="@string/web"
+                        tools:drawable="@drawable/ic_dummy_app"
+                        tools:secondaryText="Visit bridges.torproject.org" />
+
+                    <org.torproject.vpn.ui.bridgesettings.view.BridgeRequestEntryView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{handler::onTelegramBridgeBotClicked}"
+                        android:visibility="@{viewModel.telegramVisibility}"
+                        app:drawable="@{viewModel.telegramDrawable}"
+                        app:secondaryText="@{viewModel.formattedTelegramBotSubtitle}"
+                        app:text="@string/telegram"
+                        tools:drawable="@drawable/ic_dummy_app"
+                        android:background="@drawable/bg_config_item_square"
+                        android:paddingHorizontal="@dimen/compact_padding"
+                        tools:secondaryText="@{viewModel.formattedTelegramBotSubtitle" />
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

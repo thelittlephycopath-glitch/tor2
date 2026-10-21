@@ -1,0 +1,1 @@
+Alkalmazásonkénti routolás Tor-ral, hálózat blokkolás feloldása & biztonság.

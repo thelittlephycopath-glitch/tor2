@@ -1,0 +1,14 @@
+<b>Beta sürümü: Karşı koyan VPN</b>
+<p>Tor VPN Beta, başkaları sizi dünyadan ayırmaya çalıştığında bunu engeller. Bu erken erişim sürümü, mobil gizliliğin geleceğini şekillendirmeye yardımcı olmak isteyen ve bunu güvenli bir şekilde yapabilen kullanıcılar içindir.</p>
+<b>Tor VPN Beta ne yapabilir? </b>
+<ul>
+  <li>Ağ düzeyinde gizlilik: Tor VPN, gerçek IP adresinizi ve konumunuzu kullandığınız uygulama ve hizmetlerden ve bağlantınızı izleyen herkesten gizler.</li>
+  <li>Uygulamaya özel yönlendirme: Hangi uygulamaların Tor üzerinden yönlendirileceğini siz seçersiniz. Her uygulamanın kendi Tor devresi ve çıkış IP adresi vardır. Böylece ağı izleyenler tüm çevrim içi etkinliklerinizi birbiri ile ilişkilendiremez.</li>
+  <li>Uygulama düzeyinde engellemeyi aşma: Erişim engellendiğinde, Tor VPN temel uygulamalarınızı internete yeniden bağlamanıza yardımcı olabilir. (Beta sınırlaması: Bu erken erişim sürümünde engellemeyi aşma özellikleri sınırlıdır ve kullanıcılar bağlantı sorunlarıyla karşılaşabilir)</li>
+  <li>Arti üzerine kurulu: Tor VPN, yeni nesil Tor Rust uygulamasını kullanıyor. Bu uygulama, eski C-Tor araçlarından daha güvenli bellek kullanımı, modern kod mimarisi ve daha güçlü bir güvenlik temeli sağlıyor.</li>
+<b>Tor VPN Beta kimler içindir? </b>
+<p>Tor VPN Beta, bir erken erişim sürümüdür ve beta döneminde yüksek riskli kullanıcılar veya hassas kullanım durumları için uygun değildir.</p>
+<p>Tor VPN Beta, mobil gizliliği şekillendirmeye yardımcı olmak isteyen ve bunu güvenli bir şekilde yapabilen erken kullanıcılar içindir. Kullanıcılar hatalarla karşılaşmayı beklemeli ve sorunları bildirmelidir. Denemeye, uygulamayı sınırlarına ulaştırmaya ve geri bildirimde bulunmaya hazırsanız, ölçeği daha özgür bir internete doğru büyütmek için yardım etmenizi çok isteriz.</p>
+<b>Önemli sınırlamalar (LÜTFEN OKUYUN)</b>
+<p>Tor VPN tam bir çözüm değildir: Bazı Android platform verileri aygıtınızın tanımlanmasında kullanılabilir ve hiçbir VPN bunu tümüyle önleyemez. Aşırı gözetim riskleriyle karşı karşıyaysanız, Tor VPN Beta sürümünü kullanmamanızı öneririz.</p>
+<p>Tor engellemeyi aşma özelliklerinin tümü henüz eklenmedi. Yoğun sansür uygulanan bölgelerdeki kullanıcılar, Tor veya internet bağlantısı kurmak için Tor VPN Beta sürümünü kullanamayabilir.</p>

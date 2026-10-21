@@ -1,0 +1,176 @@
+stages:
+  - build_image
+  - build
+  - test
+  - publish
+
+variables:
+  # When using dind, it's wise to use the overlayfs driver for
+  # improved performance.
+  DOCKER_DRIVER: overlay
+  GITLAB_ADVANCED_SAST_ENABLED: 'true'
+  DS_GRADLE_RESOLUTION_POLICY: 'none'
+  # default image tag used by jobs unless overridden by rules
+  IMAGE_TAG: 'main'
+
+include:
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+
+# Build the container image on schedule and push to :main
+build-container-image-schedule:
+  variables:
+    TAG: main # non-tag build will be unset, set to 'latest' in script
+  stage: build_image
+  image:
+    name: "containers.torproject.org/tpo/tpa/base-images/podman:trixie"
+  script:
+    - export TMPDIR=$(pwd)/.tmp
+    - podman login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - podman build -t ${CI_REGISTRY_IMAGE}:${TAG} .
+    - podman push ${CI_REGISTRY_IMAGE}:${TAG}
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: always
+    - when: never
+
+# Build container image for MRs/branches when Containerfile changes
+# set to tag = commit SHA
+# Do not try to push the container when its a merge request event
+build-container-image:
+  stage: build_image
+  image:
+    name: "containers.torproject.org/tpo/tpa/base-images/podman:trixie"
+  script:
+    - set -euo pipefail
+    - export TMPDIR=$(pwd)/.tmp
+    - export BRANCH_TAG="${CI_COMMIT_REF_SLUG}"
+    # Always try to build; fail fast on build errors
+    - podman build --pull=always -f Containerfile -t ${CI_REGISTRY_IMAGE}:${BRANCH_TAG} .
+    # We want branch pipelines (same project) and downstream jobs run in the new
+    # image.
+    # Pipelines that run in a forked project push to the fork's registry, and
+    # downstream jobs in the fork use the new image so it is tested
+    # MRs that are from forked jobs should run in the target project
+    # (merged-results/parent project MR pipelines), but skip push
+    - |
+      # Default: do not push in MR pipelines
+      SHOULD_PUSH=false
+
+      echo "Project path: $CI_PROJECT_PATH"
+      if [ "${CI_PIPELINE_SOURCE:-}" != "merge_request_event" ]; then
+         echo "Not a merge request pipeline: safe to push."
+         SHOULD_PUSH=true
+      elif [ "${CI_PROJECT_PATH:-}" != "tpo/applications/vpn" ]; then
+           # We’re in a fork (source project), so CI_REGISTRY_IMAGE is the fork’s registry
+           echo "MR pipeline running in fork project: safe to push to fork registry."
+           SHOULD_PUSH=true
+      else
+         echo "MR pipeline running in target project, or merged result: skipping push"
+      fi
+      # Always create the dotenv file; only populate it when we pushed, GitLab may
+      # otherwise complain about the missing artifact
+      echo -n > image_tag.env
+
+      if [ "$SHOULD_PUSH" = "true" ]; then
+        echo "Pushing image ${CI_REGISTRY_IMAGE}:${BRANCH_TAG}"
+        podman login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+        podman push "${CI_REGISTRY_IMAGE}:${BRANCH_TAG}"
+        echo "IMAGE_TAG=${BRANCH_TAG}" > image_tag.env
+      else
+        echo "Skipping push."
+      fi
+  artifacts:
+    reports:
+      dotenv: image_tag.env
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule"'
+      changes: [ "Containerfile" ]
+      when: on_success
+    - when: never
+
+# Basic android and gradle stuff
+# Check linting
+lintDebug:
+  image: "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+  interruptible: true
+  stage: test
+  script:
+    - ./gradlew -Pci --console=plain :app:ktlintCheck :app:lintDebug -PbuildDir=lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - when: always
+
+# Make Project
+assembleStaging:
+  image: "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+  interruptible: true
+  stage: build
+  script:
+    - curl -s https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer | bash
+    - ./gradlew clean assembleStaging --stacktrace
+  artifacts:
+    paths:
+      - app/build/outputs/
+      - build.log
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - when: always
+
+# Publish apk
+publish:
+  image: "containers.torproject.org/tpo/applications/vpn:main"
+  stage: publish
+  rules:
+    # Skip this job in scheduled pipelines
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    # Run when a tag is created
+    - if: $CI_COMMIT_TAG
+      variables:
+        TAG: "${CI_COMMIT_TAG}"
+    # Run when commits are pushed or merged to the default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        TAG: "main"
+  dependencies: 
+    - assembleStaging
+  script:
+    - 'echo "Pushing apk with tag: ${TAG} to gitlab package area"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file app/build/outputs/apk/staging/app-universal-staging.apk "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/org.torproject.vpn.testing/${TAG}/tor-vpn-staging.apk"'
+
+# Run all tests, if any fails, interrupt the pipeline(fail it)
+debugTests:
+  image: "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+  interruptible: true
+  stage: test
+  script:
+    - ./gradlew -Pci --console=plain :app:testDebug
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - "app/build/test-results/**/*.xml"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - when: always
+
+debugIntegrationTests:
+  image: "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+  interruptible: true
+  stage: test
+  script:
+    - ./scripts/run_browserstack.sh
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    reports:
+      junit: reports/*.xml
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: never

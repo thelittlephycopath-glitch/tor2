@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:color="@color/error_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+
+    <item>
+        <selector>
+            <!-- Pressed state -->
+            <item android:state_pressed="true">
+                <layer-list>
+                    <item android:drawable="@drawable/bg_btn_stop" />
+                    <!-- State overlay for pressed -->
+                    <item>
+                        <aapt:attr name="android:drawable">
+
+                            <vector android:width="143dp"
+                                android:height="88dp"
+                                android:viewportWidth="143"
+                                android:viewportHeight="88">
+                                <path
+                                    android:fillColor="@color/error_state_overlay_pressed"
+                                    android:pathData="M49.5,0L93.5,0A24,24 0,0 1,117.5 24L117.5,64A24,24 0,0 1,93.5 88L49.5,88A24,24 0,0 1,25.5 64L25.5,24A24,24 0,0 1,49.5 0z" />
+                            </vector>
+                        </aapt:attr>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Focused state -->
+            <item android:state_focused="true">
+                <layer-list>
+                    <item android:drawable="@drawable/bg_btn_stop" />
+                    <!-- State overlay for focused -->
+                    <item>
+                        <aapt:attr name="android:drawable">
+
+                            <vector android:width="143dp"
+                                android:height="88dp"
+                                android:viewportWidth="143"
+                                android:viewportHeight="88">
+                                <path
+                                    android:fillColor="@color/error_state_overlay_focused"
+                                    android:pathData="M49.5,0L93.5,0A24,24 0,0 1,117.5 24L117.5,64A24,24 0,0 1,93.5 88L49.5,88A24,24 0,0 1,25.5 64L25.5,24A24,24 0,0 1,49.5 0z" />
+                            </vector>
+                        </aapt:attr>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Hovered state -->
+            <item android:state_hovered="true">
+                <layer-list>
+                    <item android:drawable="@drawable/bg_btn_stop" />
+                    <!-- State overlay for hovered -->
+                    <item>
+                        <aapt:attr name="android:drawable">
+                            <vector android:width="143dp"
+                                android:height="88dp"
+                                android:viewportWidth="143"
+                                android:viewportHeight="88">
+                                <path
+                                    android:fillColor="@color/error_state_overlay_hovered"
+                                    android:pathData="M49.5,0L93.5,0A24,24 0,0 1,117.5 24L117.5,64A24,24 0,0 1,93.5 88L49.5,88A24,24 0,0 1,25.5 64L25.5,24A24,24 0,0 1,49.5 0z" />
+                            </vector>
+                        </aapt:attr>
+                    </item>
+                </layer-list>
+            </item>
+
+            <!-- Default state -->
+            <item android:drawable="@drawable/bg_btn_stop" />
+        </selector>
+    </item>
+</ripple>

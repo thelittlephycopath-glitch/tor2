@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="handler"
+            type="org.torproject.vpn.ui.help.ClickHandler" />
+        <import type="android.view.View" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        >
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:liftOnScroll="true"
+            app:elevation="0dp"
+            android:theme="@style/Theme.TorVPN.AppBarOverlay">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:title="@string/help"
+                app:popupTheme="@style/Theme.TorVPN.PopupOverlay" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/landscape_help_scroll_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_padding"
+                android:orientation="vertical"
+                >
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_rounded"
+                    android:orientation="vertical">
+
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:id="@+id/ll_faq_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="64dp"
+                        android:orientation="horizontal"
+                        android:background="@drawable/bg_config_item_top_curve"
+                        android:weightSum="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                        android:onClick="@{handler::onOfflineHelpClicked}"
+                        >
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_docs"
+                            android:layout_gravity="center_vertical"
+                            />
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            style="@style/list_item_style_medium"
+                            android:layout_weight="1"
+                            android:text="@string/view_support_docs"
+                            android:layout_gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                            />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/outline"
+                        />
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:id="@+id/ll_reort_bugs_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="64dp"
+                        android:orientation="horizontal"
+                        android:background="@drawable/bg_config_item_square"
+                        android:weightSum="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                        android:onClick="@{handler::onReportBugClicked}"
+                        >
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_bug_beetle"
+                            app:tint="@color/on_surface"
+                            android:layout_gravity="center_vertical"
+                            />
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            style="@style/list_item_style_medium"
+                            android:layout_weight="1"
+                            android:text="@string/report_bug"
+                            android:layout_gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                            />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/outline"
+                        />
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:id="@+id/ll_contact_support_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="64dp"
+                        android:orientation="horizontal"
+                        android:background="@drawable/bg_config_item_bottom_curve"
+                        android:weightSum="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:onClick="@{handler::onContactSupportClicked}"
+                        android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                        >
+                        <androidx.appcompat.widget.AppCompatImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_chats_circle"
+                            android:layout_gravity="center_vertical"
+                            />
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            style="@style/list_item_style_medium"
+                            android:layout_weight="1"
+                            android:text="@string/contact_support"
+                            android:layout_gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/activity_horizontal_margin"
+                            />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/list_item_style_medium"
+                    android:paddingTop="@dimen/activity_vertical_margin"
+                    android:text="@string/help_description_wip"
+                    android:paddingHorizontal="@dimen/compact_padding"
+                    />
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:paddingVertical="@dimen/compact_padding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/list_item_style_medium"
+                    android:text="@string/help_description_bug_report"
+                    android:paddingHorizontal="@dimen/compact_padding"
+                    />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</layout>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="org.torproject.vpn.ui.home.model.ConnectFragmentViewModel" />
+
+        <import type="android.view.View" />
+
+        <import type="org.torproject.vpn.vpn.ConnectionState" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="org.torproject.vpn.ui.home.ConnectFragment">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/upper_guideline_action_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="@dimen/connection_button_upper_guideline" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/lower_guideline_action_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="@dimen/connection_button_lower_guideline" />
+
+        <ImageView
+            android:id="@+id/iv_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            android:src="@drawable/bg_onion_puks"
+            tools:src="@drawable/bg_onion_puks"
+            tools:visibility="visible" />
+
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/connection_status_bar_horizontal_padding"
+            android:paddingVertical="@dimen/connection_status_bar_vertical_padding"
+
+            android:background="@color/surface"
+            android:minHeight="?attr/actionBarSize"
+            android:theme="?attr/actionBarTheme"
+            android:contentDescription="@{viewModel.toolBarTitle}"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@{viewModel.toolBarTitle}"
+            android:importantForAccessibility="no"
+            app:titleCentered="true"
+            app:popupTheme="@style/Theme.TorVPN.PopupOverlay"
+            app:titleTextAppearance="@style/connection_toolbar_title"
+            app:titleTextColor="@color/on_surface">
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="match_parent"
+                android:text="@{viewModel.toolBarTitle}"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_height="match_parent"
+                android:textAppearance="@style/connection_toolbar_title" />
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <org.torproject.vpn.utils.GradientGlowView
+            android:id="@+id/gradient_view"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            tools:visibility="gone" />
+
+
+        <include
+            android:id="@+id/include_stats"
+            layout="@layout/include_connection_stats"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/upper_guideline_action_btns"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            app:viewModel="@{viewModel}"
+            tools:visibility="visible" />
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_exit_selection_button"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline_action_btns"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/upper_guideline_action_btns">
+
+            <TextView
+                android:id="@+id/tv_connect_action_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:paddingHorizontal="@dimen/compact_padding"
+                tools:background="@drawable/av_connect_to_cancel"
+                android:clickable="true"
+                android:elevation="0dp"
+                android:enabled="@{viewModel.connectionState != ConnectionState.PRIVATE_DNS_ERROR}"
+                android:focusable="true"
+                android:gravity="center"
+                android:onClick="@{()->viewModel.connectStateButtonClicked()}"
+                android:text="@{viewModel.connectButtonText}"
+                android:contentDescription="@{viewModel.connectButtonContentDescription}"
+                android:textAppearance="@style/button_text_connect"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintEnd_toStartOf="@+id/cl_selection_exit_inner"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cl_selection_exit_inner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:transitionName="exit_node_selection_container_transform"
+                android:background="@drawable/round_exit_bg_interactive"
+                android:onClick="@{() -> viewModel.exitNodeSelectionButtonClicked()}"
+                android:padding="29dp"
+                android:contentDescription="@string/exit_location"
+                android:clickable="true"
+                android:focusable="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/tv_connect_action_btn"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible"
+                android:visibility="@{viewModel.exitNodeSelectionVisibility}"
+                >
+
+                <ImageView
+                    android:id="@+id/imageView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/imageView6"
+                    app:layout_constraintHorizontal_chainStyle="packed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_globe" />
+
+                <ImageView
+                    android:id="@+id/imageView6"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:scaleType="fitXY"
+                    android:layout_marginStart="16dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@{viewModel.countryLabel}"
+                    android:src="@{viewModel.countryDrawable}"
+                    android:visibility="@{viewModel.countryDrawable != null ? View.VISIBLE : View.GONE}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/imageView5"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:srcCompat="@drawable/flag_1f1e7_1f1ed"
+                    tools:visibility="gone" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <include
+            android:id="@+id/include_error"
+            layout="@layout/include_error_frame"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="@{viewModel.connectionState == ConnectionState.CONNECTION_ERROR ? View.VISIBLE: View.GONE}"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline_action_btns"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:viewModel="@{viewModel}"
+            tools:visibility="gone" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

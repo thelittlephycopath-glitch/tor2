@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.TorVPN" parent="Theme.Material3Expressive.Dark.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorOnErrorContainer">@color/on_error_container</item>
+
+        <item name="android:colorBackground">@color/surface</item>
+        <item name="colorOnBackground">@color/on_surface</item>
+
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+
+        <item name="colorSurfaceInverse">@color/inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/inverse_on_surface</item>
+        <item name="colorPrimaryInverse">@color/inverse_primary</item>
+
+        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_container_highest</item>
+
+        <!-- set material design 3 default text attributes our custom text styles -->
+        <item name="textAppearanceTitleLarge">@style/title_large</item>
+        <item name="textAppearanceTitleMedium">@style/title_medium</item>
+        <item name="textAppearanceTitleSmall">@style/title_small</item>
+        <item name="textAppearanceBodyLarge">@style/body_large</item>
+        <item name="textAppearanceBodyMedium">@style/body_medium</item>
+        <item name="textAppearanceBodySmall">@style/body_small</item>
+        <item name="textAppearanceHeadlineLarge">@style/headline_small</item>
+        <item name="textAppearanceHeadlineMedium">@style/headline_medium</item>
+        <item name="textAppearanceHeadlineSmall">@style/headline_small</item>
+        <item name="textAppearanceLabelLarge">@style/label_large</item>
+        <item name="textAppearanceLabelMedium">@style/label_medium</item>
+        <item name="textAppearanceLabelSmall">@style/label_small</item>
+        <item name="textAppearanceButton">@style/label_large</item>
+
+        <!-- Ensure Inter is the default font for the whole app -->
+        <item name="fontFamily">@font/inter_variable</item>
+        <item name="android:fontFamily">@font/inter_variable</item>
+
+        <!-- android:statusBarColor used on phones with Android SDK < API 35 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- android:statusBarColor removed — deprecated and no-op with edge-to-edge on API 35+
+             https://developer.android.com/about/versions/16/behavior-changes-16#edge-to-edge -->
+        <item name="android:windowLightStatusBar" >false</item>
+
+        <item name="actionMenuTextColor">@color/menu_item_color</item>
+        <item name="android:actionMenuTextColor">@color/primary</item>
+
+        <!-- Customize your theme here. -->
+        <item name="android:homeAsUpIndicator">@drawable/ic_arrow_left</item>
+
+        <!--//We have explicitly defined these on Toolbars and BottomNav but adding here for consistency across the app in case future updates adds more toolbars-->
+        <item name="toolbarStyle">@style/toolbar_theme</item>
+        <item name="bottomNavigationStyle">@style/Widget.Material3.BottomNavigationView</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <item name="snackbarStyle">@style/snackBarBackground</item>
+        <item name="snackbarTextViewStyle">@style/snackBarText</item>
+    </style>
+
+    <style name="Theme.TorVPN.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
+    <style name="Theme.TorVPN.PopupOverlay" parent="ThemeOverlay.Material3.Dark" />
+</resources>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:padding="@dimen/default_padding"
+        android:background="@drawable/bg_config_item"
+        android:id="@+id/icon_text_entry_view_container"
+        >
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginHorizontal="6dp"
+            android:src="@drawable/ic_dummy_app"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:duplicateParentState="true"
+            tools:visibility="gone" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvTitle"
+            style="@style/list_item_style_medium"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:gravity="start"
+            android:textAlignment="gravity"
+            app:layout_constraintStart_toEndOf="@id/ivIcon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvSubtitle"
+            app:layout_constraintEnd_toStartOf="@+id/smItemSwitch"
+            android:paddingStart="20dp"
+            android:paddingEnd="@dimen/compact_padding"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:duplicateParentState="true"
+            tools:text="a long test that should not touch the divider letsee"
+            tools:textColor="#000000" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvSubtitle"
+            android:textAppearance="@style/list_item_subheader_style"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:gravity="start"
+            android:textAlignment="gravity"
+            app:layout_constraintStart_toStartOf="@id/tvTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/smItemSwitch"
+            android:paddingStart="20dp"
+            android:paddingEnd="@dimen/compact_padding"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:duplicateParentState="true"
+            tools:text="a long test that should not touch the divider letsee"
+            tools:textColor="#000000"
+            />
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/smItemSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="gone"
+            android:duplicateParentState="true"
+            />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

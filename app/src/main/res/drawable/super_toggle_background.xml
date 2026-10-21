@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_checked_pressed_color"/>
+        </shape>
+    </item>
+    <item android:state_checked="true" android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_checked_focused_color"/>
+        </shape>
+    </item>
+    <item android:state_checked="true" android:state_hovered="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_checked_hovered_color"/>
+        </shape>
+    </item>
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/primary"/>
+        </shape>
+    </item>
+
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_unchecked_pressed_color"/>
+        </shape>
+    </item>
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_unchecked_focused_color"/>
+        </shape>
+    </item>
+    <item android:state_hovered="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/super_toggle_unchecked_hovered_color"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <solid android:color="@color/surface_container"/>
+        </shape>
+    </item>
+</selector>

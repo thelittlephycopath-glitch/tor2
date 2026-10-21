@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guide_version_number" translatable="false">%1$s</string>
+    <!-- Download statistics, e.g 1.23 MB -->
+    <string name="stats_down" translatable="false">%1$s</string>
+    <!-- Upload statistics, e.g 1.23 MB -->
+    <string name="stats_up" translatable="false">%1$s</string>
+    <string name="obfs4_label" translatable="false">obfs4</string>
+    <string name="webtunnel_label" translatable="false">WebTunnel</string>
+    <string name="snowflake_label" translatable="false">Snowflake</string>
+
+</resources>

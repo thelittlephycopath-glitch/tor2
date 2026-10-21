@@ -1,0 +1,6 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/primary_variant" android:state_checked="true" android:state_enabled="true"/>
+    <item android:color="@color/primary_variant" android:state_checked="true" android:state_enabled="false"/>
+    <item android:color="@color/inverse_surface" android:state_enabled="false"/>
+    <item android:color="@color/inverse_surface"/>
+</selector>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        tools:context="org.torproject.vpn.ui.help.OfflineHelpFragment">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/Theme.TorVPN.AppBarOverlay"
+            app:liftOnScroll="true"
+            app:elevation="0dp"
+            android:fitsSystemWindows="true"
+            >
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                app:title="@string/help"
+                app:navigationIcon="?attr/homeAsUpIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:popupTheme="@style/Theme.TorVPN.PopupOverlay"
+                app:navigationContentDescription="@string/accessibility_back_button"/>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <FrameLayout
+            android:id="@+id/wv_help_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <WebView
+                android:id="@+id/wv_help"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/surface"
+                android:nestedScrollingEnabled="true"
+                tools:context="org.torproject.vpn.ui.help.OfflineHelpFragment" />
+        </FrameLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

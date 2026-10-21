@@ -1,0 +1,21 @@
+/* stylesheets for js-disabled browsers */
+
+/* always show tab and accordion contents */
+[data-controller="tabs"] .toggler + .toggled.toggle-d-block,
+.accordion .toggler + .toggled.toggle-d-block {
+  display: block !important;
+}
+[data-controller="tabs"] .toggler + .toggled,
+.accordion .toggler + .toggled {
+  visibility: visible;
+}
+
+/* hide accordion-button carat */
+.accordion-button::after {
+  display: none;
+}
+
+/* utility for hiding js-related elements */
+.noscript-hide {
+  display: none !important;
+}

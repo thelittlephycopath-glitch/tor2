@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- first segment -->
+    <item android:bottom="60dp">
+        <shape android:shape="oval">
+            <size android:height="10dp" android:width="10dp"/>
+            <solid android:color="@color/secondary"/>
+        </shape>
+    </item>
+
+   <item android:bottom="49.5dp" android:top="9.5dp" android:left="4.5dp" android:right="4.5dp" >
+        <shape android:shape="rectangle">
+            <size android:width="1dp" android:height="10dp"/>
+            <solid android:color="@color/secondary"/>
+        </shape>
+    </item>
+
+    <!-- 2. segment -->
+    <item android:bottom="40dp" android:top="20dp">
+        <shape android:shape="oval">
+            <stroke android:color="@color/secondary"
+                android:width="1dp" />
+            <size android:height="10dp" android:width="10dp"/>
+        </shape>
+    </item>
+
+   <item android:bottom="29.5dp" android:top="29.5dp" android:left="4.5dp" android:right="4.5dp">
+        <shape android:shape="rectangle">
+            <size android:width="1dp" android:height="10dp"/>
+            <solid android:color="@color/secondary"/>
+        </shape>
+    </item>
+
+    <!-- 3. segment -->
+    <item android:bottom="20dp" android:top="40dp">
+        <shape android:shape="oval">
+            <stroke android:color="@color/secondary"
+                android:width="1dp" />
+            <size android:height="10dp" android:width="10dp"/>
+        </shape>
+    </item>
+
+   <item android:bottom="9.5dp" android:top="49.5dp" android:left="4.5dp" android:right="4.5dp">
+        <shape android:shape="rectangle">
+            <size android:width="1dp" android:height="10dp"/>
+            <solid android:color="@color/secondary"/>
+        </shape>
+    </item>
+
+    <!-- 4. segment -->
+    <item android:top="60dp">
+        <shape android:shape="oval">
+            <stroke android:color="@color/secondary"
+                android:width="1dp" />
+            <size android:height="10dp" android:width="10dp"/>
+        </shape>
+    </item>
+
+</layer-list>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="android.view.View" />
+
+        <variable
+            name="viewModel"
+            type="org.torproject.vpn.ui.bridgesettings.model.BridgeLinesFragmentViewModel" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/surface"
+        tools:context="org.torproject.vpn.ui.bridgesettings.BrideLinesFragment">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/Theme.TorVPN.AppBarOverlay"
+            app:elevation="0dp"
+            android:fitsSystemWindows="true"
+            app:liftOnScroll="true">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:paddingEnd="15dp"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:menu="@menu/bridgelines_menu"
+                app:navigationIcon="@drawable/ic_x"
+                app:popupTheme="@style/Theme.TorVPN.PopupOverlay"
+                app:title="@string/add_bridge"
+                app:navigationContentDescription="@string/accessibility_back_button"/>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/root_content_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            >
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/bottom_guideline"
+                android:layout_height="0dp"
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_end="0dp"
+                />
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cl_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:paddingStart="@dimen/default_padding"
+                android:paddingTop="@dimen/default_padding"
+                android:paddingEnd="@dimen/default_padding"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:id="@+id/tv_description"
+                    style="@style/dialog_title_small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="@dimen/compact_padding"
+                    android:text="@string/bridge_address_dialog_description"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_bridge_type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingBottom="@dimen/default_padding"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_description"
+                    app:selectionRequired="false"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_snowflake"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/snowflake_label"
+                        android:textColor="@color/on_surface_variant"
+                        app:chipStrokeColor="@color/outline_variant" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_obfs4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/obfs4_label"
+                        android:textColor="@color/on_surface_variant"
+                        app:chipStrokeColor="@color/outline_variant" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_webtunnel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/on_surface_variant"
+                        app:chipStrokeColor="@color/outline_variant"
+                        android:text="@string/webtunnel_label" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cl_editText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/chip_group_bridge_type">
+
+                    <androidx.core.widget.NestedScrollView
+                        android:id="@+id/scrollViewContainer"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8sp"
+                        android:layout_marginBottom="@dimen/compact_padding"
+                        android:background="@drawable/round_material_edittext_outline"
+                        android:orientation="vertical"
+                        android:overScrollMode="never"
+                        android:paddingTop="8sp"
+                        app:layout_constraintHeight_max="350dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.0">
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:id="@+id/ll_scrollView_child"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:weightSum="1"
+                            android:orientation="vertical">
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:id="@+id/chip_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:scrollIndicators="end">
+
+                            </com.google.android.material.chip.ChipGroup>
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/textinput_bridges"
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1"
+                                android:layout_marginBottom="@dimen/default_padding"
+                                android:background="@android:color/transparent"
+                                android:gravity="start"
+                                android:inputType="textMultiLine"
+                                android:paddingHorizontal="@dimen/default_padding"
+                                android:paddingBottom="@dimen/default_padding"
+                                android:textColor="@color/on_surface"
+                                android:textCursorDrawable="@drawable/edittext_cursor"
+                                tools:text="obfs4blub" />
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+                    </androidx.core.widget.NestedScrollView>
+
+                    <TextView
+                        android:id="@+id/tv_bridge_address"
+                        style="@style/small_info_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="@dimen/default_padding"
+                        android:background="@drawable/bridgeline_addresses_bg"
+                        android:paddingHorizontal="@dimen/compact_padding"
+                        android:text="@string/bridge_addresses"
+                        android:textColor="@color/primary"
+                        app:layout_constraintStart_toStartOf="@+id/scrollViewContainer"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/tv_helpline"
+                    style="@style/body_small"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="40dp"
+                    android:ellipsize="end"
+                    android:gravity="start"
+                    android:maxLines="1"
+                    android:textColor="@color/on_surface_variant"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cl_editText"
+                    app:layout_constraintVertical_bias="0" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.coordinatorlayout.widget.CoordinatorLayout
+                android:id="@+id/snackbar_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintVertical_bias="1"
+                app:layout_constraintBottom_toBottomOf="@id/bottom_guideline"
+                >
+            </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

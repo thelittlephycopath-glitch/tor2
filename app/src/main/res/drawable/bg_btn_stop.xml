@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="143dp"
+    android:height="88dp"
+    android:viewportWidth="143"
+    android:viewportHeight="88">
+
+    <group>
+        <path
+            android:name="stop-shape"
+            android:pathData="M49.5,0L93.5,0A24,24 0,0 1,117.5 24L117.5,64A24,24 0,0 1,93.5 88L49.5,88A24,24 0,0 1,25.5 64L25.5,24A24,24 0,0 1,49.5 0z"
+            android:fillColor="@color/error"/>
+        <group>
+            <path
+                android:name="stop-inner-shape"
+                android:pathData="M65.65,53C64.78,53 64.03,52.69 63.42,52.08C62.81,51.47 62.5,50.72 62.5,49.85L62.5,38.15C62.5,37.28 62.81,36.53 63.42,35.92C64.03,35.31 64.78,35 65.65,35L77.35,35C78.22,35 78.97,35.31 79.58,35.92C80.19,36.53 80.5,37.28 80.5,38.15L80.5,49.85C80.5,50.72 80.19,51.47 79.58,52.08C78.97,52.69 78.22,53 77.35,53L65.65,53Z"
+                android:fillColor="@color/on_error"/>
+        </group>
+    </group>
+</vector>

@@ -1,0 +1,207 @@
+# Privacy Policy for Tor Browser for Desktop, Tor Browser for Android, and TorVPN
+
+**Effective Date:** August 21, 2025
+
+This privacy policy covers:
+
+- **Tor Browser for Android**
+- **Tor Browser for Desktop**
+- **TorVPN**
+
+It explains how each application accesses, collects, uses, and shares user data.
+
+## 1. Developer & Contact Information
+
+**Developer:** The Tor Project, Inc.
+
+**Website:** [https://www.torproject.org](https://www.torproject.org)
+
+**Support/Inquiries:** [https://support.torproject.org/](https://support.torproject.org/)
+
+**Privacy Contact Email:** [privacy contact](mailto:frontdesk@torproject.org)
+
+## 2. Shared Privacy Principles
+
+We design all Tor applications to maximize user privacy and anonymity:
+
+- **No collection of personal or sensitive user data**
+- **No tracking, telemetry, or analytics**
+- **No user accounts or identity linkage**
+- Open-source and privacy-by-design
+
+## 3. Application-Specific Data Practices
+
+### Tor Browser (Android & Desktop)
+
+- Does **not collect IP addresses, browsing history, device IDs, or location**
+- All connections routed through the Tor network for anonymity, with **one exception:**
+    - In environments with restricted or censored internet access, Tor Browser may use anti-censorship tools such as pluggable transports (PTs) (e.g., Moat) to obtain bridge information.
+    - These tools require a **brief non-Tor** connection, known as a signaling channel, to fetch data necessary to connect to the Tor network.
+    - This fallback may occur automatically when Tor Browser cannot connect directly, or it may be manually selected by the user.
+    - The Tor Project does not log any personally identifiable information during these signaling requests.
+- **Temporary session cache only**, cleared on exit or "New Identity"
+
+In order to provide user control and ensure privacy-preserving functionality, TorVPN stores certain user-configured settings locally on the device.
+
+Examples of such settings include:
+- Selected bridge relays or custom bridge configurations
+- Exit node preferences (e.g., country selection)
+- Per-app routing rules (which apps should or should not be routed over Tor)
+
+These preferences:
+- Are stored only on the user's device
+- Are used solely for local functionality and configuration
+- Can be deleted at any time via in-app settings or by uninstalling the app
+
+### TorVPN
+- **No user sign-in, tracking, or identity linkage**
+- **No remote telemetry or usage logging**
+- **Local-only** session stats (duration, bandwidth), discarded after session
+- **Local-only** session logs, visible in the Logs view, are discarded after the VPN is stopped and the app is quit
+- **No** access to contacts, files, or personal identifiers
+
+In order to provide user control and customization, TorVPN stores certain user-configured settings locally on the device. These settings are **never** transmitted to The Tor Project or any third party, and are **not** linked to user identity or device information.
+
+These include:
+
+- Selected bridge relays or custom bridge configurations
+- Exit node preferences (e.g., country selection)
+- Per-app routing rules (which apps should or should not be routed over Tor)
+- List of installed apps (used locally to manage per-app routing)
+- List of protected apps (required to enforce traffic routing exceptions)
+- "Start on boot" preference
+- Preferred manual launcher (if any)
+
+These settings:
+- Are stored **only on the user's device**
+- Are used **solely** for local functionality and configuration
+- Can be deleted at **any time** via in-app settings or by uninstalling the app
+- **Never transmitted** to The Tor Project or any third party
+- **Not linked to identity** or device information
+
+Note: The list of installed apps and protected apps are necessary for the app’s VPN enforcement logic — to guarantee that all apps are routed over Tor unless explicitly exempted by the user.
+
+## 4. Permissions (Android)
+
+**Tor Browser for Android** currently requires the following permissions:
+
+- `INTERNET` — to connect to the Tor network
+- `WAKE_LOCK` — prevents the device from sleeping during active use (e.g., video playback)
+- `MODIFY_AUDIO_SETTINGS` — required by WebRTC-related components (note: WebRTC is permanently disabled at build time)
+- `HIGH_SAMPLING_RATE_SENSORS` — used for certain JavaScript APIs; timing is throttled by Tor Browser’s privacy protections
+
+These permissions are **not** related to data collection, and are scoped to support functionality inherited from the Firefox (Fenix) base. We regularly review and audit inherited permissions to ensure they do not compromise user privacy or exposure.
+
+**Tor Browser for Android** does **not** request access to:
+
+- Contacts
+- Location
+- Device identifiers (e.g., IMEI, Android ID)
+- External storage or files
+- Phone call logs or SMS data
+- User accounts or login credentials
+
+Access to camera, microphone, or device sensors is not requested by default. However, users may optionally grant these permissions in specific contexts, such as:
+
+- Scanning QR codes using the URL bar
+- Allowing site-specific functionality (e.g., video conferencing)
+
+All such requests are subject to Android’s runtime permission model, users are in control of granting or denying said access, and is limited in scope and durtation.
+
+**TorVPN**
+TorVPN requests the following Android permissions in order to function properly. These are limited to what is strictly necessary for VPN operation, user control, and system integration. No permissions are used for telemetry, user tracking, or personal data collection.
+
+Permissions required:
+- `INTERNET` — to connect to the Tor network and route traffic
+- `BIND_VPN_SERVICE` — to create and maintain secure VPN connections
+- `ACCESS_NETWORK_STATE / ACCESS_WIFI_STATE` — to detect network availability and changes
+- `RECEIVE_BOOT_COMPLETED` — to optionally start TorVPN on device boot (if the user enables “Start on boot”)
+- `QUERY_ALL_PACKAGES` — used locally to display a list of installed apps for per-app routing settings (never transmitted or logged)
+- `WAKE_LOCK` — prevents the device from sleeping during active VPN use
+- `FOREGROUND_SERVICE / FOREGROUND_SERVICE_SYSTEM_EXEMPTED` — to comply with modern Android requirements for long-running VPN services
+- `VIBRATE` — used only for optional in-app notifications (e.g., connection status)
+- `POST_NOTIFICATIONS` — used for connection status notifications when enabled (Android 13+)
+
+These permissions are **not** used to collect, transmit, or share personal data. All permissions are either essential for VPN functionality or provide local-only features controlled by the user. We routinely audit all permissions to ensure they remain aligned with our privacy-preserving principles.
+
+TorVPN does **not** request access to:
+- Contacts
+- Location
+- Camera, microphone, or sensors
+- Device identifiers (e.g. IMEI, Android ID)
+- External storage or files
+- Phone call logs or SMS data
+- User accounts or login credentials
+
+## 5. Data Sharing & Third Parties
+
+- **No user data is shared** with third parties — no advertisers, analytics providers, or others.
+
+- In **Tor Browser for Desktop**, users may manually choose to visit https://check.torproject.org via a link in about:tor to verify their connection. This is optional, user-initiated, and routed over Tor. No identifying information is logged or stored. This check is not performed automatically and is not present on **Android**.
+
+- For **Tor Browser on Desktop**, the application may **anonymously** check for available software updates from Tor Project servers. These update checks:
+    - Check for software updates from Tor Project servers, over the Tor network
+    - Fetch extension updates from Mozilla’s Add-ons service (e.g., for bundled extensions like NoScript)
+    - These update requests are not linked to user identity or device information.
+
+- For **Android apps**, updates are delivered via app distribution platforms (e.g., Google Play) and not directly from Tor Project servers.
+
+- In those cases, when we distribute our applications through Google Play services, our hands are tied and [their terms and policies](https://play.google.com/about/play-terms.html) apply. If you wish to obtain TorVPN from the a no-logging, non-tracking, free and open-source app store, then use F-Droid to do so.
+
+- **Add-ons and extensions**: Users may install additional extensions in **Tor Browser**. These extensions might independently fetch updates or blocklists (e.g., uBlock Origin downloads filter lists). All such requests are routed through the Tor network to preserve anonymity.
+
+- **No syncing or cloud backups** of user activity, configuration, or identity are performed.
+
+## 6. Data Retention & Deletion
+
+- **No persistent personal data is collected or transmitted by Tor Browser**
+
+However, users should be aware of the following cases where some data may persist locally:
+
+- **Bookmarks and downloads** created by users are saved to the local device and are not deleted automatically.
+
+- **Tor State** files necessary for Tor network connectivity (such as guard nodes and consensus info). This data is non-identifying and used only for Tor functionality.
+
+- **Private Browsing Mode (PBM)** behavior:
+
+      On **Android**, PBM is always-on, and prevents local storage of history, cookies, or session data.
+
+      On **Desktop**, PBM is enabled by default, but can be disabled in browser settings. In this case, data such as browsing history, cookies, and cached site data may persist across sessions unless cleared manually.
+
+- **Session Data** (e.g. tabs, site data, cookies, history) is erased when the app is closed (Android), or the user choses "New Identity" or closes the browser (Desktop with PBM enabled)
+
+- **Uninstalling** removes all local data.
+
+## 7. Children’s Privacy
+
+These apps are **not intended for children under 13**. We do not collect **any** data from anyone. If we learn of such data, it will be deleted.
+
+## 8. Security & Anonymity
+
+- All traffic is encrypted and routed through Tor
+- Tor Browser for Desktop and Android includes built-in defenses against tracking and fingerprinting, such as:
+- Uniform user-agent strings
+- Screen size normalization (**Desktop only**)
+- Isolation of website content
+- TorVPN is designed to isolate traffic so there is a different Tor circuit used per app
+- Code is open for public audit
+
+## 9. Changes to This Policy
+
+Material changes will be reflected by:
+
+- Updating the "Effective Date"
+- Publishing an updated policy on this page
+
+## 10. Consent
+
+By using Tor Browser or TorVPN, you agree to this policy. If you do not agree with this policy, please do not use the applications.
+
+## 11. GDPR and Data Protection
+
+The Tor Project is committed to protecting user privacy and supporting the principles of the European Union's General Data Protection Regulation (GDPR).
+
+Because Tor Browser for Desktop and Android do not collect, process, or store personal data — by design and in practice — the GDPR does not apply to these applications.
+
+If you have questions about data protection or our privacy practices, you may contact us at: **frontdesk@torproject.org**.
+
