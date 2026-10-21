@@ -47,7 +47,7 @@ RUN cd "$ANDROID_HOME" && \
 ENV ANDROID_NDK_HOME=/opt/android-sdk/ndk/27.3.13750724 \
     ANDROID_NDK=/opt/android-sdk/ndk/27.3.13750724 \
     LLVM_PREBUILT=/opt/android-sdk/ndk/27.3.13750724/toolchains/llvm/prebuilt/linux-x86_64/bin
-ENV PATH="/opt/android-sdk/cmdline-tools/cmdline-tools/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/ndk/27.3.13750724:/opt/android-sdk/ndk/27.3.13750724/toolchains/llvm/prebuilt/linux-x86_64/bin:${PATH}"
+ENV PATH="/root/.cargo/bin:/opt/android-sdk/cmdline-tools/cmdline-tools/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/ndk/27.3.13750724:/opt/android-sdk/ndk/27.3.13750724/toolchains/llvm/prebuilt/linux-x86_64/bin:${PATH}"
 
 RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CLT}_latest.zip" && \
     echo "${ANDROID_CLT_SHA256}  $ANDROID_HOME/cmdline-tools.zip" | sha256sum --strict --check - && \
