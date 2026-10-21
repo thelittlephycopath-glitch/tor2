@@ -35,7 +35,7 @@ export JAVA_HOME="$ONIONMASQ_JAVA_HOME"
 
 LINE="$(awk '/SOURCE_DATE_EPOCH/ { print NR + 2 "i"; exit }' build-ndk.sh)"
 if [[ -z "$LINE" ]]; then
-  echo "Could not locate SOURCE_DATE_EPOCH in deps/onionmasq/build-ndk.sh" >&2
+  echo "Could not locate SOURCE_DATE_EPOCH in build-ndk.sh" >&2
   exit 1
 fi
 
@@ -54,7 +54,8 @@ cd android/OnionmasqAndroid
 ./gradlew clean
 ./gradlew :onionmasq:build
 ./gradlew :onionmasq:publishLibraryReleasePublicationToMavenLocal
-cd ../../..
+# Return from android/OnionmasqAndroid all the way to the Tor VPN repo root.
+cd ../../../..
 
 export JAVA_HOME="$TORVPN_JAVA_HOME"
 
