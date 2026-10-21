@@ -45,8 +45,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Build pinned Android/Rust toolchain
-        run: docker build --pull --file Containerfile --tag tor2-android-builder .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build pinned Android/Rust toolchain with layer cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          tags: tor2-android-builder:latest
+          load: true
+          pull: true
+          cache-from: type=gha,scope=tor2-toolchain
+          cache-to: type=gha,mode=max,scope=tor2-toolchain
 
       - name: Compile Tor VPN and Onionmasq
         shell: bash
@@ -107,7 +118,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tor2-build-${{ github.run_number }}
-          name: Tor VPN Beta — tor2 build ${{ github.run_number }}
+          name: Tor VPN Beta â tor2 build ${{ github.run_number }}
           body: |
             Community-built debug-signed APKs compiled from the source in this private repository.
 
