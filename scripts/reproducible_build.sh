@@ -67,8 +67,12 @@ fi
 ENFORCE_LOCAL_MAVEN=1 ./gradlew assembleRelease
 mkdir -p build
 cp app/build/outputs/apk/release/app-*-release-unsigned.apk build/
-ENFORCE_LOCAL_MAVEN=1 ./gradlew bundleRelease
-cp app/build/outputs/bundle/release/app-release.aab build/
+if [[ "${BUILD_AAB:-1}" == "1" ]]; then
+  ENFORCE_LOCAL_MAVEN=1 ./gradlew bundleRelease
+  cp app/build/outputs/bundle/release/app-release.aab build/
+else
+  echo "Skipping Android App Bundle because BUILD_AAB=0"
+fi
 
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue

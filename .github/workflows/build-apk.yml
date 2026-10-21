@@ -61,7 +61,7 @@ jobs:
             --volume "${{ runner.temp }}/tor2-cargo:/root/.cargo" \
             --workdir /build/vpn \
             tor2-android-builder \
-            bash scripts/reproducible_build.sh
+            env BUILD_AAB=0 bash scripts/reproducible_build.sh
 
       - name: Sign APKs with an ephemeral debug key and verify signatures
         shell: bash
