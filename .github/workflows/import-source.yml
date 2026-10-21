@@ -1,0 +1,55 @@
+name: Import Tor VPN Beta source
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tor-vpn-source-import
+  cancel-in-progress: false
+
+jobs:
+  import-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tor2 workspace
+        uses: actions/checkout@v4
+
+      - name: Download and unpack upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tor-vpn-source
+          curl --fail --location --retry 3 --retry-all-errors \
+            'https://gitlab.torproject.org/tpo/applications/vpn/-/archive/main/vpn-main.zip' \
+            -o /tmp/tor-vpn-source.zip
+          unzip -q /tmp/tor-vpn-source.zip -d /tmp/tor-vpn-source
+          SRC="$(find /tmp/tor-vpn-source -mindepth 1 -maxdepth 1 -type d -name 'vpn-*' -print -quit)"
+          test -n "$SRC"
+          test -f "$SRC/settings.gradle.kts"
+          echo "TOR_VPN_SRC=$SRC" >> "$GITHUB_ENV"
+
+      - name: Copy source and apply reviewed build-script fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Keep this workflow available after the upstream source is copied over.
+          cp .github/workflows/import-source.yml /tmp/import-source.yml
+          cp -a "$TOR_VPN_SRC"/. .
+          mkdir -p scripts
+          cp .build-fixes/reproducible_build.sh scripts/reproducible_build.sh
+          cp .build-fixes/update-offline-help.sh scripts/update-offline-help.sh
+          cp /tmp/import-source.yml .github/workflows/import-source.yml
+          chmod +x scripts/reproducible_build.sh scripts/update-offline-help.sh
+          bash -n scripts/reproducible_build.sh scripts/update-offline-help.sh
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No source changes to commit.'
+          else
+            git commit -m 'Import Tor VPN Beta source and apply build-script fixes'
+            git push
+          fi
