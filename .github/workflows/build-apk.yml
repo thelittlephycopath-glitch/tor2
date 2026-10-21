@@ -47,8 +47,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      # Retry only recognized transient registry/network errors, not source or
+      # checksum failures, so real defects still fail fast and remain visible.
       - name: Build pinned Android/Rust toolchain
-        run: docker build --pull --file Containerfile --tag tor2-android-builder .
+        shell: bash
+        run: |
+          set -uo pipefail
+          log="${RUNNER_TEMP}/tor2-docker-build.log"
+          for attempt in 1 2 3; do
+            echo "Docker toolchain build attempt ${attempt}/3"
+            if docker build --pull --file Containerfile --tag tor2-android-builder . 2>&1 | tee "${log}"; then
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+            fi
+
+            if grep -Eqi '502 Bad Gateway|503 Service Unavailable|504 Gateway Timeout|429 Too Many Requests|connection reset|TLS handshake timeout|temporary failure|unexpected EOF|i/o timeout' "${log}" && (( attempt < 3 )); then
+              delay=$((attempt * 20))
+              echo "Transient registry/network failure; retrying in ${delay}s." >&2
+              sleep "${delay}"
+              continue
+            fi
+
+            echo "Docker toolchain build failed with exit code ${status}; no further retries." >&2
+            exit "${status}"
+          done
+          exit 1
 
       - name: Compile Tor VPN and Onionmasq
         shell: bash
