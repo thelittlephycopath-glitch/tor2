@@ -118,3 +118,12 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - A small local Kotlin harness passed the isolated parent/child `SupervisorJob` cancellation semantics check: cancelling the child left the parent active, a fresh child was active under that parent, and cancelling the parent cancelled its child. This is **not** a build or test of the Android application or its actual Gradle test suite.
 - Repeated VPN stop/start and service destruction still require runtime/device verification. Native descriptor ownership, Onionmasq startup readiness, and log retention remain open.
 - The GitLab connection has been initiated but is not active yet. Do not call GitLab tools or claim pipeline results until authentication is completed and the connection is confirmed active.
+
+
+## Update — GitHub-only validation workflow and historical build failure (2026-10-22)
+
+- Added `.github/workflows/validate-pr.yml` on the stabilization branch. It is intended to run the pinned container build, app unit tests, ktlint, Android lint, and staging APK build for pull requests, without publishing releases or requiring repository write permissions.
+- Reviewed existing GitHub Actions logs for main commit `42b86026fa984aa22592e4e548aeca8dcd2d5666`. Onionmasq compiled and published to the local Maven repository successfully, but the Tor VPN build failed because it requested `androidx.compose:compose-bom:2026.07.00`, which Gradle could not resolve from Google Maven or Maven Central. The stabilization branch currently pins Compose BOM `2026.06.00`; this is a candidate correction, **not yet confirmed by a successful build on this branch**.
+- Existing workflow runs on main have also failed at earlier steps/commits; no passing run for this stabilization head is available yet.
+- The connector can read workflow runs and job logs but does not expose a workflow-dispatch action. The new workflow file is only on this PR branch, so it has not produced a run in the observed Actions list. Do not treat the workflow's presence as a validation pass.
+- Remaining merge gate: obtain a real run of this branch's validation workflow, fix every failure and rerun, then complete review of native TUN descriptor ownership, Onionmasq readiness semantics, VPN routing/DNS, repeated start/stop, and sensitive connection-log retention. No publishing or merge should occur before that evidence exists.
