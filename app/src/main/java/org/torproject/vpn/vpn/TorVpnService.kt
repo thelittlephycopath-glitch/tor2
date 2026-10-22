@@ -82,7 +82,8 @@ class TorVpnService : VpnService() {
     private val job = SupervisorJob()
     private var collectionJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + job)
-    private var startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
+    private var startCoroutineScope =
+        CoroutineScope(Dispatchers.IO.limitedParallelism(1) + SupervisorJob(job))
     @Volatile private var actionDebouncer = TaskDebouncer()
     private var observer: Observer<OnionmasqEvent>? = null
     private var vpnStateFlow = combine(
@@ -433,7 +434,8 @@ class TorVpnService : VpnService() {
             val fd = builder.establish()
             // stop() cancels this scope; a later start in the same service instance needs a fresh one.
             if (!startCoroutineScope.isActive) {
-                startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
+                startCoroutineScope =
+                    CoroutineScope(Dispatchers.IO.limitedParallelism(1) + SupervisorJob(job))
             }
             val waitCoroutineStarted = CountDownLatch(1)
             val startupJob = startCoroutineScope.launch {
