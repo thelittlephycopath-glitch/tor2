@@ -156,10 +156,10 @@ open class TaskDebouncer(
                         delay(50)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (t: Throwable) {
-                        // on error, release slot
-                        runningType.set(null)
-                        continue
+                    } catch (e: Exception) {
+                        // Keep the consumer alive after ordinary task failures, but do not swallow
+                        // fatal JVM errors such as OutOfMemoryError or LinkageError.
+                        Log.e(TAG, "TaskDebouncer failed while processing queued work", e)
                     } finally {
                         runningType.set(null)
                     }
@@ -203,9 +203,16 @@ open class TaskDebouncer(
         }
         val seq = counter.incrementAndGet()
         val item = QueuedTask(taskId, type, seq, priority, block)
-        latestByType[type] = item
-        queue.offer(item)
-        hasTask.set(true)
-        start()
+        // Atomic per-type replacement prevents a slower producer with an older sequence
+        // from overwriting a newer task after it was already enqueued.
+        latestByType.compute(type) { _, current ->
+            if (current == null || seq > current.seq) item else current
+        }
+        // If a newer producer won the race, this item is stale and need not enter the queue.
+        if (latestByType[type]?.seq == seq) {
+            queue.offer(item)
+            hasTask.set(true)
+            start()
+        }
     }
 }
