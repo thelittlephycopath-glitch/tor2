@@ -421,9 +421,9 @@ class TorVpnService : VpnService() {
                 waitCoroutineStarted.countDown()
                 Log.v(TAG, "service ($taskID): startCoroutineScope - start Onionmasq")
                 try {
-                    OnionMasq.start(fd!!.detachFd(), getBridgeLines())
-                } catch (npe: NullPointerException) {
-                    handleException(npe, "Could not create tun interface fd.", taskID)
+                    val tunInterface = fd
+                        ?: throw IllegalStateException("Android did not establish the VPN interface.")
+                    OnionMasq.start(tunInterface.detachFd(), getBridgeLines())
                 } catch (e: Exception) {
                     handleException(e, "Onionmasq error: ${e.message}", taskID)
                 }
