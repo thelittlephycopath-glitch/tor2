@@ -1,29 +1,23 @@
+# IDE metadata
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/.idea
-/captures
-.externalNativeBuild
-.cxx
+.idea/
+.gradle/
+
+# Local SDK configuration and secrets
 local.properties
-/.idea/compiler.xml
-/.idea/gradle.xml
-/.idea/misc.xml
-/.idea/vcs.xml
-/.idea/.name
-/.idea/codeStyles/codeStyleConfig.xml
-/.idea/codeStyles/Project.xml
+secrets.properties
+
+# Generated build/native output
+**/build/
+.externalNativeBuild/
+.cxx/
+captures/
+bin/
+deps/
+
+# OS files
+.DS_Store
+
+# Generated test resources
 /app/src/main/res/layout/test.xml
 /app/src/main/res/xml/test_scene.xml
-
-/bin/
-/deps/
-secrets.properties

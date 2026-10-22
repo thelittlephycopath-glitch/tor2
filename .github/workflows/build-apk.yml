@@ -15,8 +15,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: tor2-android-build-${{ github.sha }}
-  cancel-in-progress: false
+  group: tor2-android-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/tor2-gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties', '**/*.toml', 'settings.gradle.kts', 'gradle.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
@@ -86,15 +86,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git"
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git" "${RUNNER_TEMP}/tor2-maven/repository"
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
             --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
             --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
             --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
+            --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
             --workdir /build/vpn \
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh
+
+      - name: Run unit tests, ktlint, Android lint, and staging build
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
+
+      - name: Upload staging APKs for inspection
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tor2-staging-apks
+          path: app/build/outputs/apk/staging/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Sign APKs with an ephemeral debug key and verify signatures
         shell: bash

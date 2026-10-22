@@ -3,22 +3,22 @@
 
 *WARNING* This is experimental software, do not rely on it for anything other than testing and development. It may leak information and should not be relied on for anything sensitive!
 
-# Install debug version
+# Download and install a community-built APK
 
-A debug version of the app is built in each CI run, you can install it on your phone for debugging/development purposes.
+**Experimental software:** this app may leak information. Use it only for testing, not sensitive activity.
 
-## Downloading the apk
+## Downloading the APK
 
-You can download the latest successfully built package from the [Gitlab package archive](https://gitlab.torproject.org/tpo/applications/vpn/-/packages). Once you have downloaded the apk, you will need to install it on your phone, please follow the [process for installation on your phone](#install-package-on-phone) to do so.
+1. Open the [Tor VPN Beta APK workflow](https://github.com/thelittlephycopath-glitch/tor2/actions/workflows/build-apk.yml).
+2. Open the latest **successful** “Build Tor VPN Beta APK” run.
+3. Under **Artifacts**, download and extract `tor2-debug-signed-apks`.
+4. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
 
-More recent builds can be found in the [pipeline](https://gitlab.torproject.org/tpo/applications/vpn/-/pipelines) as well. Find a passing build and download the artifact. To install:
+These are community-built APKs signed with a temporary debug key, not official Tor Project releases. Each build uses a new key, so upgrading from an earlier community build may require uninstalling it first. Do not install these over an official Tor-signed version unless you understand the consequences.
 
-- Extract the archive
-- Run `adb install app/build/outputs/apk/universal/staging/app-universal-staging.apk`
+## Install with ADB
 
-## Install
-
-In order to install this unsigned package, you will need to have the command-line tool `adb` installed on your computer. On a Debian, or Debian-derived machine, you can `sudo apt install adb` to install it. If using something else, [follow a tutorial](https://www.xda-developers.com/install-adb-windows-macos-linux/) to get it installed.
+For computer-based installation, install Android platform tools and enable USB debugging on the phone. The command is `adb install <path-to-downloaded-apk.apk>`. On a phone, you can usually install by opening the APK directly after allowing installation from your chosen file manager.
 
 ## Enable Developer mode
 On your Android device, you will need to have `Developer Mode` enabled. To do this, you have to follow a little bit of a secret pathway:
