@@ -25,14 +25,17 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo"
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git"
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
             --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
-            --volume "${RUNNER_TEMP}/tor2-cargo:/root/.cargo" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
             --workdir /build/vpn \
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh 2>&1 | tee "${RUNNER_TEMP}/tor2-compile.log"
+          status=${PIPESTATUS[0]}
+          exit "$status"
 
       - name: Upload build diagnostics
         if: always()

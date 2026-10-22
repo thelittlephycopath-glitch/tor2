@@ -27,50 +27,46 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      # Persist Gradle/Cargo caches between runs. Cache keys include dependency
-      # and toolchain inputs, so dependency changes naturally create a new cache.
+      # Persist only downloaded dependencies. Never mount all of /root/.cargo:
+      # that directory also contains rustup/cargo binaries installed in Containerfile.
       - name: Restore Gradle cache
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/tor2-gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties', '**/gradle/libs.versions.toml') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Restore Cargo cache
+      - name: Restore Cargo dependency cache
         uses: actions/cache@v4
         with:
           path: |
             ${{ runner.temp }}/tor2-cargo/registry
             ${{ runner.temp }}/tor2-cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'scripts/oni**', 'scripts/reproducible_build.sh') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'scripts/oni*', 'scripts/reproducible_build.sh') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # Retry only recognized transient registry/network errors, not source or
-      # checksum failures, so real defects still fail fast and remain visible.
       - name: Build pinned Android/Rust toolchain
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
           log="${RUNNER_TEMP}/tor2-docker-build.log"
           for attempt in 1 2 3; do
             echo "Docker toolchain build attempt ${attempt}/3"
-            if docker build --pull --file Containerfile --tag tor2-android-builder . 2>&1 | tee "${log}"; then
+            if docker build --pull --file Containerfile --tag tor2-android-builder . 2>&1 | tee "$log"; then
               exit 0
             else
               status=${PIPESTATUS[0]}
             fi
-
-            if grep -Eqi '502 Bad Gateway|503 Service Unavailable|504 Gateway Timeout|429 Too Many Requests|connection reset|TLS handshake timeout|temporary failure|unexpected EOF|i/o timeout' "${log}" && (( attempt < 3 )); then
+            if grep -Eqi '502 Bad Gateway|503 Service Unavailable|504 Gateway Timeout|429 Too Many Requests|connection reset|TLS handshake timeout|temporary failure|unexpected EOF|i/o timeout' "$log" && (( attempt < 3 )); then
               delay=$((attempt * 20))
               echo "Transient registry/network failure; retrying in ${delay}s." >&2
-              sleep "${delay}"
+              sleep "$delay"
               continue
             fi
-
-            echo "Docker toolchain build failed with exit code ${status}; no further retries." >&2
-            exit "${status}"
+            echo "Docker toolchain build failed (exit ${status})." >&2
+            exit "$status"
           done
           exit 1
 
@@ -78,11 +74,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "${{ runner.temp }}/tor2-gradle" "${{ runner.temp }}/tor2-cargo"
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git"
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
-            --volume "${{ runner.temp }}/tor2-gradle:/root/.gradle" \
-            --volume "${{ runner.temp }}/tor2-cargo:/root/.cargo" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
             --workdir /build/vpn \
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh
@@ -135,9 +132,9 @@ jobs:
           tag_name: tor2-build-${{ github.run_number }}
           name: Tor VPN Beta - tor2 build ${{ github.run_number }}
           body: |
-            Community-built debug-signed APKs compiled from the source in this private repository.
+            Community-built debug-signed APKs compiled from this private repository.
 
             These are not official Tor Project releases and are not signed with Tor's release key.
-            This is experimental VPN software. Do not rely on this build for sensitive activity.
+            This VPN software is experimental; do not rely on this build for sensitive activity.
           files: dist/*.apk
           fail_on_unmatched_files: true
