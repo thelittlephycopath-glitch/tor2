@@ -13,21 +13,33 @@ class TaskDebouncerTest {
     @Test
     fun newestPendingTaskOfSameTypeWins() {
         val debouncer = TaskDebouncer(pollTimeoutMs = 20L)
+        val blockerStarted = CountDownLatch(1)
+        val releaseBlocker = CountDownLatch(1)
         val executed = Collections.synchronizedList(mutableListOf<Int>())
         val finished = CountDownLatch(1)
 
         try {
+            // Hold the single consumer so every refresh remains pending until the final enqueue.
+            debouncer.enqueueTask(taskId = -1, type = "blocker") {
+                blockerStarted.countDown()
+                check(releaseBlocker.await(5, TimeUnit.SECONDS)) {
+                    "Timed out waiting to release blocker"
+                }
+            }
+            assertTrue("Blocking task should start", blockerStarted.await(5, TimeUnit.SECONDS))
+
             repeat(40) { id ->
                 debouncer.enqueueTask(taskId = id, type = "refresh") {
                     executed.add(id)
                     finished.countDown()
                 }
             }
+            releaseBlocker.countDown()
 
             assertTrue("Latest task should execute", finished.await(5, TimeUnit.SECONDS))
-            Thread.sleep(100)
-            assertEquals(listOf(39), executed.toList())
+            assertEquals("Only the newest pending item should run", listOf(39), executed.toList())
         } finally {
+            releaseBlocker.countDown()
             debouncer.cancel()
         }
     }
