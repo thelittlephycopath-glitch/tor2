@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: tor2-pr-validation-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: tor2-pr-validation-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   validate:
