@@ -20,6 +20,8 @@ import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.torproject.onionmasq.ConnectivityHandler
@@ -79,8 +82,9 @@ class TorVpnService : VpnService() {
     private val job = SupervisorJob()
     private var collectionJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + job)
-    private var startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
-    private var actionDebouncer = TaskDebouncer()
+    private var startCoroutineScope =
+        CoroutineScope(Dispatchers.IO.limitedParallelism(1) + SupervisorJob(job))
+    @Volatile private var actionDebouncer = TaskDebouncer()
     private var observer: Observer<OnionmasqEvent>? = null
     private var vpnStateFlow = combine(
         VpnStatusObservable.statusLiveData,
@@ -100,9 +104,7 @@ class TorVpnService : VpnService() {
     private val mainHandler: Handler by lazy {
         Handler(mainLooper)
     }
-    private val timer: Timer by lazy {
-        Timer()
-    }
+    private var timer: Timer? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "service: onBind")
@@ -210,9 +212,18 @@ class TorVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
         Log.d(TAG, "service: onDestroy")
+        // TaskDebouncer owns an independent scope, so cancelling the service job alone
+        // does not terminate its consumer or discard queued callbacks.
+        actionDebouncer.cancel()
+        startCoroutineScope.cancel()
+        timer?.cancel()
+        timer = null
+        removeObservers()
+        collectionJob?.cancel()
+        job.cancel()
+        super.onDestroy()
+
         notificationManager.cancelNotifications()
         val errors = listOf(ConnectionState.CONNECTION_ERROR, ConnectionState.PRIVATE_DNS_ERROR)
         if (VpnStatusObservable.statusLiveData.value !in errors) {
@@ -226,11 +237,14 @@ class TorVpnService : VpnService() {
         Log.v(TAG, "service ($taskID): stopping")
         VpnStatusObservable.update(state)
         actionDebouncer.cancel()
+        // TaskDebouncer.cancel() is terminal; allow a later service start to enqueue work.
+        actionDebouncer = TaskDebouncer()
         startCoroutineScope.cancel()
         OnionMasq.stop()
         removeObservers()
         logHelper.stopLog()
-        timer.cancel()
+        timer?.cancel()
+        timer = null
         VpnStatusObservable.reset()
         try {
             OnionMasq.unbindVPNService()
@@ -399,7 +413,9 @@ class TorVpnService : VpnService() {
                 logHelper.readLog()
                 createObservers()
                 startListeningObservers()
-                timer.schedule(
+                timer?.cancel()
+                timer = Timer()
+                timer?.schedule(
                     object : TimerTask() {
                         override fun run() {
                             VpnStatusObservable.updateDataUsage(
@@ -416,16 +432,44 @@ class TorVpnService : VpnService() {
 
             val builder = prepareVpnProfile()
             val fd = builder.establish()
+            // stop() cancels this scope; a later start in the same service instance needs a fresh one.
+            if (!startCoroutineScope.isActive) {
+                startCoroutineScope =
+                    CoroutineScope(Dispatchers.IO.limitedParallelism(1) + SupervisorJob(job))
+            }
             val waitCoroutineStarted = CountDownLatch(1)
-            startCoroutineScope.launch {
+            val startupJob = startCoroutineScope.launch {
                 waitCoroutineStarted.countDown()
                 Log.v(TAG, "service ($taskID): startCoroutineScope - start Onionmasq")
+                val tunInterface = fd
+                if (tunInterface == null) {
+                    handleException(
+                        IllegalStateException("Android did not establish the VPN interface."),
+                        "Onionmasq error: Android did not establish the VPN interface.",
+                        taskID
+                    )
+                    return@launch
+                }
+                val descriptorDetached = AtomicBoolean(false)
                 try {
-                    OnionMasq.start(fd!!.detachFd(), getBridgeLines())
-                } catch (npe: NullPointerException) {
-                    handleException(npe, "Could not create tun interface fd.", taskID)
+                    val nativeFd = tunInterface.detachFd()
+                    descriptorDetached.set(true)
+                    OnionMasq.start(nativeFd, getBridgeLines())
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     handleException(e, "Onionmasq error: ${e.message}", taskID)
+                } finally {
+                    // If ownership was not transferred to native code, close the Android descriptor.
+                    if (!descriptorDetached.get()) {
+                        runCatching { tunInterface.close() }
+                    }
+                }
+            }
+            // Also cover cancellation before the coroutine body starts; its finally block would not run.
+            startupJob.invokeOnCompletion {
+                if (fd != null && !fd.isClosed) {
+                    runCatching { fd.close() }
                 }
             }
             Log.v(TAG, "service ($taskID): await startCoroutineScope")

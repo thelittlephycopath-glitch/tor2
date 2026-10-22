@@ -1,0 +1,70 @@
+name: Validate Tor VPN PR
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tor2-pr-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Build, unit tests, lint, and staging APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Free unused preinstalled runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/local/lib/android/sdk /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          docker system prune --all --force || true
+          df -h /
+
+      - name: Build pinned Android/Rust toolchain
+        shell: bash
+        run: docker build --pull --file Containerfile --tag tor2-android-builder .
+
+      - name: Build pinned Onionmasq and release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git"
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            env BUILD_AAB=0 bash scripts/reproducible_build.sh
+
+      - name: Run unit tests, ktlint, Android lint, and staging build
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
+
+      - name: Upload staging APKs for inspection
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tor2-staging-apks
+          path: app/build/outputs/apk/staging/**/*.apk
+          if-no-files-found: warn
+          retention-days: 7

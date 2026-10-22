@@ -97,6 +97,7 @@ open class TaskDebouncer(
     // Signal that a producer has enqueued work; used to avoid lost-wakeup on consumer hibernate/exit
     private val hasTask = AtomicBoolean(false)
     private val isCancelled = AtomicBoolean(false)
+    private val lifecycleLock = Any()
 
     // Start consumer job.
     private fun start() {
@@ -131,24 +132,43 @@ open class TaskDebouncer(
                             break
                         }
 
-                        // stale check: if map has no entry or doesn't match this item, skip
-                        val latest = latestByType[polled.type]
-                        if (latest == null || latest.seq != polled.seq) {
-                            Log.d(TAG, "TaskDebouncer - drop ${polled.id}")
-                            continue
+                        // Validate and claim under the same lock used by enqueueTask().
+                        // Otherwise a producer can replace latestByType after the stale check
+                        // but before this consumer claims the slot, allowing an obsolete item
+                        // to run even though a newer item was already pending.
+                        val claimResult = synchronized(lifecycleLock) {
+                            if (isCancelled.get()) {
+                                0
+                            } else {
+                                val latest = latestByType[polled.type]
+                                if (latest == null || latest.seq != polled.seq) {
+                                    0
+                                } else if (!runningType.compareAndSet(null, polled.type)) {
+                                    // Preserve the newest pending item if the slot is unexpectedly busy.
+                                    if (latestByType[polled.type]?.seq == polled.seq) {
+                                        queue.offer(polled)
+                                    }
+                                    2
+                                } else {
+                                    // The lock makes this removal and the latest-item check one
+                                    // atomic claim relative to concurrent producers.
+                                    latestByType.remove(polled.type, polled)
+                                    1
+                                }
+                            }
                         }
 
-                        // Try to claim running slot for this type
-                        if (!runningType.compareAndSet(null, polled.type)) {
-                            // slot occupied: re-insert (it should still be latest) and yield
-                            latestByType[polled.type] = polled
-                            queue.offer(polled)
-                            // short suspend to yield to current runner and avoid immediate retry
-                            delay(50)
-                            continue
+                        when (claimResult) {
+                            0 -> {
+                                Log.d(TAG, "TaskDebouncer - drop stale/cancelled item ${polled.id}")
+                                continue
+                            }
+                            2 -> {
+                                // Yield if the single-running-task invariant is unexpectedly violated.
+                                delay(50)
+                                continue
+                            }
                         }
-
-                        latestByType.remove(polled.type, polled)
 
                         ensureActive()
                         process(polled)
@@ -156,10 +176,10 @@ open class TaskDebouncer(
                         delay(50)
                     } catch (e: CancellationException) {
                         throw e
-                    } catch (t: Throwable) {
-                        // on error, release slot
-                        runningType.set(null)
-                        continue
+                    } catch (e: Exception) {
+                        // Keep the consumer alive after ordinary task failures, but do not swallow
+                        // fatal JVM errors such as OutOfMemoryError or LinkageError.
+                        Log.e(TAG, "TaskDebouncer failed while processing queued work", e)
                     } finally {
                         runningType.set(null)
                     }
@@ -173,13 +193,16 @@ open class TaskDebouncer(
     // Cancel TaskDebouncer. Once cancelled, all newly enqueued tasks are ignored and not yet started
     // tasks are dropped.
     fun cancel() {
-        Log.d(TAG, "stopping TaskDebouncer")
-        isCancelled.set(true)
-        consumerJob?.cancel()
-        consumerJob = null
-        queue.clear()
-        runningType.set(null)
-        latestByType.clear()
+        synchronized(lifecycleLock) {
+            Log.d(TAG, "stopping TaskDebouncer")
+            if (!isCancelled.compareAndSet(false, true)) return
+            consumerJob?.cancel()
+            consumerJob = null
+            queue.clear()
+            hasTask.set(false)
+            runningType.set(null)
+            latestByType.clear()
+        }
     }
 
     open fun process(item: QueuedTask) {
@@ -197,15 +220,24 @@ open class TaskDebouncer(
         priority: Priority = Priority.MEDIUM,
         block: () -> Unit
     ) {
-        if (isCancelled.get()) {
-            Log.d(TAG, "immediately dropping enqueued task $taskId")
-            return
+        synchronized(lifecycleLock) {
+            if (isCancelled.get()) {
+                Log.d(TAG, "immediately dropping enqueued task $taskId")
+                return
+            }
+            val seq = counter.incrementAndGet()
+            val item = QueuedTask(taskId, type, seq, priority, block)
+            // Atomic per-type replacement prevents a slower producer with an older sequence
+            // from overwriting a newer task after it was already enqueued.
+            latestByType.compute(type) { _, current ->
+                if (current == null || seq > current.seq) item else current
+            }
+            // If a newer producer won the race, this item is stale and need not enter the queue.
+            if (latestByType[type]?.seq == seq) {
+                queue.offer(item)
+                hasTask.set(true)
+                start()
+            }
         }
-        val seq = counter.incrementAndGet()
-        val item = QueuedTask(taskId, type, seq, priority, block)
-        latestByType[type] = item
-        queue.offer(item)
-        hasTask.set(true)
-        start()
     }
 }

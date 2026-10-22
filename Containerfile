@@ -1,9 +1,9 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
 # Use a stable absolute SDK path; PWD is not guaranteed during ENV expansion.
-# Use the published stable Android 16 SDK; API 37 is not exposed by sdkmanager in this build image yet.
+# Install Android 17/API 37 for app compilation; Onionmasq remains on API 36.
 ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_COMPILE_SDK=36 \
+    ANDROID_COMPILE_SDK=37 \
     ANDROID_BUILD_TOOLS=36.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
