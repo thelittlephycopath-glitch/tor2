@@ -85,3 +85,5 @@ A release is not considered ready until:
 - Recreated the startup coroutine scope when it is no longer active and made the usage timer recreatable after cancellation (commit `87550e8ff92ad2e9b255d0fe1363614b43ff724a`).
 - Source review only. No associated GitHub Actions run or status check was returned for the latest commit. Compilation, start/stop/start behavior, descriptor cleanup, and device-level routing/leak tests remain unverified.
 - Next: inspect startup/stop concurrency and TUN descriptor ownership; then establish an actionable build/test signal before making broader routing or performance changes.
+
+- Follow-up source review found `TaskDebouncer.cancel()` permanently marks its instance cancelled, while `TorVpnService` retained that instance as a field. The service now recreates the debouncer after stop so a later start can enqueue work (commit `b73c540b1d3c6a767cc9d33d1e476e68c0d5671c`). Concurrent start/stop stress tests are still required; the field is volatile, but this is not a substitute for runtime race testing.
