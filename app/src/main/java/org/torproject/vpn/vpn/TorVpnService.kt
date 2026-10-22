@@ -20,6 +20,7 @@ import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -426,7 +427,7 @@ class TorVpnService : VpnService() {
                 startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
             }
             val waitCoroutineStarted = CountDownLatch(1)
-            startCoroutineScope.launch {
+            val startupJob = startCoroutineScope.launch {
                 waitCoroutineStarted.countDown()
                 Log.v(TAG, "service ($taskID): startCoroutineScope - start Onionmasq")
                 val tunInterface = fd
@@ -438,10 +439,10 @@ class TorVpnService : VpnService() {
                     )
                     return@launch
                 }
-                var descriptorDetached = false
+                val descriptorDetached = AtomicBoolean(false)
                 try {
                     val nativeFd = tunInterface.detachFd()
-                    descriptorDetached = true
+                    descriptorDetached.set(true)
                     OnionMasq.start(nativeFd, getBridgeLines())
                 } catch (e: CancellationException) {
                     throw e
@@ -449,9 +450,15 @@ class TorVpnService : VpnService() {
                     handleException(e, "Onionmasq error: ${e.message}", taskID)
                 } finally {
                     // If ownership was not transferred to native code, close the Android descriptor.
-                    if (!descriptorDetached) {
+                    if (!descriptorDetached.get()) {
                         runCatching { tunInterface.close() }
                     }
+                }
+            }
+            // Also cover cancellation before the coroutine body starts; its finally block would not run.
+            startupJob.invokeOnCompletion {
+                if (fd != null && !fd.isClosed) {
+                    runCatching { fd.close() }
                 }
             }
             Log.v(TAG, "service ($taskID): await startCoroutineScope")
