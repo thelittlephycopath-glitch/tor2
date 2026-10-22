@@ -9,7 +9,6 @@ import android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
 import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,19 +16,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberContainedSearchBarState
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -98,17 +95,8 @@ fun ScreenContent(
     onNavigateUp: () -> Unit = {},
     onNavigateToAppDetail: (packageName: String) -> Unit = {}
 ) {
-    val searchBarState = rememberContainedSearchBarState(
-        initialValue = SearchBarValue.Expanded,
-        animationSpecForCollapse = snap()
-    )
-
     // For clearing focus when search button is tapped
     var view: View? by remember { mutableStateOf(null) }
-
-    LaunchedEffect(key1 = searchBarState.targetValue) {
-        if (searchBarState.targetValue == SearchBarValue.Collapsed) onNavigateUp()
-    }
 
     fun onRequestSearch(query: String) {
         view?.clearFocus()
@@ -131,15 +119,17 @@ fun ScreenContent(
         }
     }
 
-    val appBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(
-        searchBarColors = SearchBarDefaults.containedColors(state = searchBarState)
-    )
-    val inputField = @Composable {
-        SearchBarDefaults.InputField(
-            colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
-            searchBarState = searchBarState,
-            textFieldState = queryState,
-            onSearch = { query -> onRequestSearch(query) },
+    val currentView = LocalView.current
+    SideEffect { view = currentView }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TextField(
+            value = queryState.text.toString(),
+            onValueChange = { value ->
+                queryState.edit { replace(0, length, value) }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
             placeholder = {
                 Text(
                     text = stringResource(R.string.search_hint),
@@ -150,7 +140,6 @@ fun ScreenContent(
             leadingIcon = {
                 IconButton(onClick = onNavigateUp) {
                     Icon(
-                        // This is due to overriding LocalContentColor above
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         painter = painterResource(R.drawable.ic_arrow_left),
                         contentDescription = stringResource(R.string.accessibility_back_button)
@@ -165,30 +154,18 @@ fun ScreenContent(
                             contentDescription = stringResource(R.string.action_clear)
                         )
                     }
-                } else {
-                    if (state.isVoiceSearchAvailable) {
-                        IconButton(onClick = ::onRequestVoiceSearch) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_mic),
-                                contentDescription = stringResource(R.string.voice_recognition)
-                            )
-                        }
+                } else if (state.isVoiceSearchAvailable) {
+                    IconButton(onClick = ::onRequestVoiceSearch) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_mic),
+                            contentDescription = stringResource(R.string.voice_recognition)
+                        )
                     }
                 }
             }
         )
-    }
-
-    ExpandedFullScreenContainedSearchBar(
-        state = searchBarState,
-        inputField = inputField,
-        colors = appBarWithSearchColors.searchBarColors.copy(
-            containerColor = MaterialTheme.colorScheme.background
-        )
-    ) {
-        val currentView = LocalView.current
-        SideEffect { view = currentView }
-
+        Box(modifier = Modifier.weight(1f)) {
+        when {
         when {
             queryState.text.isBlank() -> {
                 // We aren't searching for anything but have past search queries
@@ -299,6 +276,7 @@ fun ScreenContent(
                     }
                 }
             }
+        }
         }
     }
 }
