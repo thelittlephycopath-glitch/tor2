@@ -102,3 +102,10 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - The local container cannot resolve GitHub to clone this private repository, and no Gradle executable or Android SDK is configured in this environment. A complete repository build and the actual project test task therefore remain unavailable here. Do not represent a synthetic or source-only check as a passing project test.
 - The repository's GitLab `publish` job has rules for tags and commits to the default branch. A merge into `main` can therefore cause the configured package-upload job to run in the target project's pipeline. Ensure the validation/merge plan accounts for that side effect.
 - The merge gate remains closed pending real CI output for dependency resolution, `ktlintCheck`, `lintDebug`, `:app:testDebug`, and `assembleStaging`, plus the documented descriptor ownership/startup/device review. Do not run or enable publishing merely to validate the changes.
+
+
+## Update — deterministic newest-pending regression setup (2026-10-22)
+
+- Commit `1dc1bd726bac6a5236e7f4e81cd10cdbb12b5c6a` changes `newestPendingTaskOfSameTypeWins()` to block the consumer with latches while all 40 same-type tasks are enqueued, then release it and assert that only task 39 executes.
+- This removes reliance on the initial debounce delay and a fixed post-execution sleep for that test. It improves determinism but is **not an executed test result**.
+- Branch comparison, CI status, and GitHub Actions workflow queries still need to be refreshed after this commit. Merge remains blocked until real project CI and native/device checks produce evidence.
