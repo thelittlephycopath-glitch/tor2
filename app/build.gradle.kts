@@ -22,7 +22,7 @@ kotlin {
 }
 
 android {
-    compileSdk = 37
+    compileSdk = 36
     namespace = "org.torproject.vpn"
 
     defaultConfig {
