@@ -1,6 +1,7 @@
 package org.torproject.vpn.ui.appdetail
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -222,8 +223,8 @@ fun ScreenContent(
         }
 
         ListItem(
-            onClick = { onRoutingToggled(!app.isRoutingEnabled) },
-            content = {
+            modifier = Modifier.clickable { onRoutingToggled(!app.isRoutingEnabled) },
+            headlineContent = {
                 Text(text = stringResource(R.string.action_protect_this_app))
             },
             trailingContent = {

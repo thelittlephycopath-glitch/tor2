@@ -1,6 +1,6 @@
 package org.torproject.vpn.ui.theme
 
-import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -47,15 +47,37 @@ private val colorScheme = darkColorScheme(
     surfaceContainerHighest = surfaceContainerHighest
 )
 
+private val appFontFamily = FontFamily(Font(R.font.inter_variable))
+
+private val appTypography = Typography().let { type ->
+    type.copy(
+        displayLarge = type.displayLarge.copy(fontFamily = appFontFamily),
+        displayMedium = type.displayMedium.copy(fontFamily = appFontFamily),
+        displaySmall = type.displaySmall.copy(fontFamily = appFontFamily),
+        headlineLarge = type.headlineLarge.copy(fontFamily = appFontFamily),
+        headlineMedium = type.headlineMedium.copy(fontFamily = appFontFamily),
+        headlineSmall = type.headlineSmall.copy(fontFamily = appFontFamily),
+        titleLarge = type.titleLarge.copy(fontFamily = appFontFamily),
+        titleMedium = type.titleMedium.copy(fontFamily = appFontFamily),
+        titleSmall = type.titleSmall.copy(fontFamily = appFontFamily),
+        bodyLarge = type.bodyLarge.copy(fontFamily = appFontFamily),
+        bodyMedium = type.bodyMedium.copy(fontFamily = appFontFamily),
+        bodySmall = type.bodySmall.copy(fontFamily = appFontFamily),
+        labelLarge = type.labelLarge.copy(fontFamily = appFontFamily),
+        labelMedium = type.labelMedium.copy(fontFamily = appFontFamily),
+        labelSmall = type.labelSmall.copy(fontFamily = appFontFamily)
+    )
+}
+
 /**
  * Default app theme for TorVPN
  * @param content Composable content to show to the user
  */
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
-    MaterialExpressiveTheme(
+    MaterialTheme(
         colorScheme = colorScheme,
-        content = content,
-        typography = Typography(fontFamily = FontFamily(Font(R.font.inter_variable)))
+        typography = appTypography,
+        content = content
     )
 }

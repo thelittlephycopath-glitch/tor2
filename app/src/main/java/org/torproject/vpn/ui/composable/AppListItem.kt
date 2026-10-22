@@ -1,6 +1,7 @@
 package org.torproject.vpn.ui.composable
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -47,9 +48,9 @@ fun AppListItem(
     ListItem(
         modifier = modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min),
-        onClick = onClick,
-        content = {
+            .height(IntrinsicSize.Min)
+            .clickable(onClick = onClick),
+        headlineContent = {
             Text(
                 text = app.name,
                 style = MaterialTheme.typography.bodyLarge,

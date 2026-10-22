@@ -1,10 +1,12 @@
 package org.torproject.vpn.ui.composable
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBar as MaterialTopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,10 +31,14 @@ fun TopAppBar(
     onNavigateUp: (() -> Unit)? = null,
     actions: @Composable (RowScope.() -> Unit) = {}
 ) {
-    TopAppBar(
+    MaterialTopAppBar(
         modifier = modifier,
-        title = { if (title != null) Text(text = title) },
-        subtitle = { if (subtitle != null) Text(text = subtitle) },
+        title = {
+            Column {
+                title?.let { Text(text = it) }
+                subtitle?.let { Text(text = it, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
         navigationIcon = {
             if (onNavigateUp != null) {
                 IconButton(onClick = onNavigateUp) {

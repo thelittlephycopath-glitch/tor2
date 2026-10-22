@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -199,21 +200,23 @@ fun ScreenContent(
 
                         state.recentQueries.forEach { query ->
                             ListItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onRequestSearch(query) },
                                 leadingContent = {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_history),
                                         contentDescription = null
                                     )
                                 },
-                                content = {
+                                headlineContent = {
                                     Text(
                                         text = query,
                                         style = MaterialTheme.typography.bodyLarge,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                },
-                                onClick = { onRequestSearch(query) }
+                                }
                             )
                         }
 

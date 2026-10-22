@@ -40,7 +40,6 @@ fun ExitListItem(
                 onClick = onClick,
                 role = Role.RadioButton
             ),
-        onClick = onClick,
         leadingContent = {
             Image(
                 modifier = Modifier.requiredSize(iconSizeBig),
@@ -58,7 +57,7 @@ fun ExitListItem(
                 )
             }
         },
-        content = {
+        headlineContent = {
             Text(
                 text = when (country) {
                     Country.RANDOM -> stringResource(R.string.exit_location_automatic)

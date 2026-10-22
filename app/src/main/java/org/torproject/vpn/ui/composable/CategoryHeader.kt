@@ -1,5 +1,6 @@
 package org.torproject.vpn.ui.composable
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,8 +46,10 @@ fun CategoryHeader(
 
         if (canExpand) {
             ListItem(
-                onClick = { onExpand(!isExpanded) },
-                content = {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onExpand(!isExpanded) },
+                headlineContent = {
                     Text(
                         text = if (isExpanded) {
                             stringResource(R.string.app_routing_hide_apps, listSize)

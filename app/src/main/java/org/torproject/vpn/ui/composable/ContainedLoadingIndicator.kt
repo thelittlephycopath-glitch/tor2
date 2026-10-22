@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +25,7 @@ fun ContainedLoadingIndicator(modifier: Modifier = Modifier) {
             .padding(spacingSizeSmall),
         contentAlignment = Alignment.Center
     ) {
-        ContainedLoadingIndicator(
+        CircularProgressIndicator(
             modifier = Modifier.requiredSize(appIconSizeMDPI)
         )
     }
