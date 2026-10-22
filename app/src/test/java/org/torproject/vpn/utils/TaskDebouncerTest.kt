@@ -33,24 +33,28 @@ class TaskDebouncerTest {
     }
 
     @Test
-    fun concurrentProducersKeepOnePendingTaskPerType() {
+    fun concurrentProducersKeepOnlyNewestPendingTaskPerType() {
         val debouncer = TaskDebouncer(pollTimeoutMs = 20L)
-        val start = CountDownLatch(1)
+        val blockerStarted = CountDownLatch(1)
+        val releaseBlocker = CountDownLatch(1)
         val producersDone = CountDownLatch(4)
-        val executed = AtomicInteger(0)
+        val executedIds = Collections.synchronizedList(mutableListOf<Int>())
         val failure = AtomicReference<Throwable?>(null)
 
         try {
+            debouncer.enqueueTask(taskId = -1, type = "blocker") {
+                blockerStarted.countDown()
+                check(releaseBlocker.await(5, TimeUnit.SECONDS)) { "Timed out waiting to release blocker" }
+            }
+            assertTrue("Blocking task should start", blockerStarted.await(5, TimeUnit.SECONDS))
+
             repeat(4) { producer ->
                 Thread {
                     try {
-                        start.await()
                         repeat(20) { index ->
-                            debouncer.enqueueTask(
-                                taskId = producer * 20 + index,
-                                type = "same-type"
-                            ) {
-                                executed.incrementAndGet()
+                            val id = producer * 20 + index
+                            debouncer.enqueueTask(taskId = id, type = "same-type") {
+                                executedIds.add(id)
                             }
                         }
                     } catch (t: Throwable) {
@@ -61,12 +65,18 @@ class TaskDebouncerTest {
                 }.start()
             }
 
-            start.countDown()
             assertTrue("Producers should finish", producersDone.await(5, TimeUnit.SECONDS))
-            // The debouncer delays its first drain, so the concurrent submissions settle first.
-            Thread.sleep(400)
             assertEquals(null, failure.get())
-            assertEquals(1, executed.get())
+        } finally {
+            releaseBlocker.countDown()
+        }
+
+        try {
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+            while (executedIds.isEmpty() && System.nanoTime() < deadline) {
+                Thread.sleep(10)
+            }
+            assertEquals("Only the newest pending task should execute", 1, executedIds.size)
         } finally {
             debouncer.cancel()
         }
