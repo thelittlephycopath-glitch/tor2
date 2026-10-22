@@ -76,3 +76,12 @@ A release is not considered ready until:
 - sensitive logging and permissions have been reviewed;
 - build provenance, checksum, signing status, and limitations are documented;
 - unresolved high-severity findings are explicitly documented and block a production-security claim.
+
+## Iteration log
+
+### 2026-10-22 — VPN service lifecycle source review
+
+- Added an explicit null check for `Builder.establish()` before detaching the TUN file descriptor (commit `25bf5fe0cd2ad39c1794069ba0d5061d105beb80`).
+- Recreated the startup coroutine scope when it is no longer active and made the usage timer recreatable after cancellation (commit `87550e8ff92ad2e9b255d0fe1363614b43ff724a`).
+- Source review only. No associated GitHub Actions run or status check was returned for the latest commit. Compilation, start/stop/start behavior, descriptor cleanup, and device-level routing/leak tests remain unverified.
+- Next: inspect startup/stop concurrency and TUN descriptor ownership; then establish an actionable build/test signal before making broader routing or performance changes.
