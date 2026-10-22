@@ -3,8 +3,8 @@ androidGradlePlugin = "9.4.0"
 kotlin = "2.4.10"
 kotlinCoroutines = "1.11.0"
 constraintlayout = "2.2.2"
-composeBom = "2026.10.00"
-composeMaterial = "1.4.0"
+composeBom = "2026.09.00"
+composeMaterial = "1.5.0-beta02"
 androidTest = "1.7.0"
 espressoVersion = "3.7.0"
 ksp = "2.3.11"
@@ -58,7 +58,7 @@ androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = 
 androidx-compose-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-compose-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 
 # Navigation3
