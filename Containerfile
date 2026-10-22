@@ -1,14 +1,14 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
 # Use a stable absolute SDK path; PWD is not guaranteed during ENV expansion.
-# Android 17 is currently published as the Cinnamon Bun preview platform package.
+# Use the published stable Android 16 SDK; API 37 is not exposed by sdkmanager in this build image yet.
 ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_COMPILE_SDK=37 \
-    ANDROID_BUILD_TOOLS=37.0.0 \
+    ANDROID_COMPILE_SDK=36 \
+    ANDROID_BUILD_TOOLS=36.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
-    ONIONMASQ_ANDROID_COMPILE_SDK=37 \
-    ONIONMASQ_ANDROID_BUILD_TOOLS=37.0.0 \
+    ONIONMASQ_ANDROID_COMPILE_SDK=36 \
+    ONIONMASQ_ANDROID_BUILD_TOOLS=36.0.0 \
     ANDROID_NDK_VERSION=27.3.13750724 \
     ANDROID_NDK_SHA256=601246087a682d1944e1e16dd85bc6e49560fe8b6d61255be2829178c8ed15d9 \
     ANDROID_NDK_RELNAME=r27d
@@ -53,8 +53,7 @@ RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https
     unzip -qq -d "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/cmdline-tools.zip" && \
     rm -f "$ANDROID_HOME/cmdline-tools.zip"
 
-# Preview SDK packages are published under their codename, not android-37.
 RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null && \
-    sdkmanager --channel=3 --sdk_root="$ANDROID_HOME" "platforms;android-CinnamonBun" \
+    sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}" \
       "platform-tools" \
       "build-tools;${ANDROID_BUILD_TOOLS}"
