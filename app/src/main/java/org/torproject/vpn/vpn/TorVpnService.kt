@@ -468,9 +468,9 @@ class TorVpnService : VpnService() {
             }
             // Also cover cancellation before the coroutine body starts; its finally block would not run.
             startupJob.invokeOnCompletion {
-                if (fd != null && !fd.isClosed) {
-                    runCatching { fd.close() }
-                }
+                // ParcelFileDescriptor has no isClosed property; close is safe after detachFd(),
+                // because detachFd() invalidates the Java-side descriptor without closing native fd.
+                fd?.let { descriptor -> runCatching { descriptor.close() } }
             }
             Log.v(TAG, "service ($taskID): await startCoroutineScope")
             val success = waitCoroutineStarted.await(15, TimeUnit.SECONDS)
