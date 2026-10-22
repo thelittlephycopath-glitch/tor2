@@ -1,8 +1,7 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
 # Use a stable absolute SDK path; PWD is not guaranteed during ENV expansion.
-# API 37 is currently distributed through the Android SDK preview channel.
-# Install it explicitly so dependency metadata and compileSdk stay aligned.
+# Android 17 is currently published as the Cinnamon Bun preview platform package.
 ENV ANDROID_HOME=/opt/android-sdk \
     ANDROID_COMPILE_SDK=37 \
     ANDROID_BUILD_TOOLS=37.0.0 \
@@ -54,7 +53,8 @@ RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https
     unzip -qq -d "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/cmdline-tools.zip" && \
     rm -f "$ANDROID_HOME/cmdline-tools.zip"
 
+# Preview SDK packages are published under their codename, not android-37.
 RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null && \
-    sdkmanager --channel=3 --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}" \
+    sdkmanager --channel=3 --sdk_root="$ANDROID_HOME" "platforms;android-CinnamonBun" \
       "platform-tools" \
       "build-tools;${ANDROID_BUILD_TOOLS}"
