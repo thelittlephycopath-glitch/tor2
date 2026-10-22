@@ -39,6 +39,8 @@ class TaskDebouncerTest {
         val releaseBlocker = CountDownLatch(1)
         val producersDone = CountDownLatch(4)
         val executedIds = Collections.synchronizedList(mutableListOf<Int>())
+        val enqueueLock = Any()
+        val lastEnqueuedId = AtomicInteger(Int.MIN_VALUE)
         val failure = AtomicReference<Throwable?>(null)
 
         try {
@@ -53,8 +55,13 @@ class TaskDebouncerTest {
                     try {
                         repeat(20) { index ->
                             val id = producer * 20 + index
-                            debouncer.enqueueTask(taskId = id, type = "same-type") {
-                                executedIds.add(id)
+                            // Keep the test's producer order deterministic so the expected
+                            // winner is exactly the final accepted enqueue while the consumer is blocked.
+                            synchronized(enqueueLock) {
+                                debouncer.enqueueTask(taskId = id, type = "same-type") {
+                                    executedIds.add(id)
+                                }
+                                lastEnqueuedId.set(id)
                             }
                         }
                     } catch (t: Throwable) {
@@ -77,6 +84,11 @@ class TaskDebouncerTest {
                 Thread.sleep(10)
             }
             assertEquals("Only the newest pending task should execute", 1, executedIds.size)
+            assertEquals(
+                "The final accepted enqueue must win while all tasks are pending",
+                lastEnqueuedId.get(),
+                executedIds.single()
+            )
         } finally {
             debouncer.cancel()
         }
