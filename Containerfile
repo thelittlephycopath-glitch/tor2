@@ -1,15 +1,15 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
 # Use a stable absolute SDK path; PWD is not guaranteed during ENV expansion.
-# API 36 is the stable SDK platform; API 37 is not available as platforms;android-37
-# on the stable sdkmanager channel used by this reproducible build.
+# API 37 is currently distributed through the Android SDK preview channel.
+# Install it explicitly so dependency metadata and compileSdk stay aligned.
 ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_COMPILE_SDK=36 \
-    ANDROID_BUILD_TOOLS=36.0.0 \
+    ANDROID_COMPILE_SDK=37 \
+    ANDROID_BUILD_TOOLS=37.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
-    ONIONMASQ_ANDROID_COMPILE_SDK=36 \
-    ONIONMASQ_ANDROID_BUILD_TOOLS=36.0.0 \
+    ONIONMASQ_ANDROID_COMPILE_SDK=37 \
+    ONIONMASQ_ANDROID_BUILD_TOOLS=37.0.0 \
     ANDROID_NDK_VERSION=27.3.13750724 \
     ANDROID_NDK_SHA256=601246087a682d1944e1e16dd85bc6e49560fe8b6d61255be2829178c8ed15d9 \
     ANDROID_NDK_RELNAME=r27d
@@ -55,6 +55,6 @@ RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https
     rm -f "$ANDROID_HOME/cmdline-tools.zip"
 
 RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null && \
-    sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}" \
+    sdkmanager --channel=3 --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}" \
       "platform-tools" \
       "build-tools;${ANDROID_BUILD_TOOLS}"

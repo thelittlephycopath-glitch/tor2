@@ -22,13 +22,13 @@ kotlin {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
     namespace = "org.torproject.vpn"
 
     defaultConfig {
         applicationId = "org.torproject.vpn"
         minSdk = 24
-        // Android 16 — https://developer.android.com/about/versions/16/behavior-changes-16
+        // Android 16 â https://developer.android.com/about/versions/16/behavior-changes-16
         targetSdk = 36
         // base version code, must keep incrementing
         // in productFlavors we multiply by 10 and add abi specific offsets
