@@ -211,9 +211,18 @@ class TorVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
         Log.d(TAG, "service: onDestroy")
+        // TaskDebouncer owns an independent scope, so cancelling the service job alone
+        // does not terminate its consumer or discard queued callbacks.
+        actionDebouncer.cancel()
+        startCoroutineScope.cancel()
+        timer?.cancel()
+        timer = null
+        removeObservers()
+        collectionJob?.cancel()
+        job.cancel()
+        super.onDestroy()
+
         notificationManager.cancelNotifications()
         val errors = listOf(ConnectionState.CONNECTION_ERROR, ConnectionState.PRIVATE_DNS_ERROR)
         if (VpnStatusObservable.statusLiveData.value !in errors) {
