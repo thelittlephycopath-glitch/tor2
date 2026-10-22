@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.torproject.onionmasq.ConnectivityHandler
@@ -100,9 +101,7 @@ class TorVpnService : VpnService() {
     private val mainHandler: Handler by lazy {
         Handler(mainLooper)
     }
-    private val timer: Timer by lazy {
-        Timer()
-    }
+    private var timer: Timer? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "service: onBind")
@@ -230,7 +229,8 @@ class TorVpnService : VpnService() {
         OnionMasq.stop()
         removeObservers()
         logHelper.stopLog()
-        timer.cancel()
+        timer?.cancel()
+        timer = null
         VpnStatusObservable.reset()
         try {
             OnionMasq.unbindVPNService()
@@ -399,7 +399,9 @@ class TorVpnService : VpnService() {
                 logHelper.readLog()
                 createObservers()
                 startListeningObservers()
-                timer.schedule(
+                timer?.cancel()
+                timer = Timer()
+                timer?.schedule(
                     object : TimerTask() {
                         override fun run() {
                             VpnStatusObservable.updateDataUsage(
@@ -416,6 +418,10 @@ class TorVpnService : VpnService() {
 
             val builder = prepareVpnProfile()
             val fd = builder.establish()
+            // stop() cancels this scope; a later start in the same service instance needs a fresh one.
+            if (!startCoroutineScope.isActive) {
+                startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
+            }
             val waitCoroutineStarted = CountDownLatch(1)
             startCoroutineScope.launch {
                 waitCoroutineStarted.countDown()
