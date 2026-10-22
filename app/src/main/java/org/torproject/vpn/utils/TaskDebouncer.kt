@@ -97,6 +97,7 @@ open class TaskDebouncer(
     // Signal that a producer has enqueued work; used to avoid lost-wakeup on consumer hibernate/exit
     private val hasTask = AtomicBoolean(false)
     private val isCancelled = AtomicBoolean(false)
+    private val lifecycleLock = Any()
 
     // Start consumer job.
     private fun start() {
@@ -173,13 +174,16 @@ open class TaskDebouncer(
     // Cancel TaskDebouncer. Once cancelled, all newly enqueued tasks are ignored and not yet started
     // tasks are dropped.
     fun cancel() {
-        Log.d(TAG, "stopping TaskDebouncer")
-        isCancelled.set(true)
-        consumerJob?.cancel()
-        consumerJob = null
-        queue.clear()
-        runningType.set(null)
-        latestByType.clear()
+        synchronized(lifecycleLock) {
+            Log.d(TAG, "stopping TaskDebouncer")
+            if (!isCancelled.compareAndSet(false, true)) return
+            consumerJob?.cancel()
+            consumerJob = null
+            queue.clear()
+            hasTask.set(false)
+            runningType.set(null)
+            latestByType.clear()
+        }
     }
 
     open fun process(item: QueuedTask) {
@@ -197,22 +201,24 @@ open class TaskDebouncer(
         priority: Priority = Priority.MEDIUM,
         block: () -> Unit
     ) {
-        if (isCancelled.get()) {
-            Log.d(TAG, "immediately dropping enqueued task $taskId")
-            return
-        }
-        val seq = counter.incrementAndGet()
-        val item = QueuedTask(taskId, type, seq, priority, block)
-        // Atomic per-type replacement prevents a slower producer with an older sequence
-        // from overwriting a newer task after it was already enqueued.
-        latestByType.compute(type) { _, current ->
-            if (current == null || seq > current.seq) item else current
-        }
-        // If a newer producer won the race, this item is stale and need not enter the queue.
-        if (latestByType[type]?.seq == seq) {
-            queue.offer(item)
-            hasTask.set(true)
-            start()
+        synchronized(lifecycleLock) {
+            if (isCancelled.get()) {
+                Log.d(TAG, "immediately dropping enqueued task $taskId")
+                return
+            }
+            val seq = counter.incrementAndGet()
+            val item = QueuedTask(taskId, type, seq, priority, block)
+            // Atomic per-type replacement prevents a slower producer with an older sequence
+            // from overwriting a newer task after it was already enqueued.
+            latestByType.compute(type) { _, current ->
+                if (current == null || seq > current.seq) item else current
+            }
+            // If a newer producer won the race, this item is stale and need not enter the queue.
+            if (latestByType[type]?.seq == seq) {
+                queue.offer(item)
+                hasTask.set(true)
+                start()
+            }
         }
     }
 }
