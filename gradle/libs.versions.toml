@@ -58,7 +58,7 @@ androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = 
 androidx-compose-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-compose-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 
 # Navigation3
