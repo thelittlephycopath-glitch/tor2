@@ -109,3 +109,12 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - Commit `1dc1bd726bac6a5236e7f4e81cd10cdbb12b5c6a` changes `newestPendingTaskOfSameTypeWins()` to block the consumer with latches while all 40 same-type tasks are enqueued, then release it and assert that only task 39 executes.
 - This removes reliance on the initial debounce delay and a fixed post-execution sleep for that test. It improves determinism but is **not an executed test result**.
 - Branch comparison, CI status, and GitHub Actions workflow queries still need to be refreshed after this commit. Merge remains blocked until real project CI and native/device checks produce evidence.
+
+
+## Update — service teardown and startup-job ownership (2026-10-22)
+
+- Commit `b4cc77a3efabbbaa150dda7939dd439df921aaa1` adds explicit service-destruction cleanup for the independent TaskDebouncer consumer, startup scope, periodic timer, and observers/collection job. This is source-reviewed but not exercised in an Android service test.
+- Commit `bf6746437112d2fef6e417267e01a8e7c2622947` corrects startup-job ownership: the startup scope now uses a child `SupervisorJob(job)`, both on initial construction and recreation. Previously, the scope used the service root `job` directly, so `startCoroutineScope.cancel()` could cancel the root job and make a recreated scope inherit an already-cancelled parent.
+- A small local Kotlin harness passed the isolated parent/child `SupervisorJob` cancellation semantics check: cancelling the child left the parent active, a fresh child was active under that parent, and cancelling the parent cancelled its child. This is **not** a build or test of the Android application or its actual Gradle test suite.
+- Repeated VPN stop/start and service destruction still require runtime/device verification. Native descriptor ownership, Onionmasq startup readiness, and log retention remain open.
+- The GitLab connection has been initiated but is not active yet. Do not call GitLab tools or claim pipeline results until authentication is completed and the connection is confirmed active.
