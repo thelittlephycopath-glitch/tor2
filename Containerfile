@@ -1,9 +1,9 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
-# API 36 is the newest Android platform package exposed by the pinned SDK manager
-# in this build environment; keep app and native Onionmasq SDKs aligned.
+# The app needs API 37 for its current AndroidX lifecycle dependencies.
+# Onionmasq itself remains pinned to API 36 through its separate environment variable.
 ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_COMPILE_SDK=36 \
+    ANDROID_COMPILE_SDK=37 \
     ANDROID_BUILD_TOOLS=36.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
@@ -54,6 +54,6 @@ RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https
     rm -f "$ANDROID_HOME/cmdline-tools.zip"
 
 RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null && \
-    sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}" \
+    sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}.0" \
       "platform-tools" \
       "build-tools;${ANDROID_BUILD_TOOLS}"
