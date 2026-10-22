@@ -132,24 +132,43 @@ open class TaskDebouncer(
                             break
                         }
 
-                        // stale check: if map has no entry or doesn't match this item, skip
-                        val latest = latestByType[polled.type]
-                        if (latest == null || latest.seq != polled.seq) {
-                            Log.d(TAG, "TaskDebouncer - drop ${polled.id}")
-                            continue
+                        // Validate and claim under the same lock used by enqueueTask().
+                        // Otherwise a producer can replace latestByType after the stale check
+                        // but before this consumer claims the slot, allowing an obsolete item
+                        // to run even though a newer item was already pending.
+                        val claimResult = synchronized(lifecycleLock) {
+                            if (isCancelled.get()) {
+                                0
+                            } else {
+                                val latest = latestByType[polled.type]
+                                if (latest == null || latest.seq != polled.seq) {
+                                    0
+                                } else if (!runningType.compareAndSet(null, polled.type)) {
+                                    // Preserve the newest pending item if the slot is unexpectedly busy.
+                                    if (latestByType[polled.type]?.seq == polled.seq) {
+                                        queue.offer(polled)
+                                    }
+                                    2
+                                } else {
+                                    // The lock makes this removal and the latest-item check one
+                                    // atomic claim relative to concurrent producers.
+                                    latestByType.remove(polled.type, polled)
+                                    1
+                                }
+                            }
                         }
 
-                        // Try to claim running slot for this type
-                        if (!runningType.compareAndSet(null, polled.type)) {
-                            // slot occupied: re-insert (it should still be latest) and yield
-                            latestByType[polled.type] = polled
-                            queue.offer(polled)
-                            // short suspend to yield to current runner and avoid immediate retry
-                            delay(50)
-                            continue
+                        when (claimResult) {
+                            0 -> {
+                                Log.d(TAG, "TaskDebouncer - drop stale/cancelled item ${polled.id}")
+                                continue
+                            }
+                            2 -> {
+                                // Yield if the single-running-task invariant is unexpectedly violated.
+                                delay(50)
+                                continue
+                            }
                         }
-
-                        latestByType.remove(polled.type, polled)
 
                         ensureActive()
                         process(polled)
