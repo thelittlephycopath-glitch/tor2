@@ -15,7 +15,7 @@
 
 ## Confirmed repository facts
 
-- The stabilization branch is 16 commits ahead of `main` and not behind it at the time of review.
+- The stabilization branch was last compared as 20 commits ahead of `main` and 0 behind; re-check before merge because the branch can advance.
 - Draft PR #1 currently includes changes to `TaskDebouncer.kt`, `TorVpnService.kt`, `TaskDebouncerTest.kt`, and this security/performance plan.
 - The existing GitLab pipeline defines `ktlintCheck`, `lintDebug`, `assembleStaging`, and `:app:testDebug` jobs. Its publish job is separate and must not be triggered for validation.
 - `settings.gradle.kts` resolves Onionmasq from the Tor Project Maven endpoint when configured with a token, or from `mavenLocal()` otherwise.
@@ -81,3 +81,14 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - The existing cancellation test still verifies that enqueueing after cancellation is ignored.
 - Source and test files were fetched again from GitHub after the writes; the lifecycle lock appears in both enqueue and cancel paths, and four TaskDebouncer test methods are present.
 - The new tests remain **unexecuted**. The latest GitHub status and workflow-run queries still return no checks/runs, so no passing result can be claimed.
+
+
+## Update — latest review pass (2026-10-22)
+
+- Re-fetched the current branch versions of `TaskDebouncer.kt`, `TaskDebouncerTest.kt`, `TorVpnService.kt`, `settings.gradle.kts`, and `.gitlab-ci.yml`.
+- GitHub combined status for commit `cc8d2269a26fd6ca98a21dee90bff9eb601e4a8c` returned no status entries; the GitHub workflow-run query returned no runs. This does not tell us whether the external GitLab pipeline ran.
+- Confirmed the repository's existing GitLab validation jobs are `lintDebug`, `assembleStaging`, and `debugTests`; `publish` is a separate job. Do not run publishing as part of validation.
+- Confirmed dependency resolution requires either the Tor Project Onionmasq Maven token configuration or an existing local Maven artifact. A generic GitHub runner cannot be assumed to have this dependency.
+- Reviewed the new lifecycle-lock code and cancellation regression test at source level. The code remains uncompiled and tests remain unexecuted; source inspection is not a substitute for Gradle output.
+- No source-code change was made during this pass because a compile/test environment is still unavailable and unverified edits would increase risk.
+- Next gate: obtain a permitted CI run or a documented local environment with the required Onionmasq dependency; run focused tests, full `:app:testDebug`, ktlint, Android lint, and a staging build while ensuring the `publish` job does not run.
