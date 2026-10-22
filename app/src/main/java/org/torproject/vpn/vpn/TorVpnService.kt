@@ -20,6 +20,7 @@ import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -428,12 +429,29 @@ class TorVpnService : VpnService() {
             startCoroutineScope.launch {
                 waitCoroutineStarted.countDown()
                 Log.v(TAG, "service ($taskID): startCoroutineScope - start Onionmasq")
+                val tunInterface = fd
+                if (tunInterface == null) {
+                    handleException(
+                        IllegalStateException("Android did not establish the VPN interface."),
+                        "Onionmasq error: Android did not establish the VPN interface.",
+                        taskID
+                    )
+                    return@launch
+                }
+                var descriptorDetached = false
                 try {
-                    val tunInterface = fd
-                        ?: throw IllegalStateException("Android did not establish the VPN interface.")
-                    OnionMasq.start(tunInterface.detachFd(), getBridgeLines())
+                    val nativeFd = tunInterface.detachFd()
+                    descriptorDetached = true
+                    OnionMasq.start(nativeFd, getBridgeLines())
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     handleException(e, "Onionmasq error: ${e.message}", taskID)
+                } finally {
+                    // If ownership was not transferred to native code, close the Android descriptor.
+                    if (!descriptorDetached) {
+                        runCatching { tunInterface.close() }
+                    }
                 }
             }
             Log.v(TAG, "service ($taskID): await startCoroutineScope")
