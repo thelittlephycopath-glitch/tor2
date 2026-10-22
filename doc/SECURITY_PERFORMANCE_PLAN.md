@@ -116,3 +116,9 @@ Optimize measured bottlenecks one at a time. Do not weaken encryption, route tra
 - Documented that the startup latch reports coroutine scheduling, not native tunnel readiness (commit `b67143164ba62ad9ed22bf5a4fc428784c510bc2`).
 
 **Verification status:** source review only. These commits have not been compiled or validated on a device in this session. GitHub returned no status checks for the descriptor-cleanup commit; GitLab CI status still needs separate confirmation. Descriptor ownership, native startup behavior, lifecycle races, routing, leaks, and logging retention remain open verification items.
+
+### 2026-10-22 — Task queue concurrency review
+
+- Fixed a newest-per-type race in `TaskDebouncer.enqueueTask()`: concurrent producers now replace the map entry atomically, and a producer only queues its item if its sequence is still current.
+- Changed the consumer's ordinary-failure handler to catch and log `Exception` rather than swallowing every `Throwable`. Fatal JVM errors are no longer deliberately consumed by this handler.
+- These are source-level fixes only. A dedicated unit-test file was not present at the expected path, and this change has not been compiled or stress-tested. Add deterministic concurrency tests and run the existing GitLab lint/test jobs before treating it as verified.
