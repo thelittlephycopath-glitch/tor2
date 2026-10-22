@@ -73,3 +73,11 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - Cancellation now clears the producer work signal and remains idempotent.
 - This is a source-level race fix, **not yet compiled or tested**. The consumer may already be executing a callback when cancellation is requested; callers must not treat `cancel()` as proof that an already-running synchronous callback has completed.
 - Next: add/strengthen a focused regression test, run the unit-test task and lint, then review the full diff for lock ordering and lifecycle semantics.
+
+## Update — focused cancellation regression coverage
+
+- Commit: `1f45bc16678a67d9fa0595045cb9507fc14c0160`
+- Added `cancelWhileConsumerIsBlockedDropsPendingWork()`: it holds the consumer in a blocking task, queues additional work, cancels, releases the blocker, and asserts queued callbacks do not execute.
+- The existing cancellation test still verifies that enqueueing after cancellation is ignored.
+- Source and test files were fetched again from GitHub after the writes; the lifecycle lock appears in both enqueue and cancel paths, and four TaskDebouncer test methods are present.
+- The new tests remain **unexecuted**. The latest GitHub status and workflow-run queries still return no checks/runs, so no passing result can be claimed.
