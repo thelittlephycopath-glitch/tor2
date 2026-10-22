@@ -15,7 +15,7 @@
 
 ## Confirmed repository facts
 
-- The stabilization branch was last compared as 20 commits ahead of `main` and 0 behind; re-check before merge because the branch can advance.
+- The latest comparison on 2026-10-22 reports `security/performance-baseline` 24 commits ahead of `main` and 0 behind. Re-check immediately before any merge because the branch can advance.
 - Draft PR #1 currently includes changes to `TaskDebouncer.kt`, `TorVpnService.kt`, `TaskDebouncerTest.kt`, and this security/performance plan.
 - The existing GitLab pipeline defines `ktlintCheck`, `lintDebug`, `assembleStaging`, and `:app:testDebug` jobs. Its publish job is separate and must not be triggered for validation.
 - `settings.gradle.kts` resolves Onionmasq from the Tor Project Maven endpoint when configured with a token, or from `mavenLocal()` otherwise.
@@ -92,3 +92,13 @@ If the required Tor Maven access or device testing is unavailable, report the bl
 - Reviewed the new lifecycle-lock code and cancellation regression test at source level. The code remains uncompiled and tests remain unexecuted; source inspection is not a substitute for Gradle output.
 - No source-code change was made during this pass because a compile/test environment is still unavailable and unverified edits would increase risk.
 - Next gate: obtain a permitted CI run or a documented local environment with the required Onionmasq dependency; run focused tests, full `:app:testDebug`, ktlint, Android lint, and a staging build while ensuring the `publish` job does not run.
+
+
+## Update — atomic claim review and stronger concurrent-producer assertion (2026-10-22)
+
+- Commit `9257e1c1af8934121301d2471321e70023cece65` updates `TaskDebouncer` so the consumer validates that a polled item is still the newest and claims the running slot while holding `lifecycleLock`, the same lock used by producers. This closes the source-level window where a producer could replace the pending item between the consumer's stale check and its slot claim.
+- Commit `d0603517bd3785d2110ae0d45df6d517d1f06d18` strengthens `concurrentProducersKeepOnlyNewestPendingTaskPerType`: the blocker keeps all candidate tasks pending, enqueue calls are serialized in the test, and the assertion checks the final accepted task ID rather than merely checking that one task ran.
+- These are **source-level changes only; the Android Gradle tests have not been executed**. GitHub combined status and GitHub Actions workflow-run results are empty for the updated head. This does not prove whether external GitLab CI ran.
+- The local container cannot resolve GitHub to clone this private repository, and no Gradle executable or Android SDK is configured in this environment. A complete repository build and the actual project test task therefore remain unavailable here. Do not represent a synthetic or source-only check as a passing project test.
+- The repository's GitLab `publish` job has rules for tags and commits to the default branch. A merge into `main` can therefore cause the configured package-upload job to run in the target project's pipeline. Ensure the validation/merge plan accounts for that side effect.
+- The merge gate remains closed pending real CI output for dependency resolution, `ktlintCheck`, `lintDebug`, `:app:testDebug`, and `assembleStaging`, plus the documented descriptor ownership/startup/device review. Do not run or enable publishing merely to validate the changes.
