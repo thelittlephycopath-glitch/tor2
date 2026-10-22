@@ -15,6 +15,18 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Free unused preinstalled runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Disk space before cleanup:"
+          df -h /
+          # The build uses its own pinned Android SDK inside the container.
+          sudo rm -rf /usr/local/lib/android/sdk /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          docker system prune --all --force || true
+          echo "Disk space after cleanup:"
+          df -h /
+
       - name: Build pinned Android/Rust toolchain
         shell: bash
         run: |
