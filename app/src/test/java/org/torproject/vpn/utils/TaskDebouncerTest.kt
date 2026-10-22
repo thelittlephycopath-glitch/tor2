@@ -83,6 +83,36 @@ class TaskDebouncerTest {
     }
 
     @Test
+    fun cancelWhileConsumerIsBlockedDropsPendingWork() {
+        val debouncer = TaskDebouncer(pollTimeoutMs = 20L)
+        val blockerStarted = CountDownLatch(1)
+        val releaseBlocker = CountDownLatch(1)
+        val pendingExecutions = AtomicInteger(0)
+
+        try {
+            debouncer.enqueueTask(taskId = -1, type = "blocker") {
+                blockerStarted.countDown()
+                releaseBlocker.await(5, TimeUnit.SECONDS)
+            }
+            assertTrue("Blocking task should start", blockerStarted.await(5, TimeUnit.SECONDS))
+
+            repeat(20) { id ->
+                debouncer.enqueueTask(taskId = id, type = "pending-$id") {
+                    pendingExecutions.incrementAndGet()
+                }
+            }
+
+            debouncer.cancel()
+        } finally {
+            releaseBlocker.countDown()
+            debouncer.cancel()
+        }
+
+        Thread.sleep(400)
+        assertEquals("Pending work must be dropped on cancellation", 0, pendingExecutions.get())
+    }
+
+    @Test
     fun cancelDropsQueuedTasksAndRejectsLaterEnqueues() {
         val debouncer = TaskDebouncer(pollTimeoutMs = 20L)
         val executed = AtomicInteger(0)
