@@ -121,4 +121,7 @@ Optimize measured bottlenecks one at a time. Do not weaken encryption, route tra
 
 - Fixed a newest-per-type race in `TaskDebouncer.enqueueTask()`: concurrent producers now replace the map entry atomically, and a producer only queues its item if its sequence is still current.
 - Changed the consumer's ordinary-failure handler to catch and log `Exception` rather than swallowing every `Throwable`. Fatal JVM errors are no longer deliberately consumed by this handler.
-- These are source-level fixes only. A dedicated unit-test file was not present at the expected path, and this change has not been compiled or stress-tested. Add deterministic concurrency tests and run the existing GitLab lint/test jobs before treating it as verified.
+- These are source-level fixes only. The regression test file is now present, but the tests have not been compiled or executed in this session. Run the existing GitLab lint/test jobs before treating the fix as verified.
+- Added `app/src/test/java/org/torproject/vpn/utils/TaskDebouncerTest.kt` with regression coverage for newest-pending-task behavior, concurrent producers while the consumer is occupied, and cancellation/rejection after cancellation.
+- The concurrency test uses a blocking task to hold the consumer while producers enqueue, making the newest-per-type assertion less dependent on machine timing. The tests are committed but have **not yet been executed** because this environment has no project checkout, Gradle wrapper runtime, Android SDK dependency cache, or Onionmasq artifact configured.
+
