@@ -87,3 +87,5 @@ A release is not considered ready until:
 - Next: inspect startup/stop concurrency and TUN descriptor ownership; then establish an actionable build/test signal before making broader routing or performance changes.
 
 - Follow-up source review found `TaskDebouncer.cancel()` permanently marks its instance cancelled, while `TorVpnService` retained that instance as a field. The service now recreates the debouncer after stop so a later start can enqueue work (commit `b73c540b1d3c6a767cc9d33d1e476e68c0d5671c`). Concurrent start/stop stress tests are still required; the field is volatile, but this is not a substitute for runtime race testing.
+
+- Descriptor ownership follow-up: startup now closes the Android `ParcelFileDescriptor` on the non-detached failure path and adds a coroutine-completion cleanup for cancellation before the coroutine body runs (commit `f7ff764a8ab37b5c1c9d10f6982e2b406fbc2f8c` and follow-up `1a1a66fb27f97a64d67436f3a3782b47e73d02df`). This remains uncompiled; verify `ParcelFileDescriptor.isClosed` behavior and native `OnionMasq.start` descriptor ownership before accepting the fix.
