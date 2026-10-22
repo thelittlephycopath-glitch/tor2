@@ -65,3 +65,11 @@ Before merge, collect actual evidence for:
 - [ ] Explicit list of unverified risks.
 
 If the required Tor Maven access or device testing is unavailable, report the blocker. Do not substitute source review for a passing build or device test.
+
+## Update — cancellation/enqueue serialization patch
+
+- Commit: `b288c5c0862b44e5b9110e5e2158210d37c363a0`
+- Added a lifecycle lock around enqueue publication and terminal cancellation cleanup, so a producer cannot publish new queued work after cancellation has cleared the queue.
+- Cancellation now clears the producer work signal and remains idempotent.
+- This is a source-level race fix, **not yet compiled or tested**. The consumer may already be executing a callback when cancellation is requested; callers must not treat `cancel()` as proof that an already-running synchronous callback has completed.
+- Next: add/strengthen a focused regression test, run the unit-test task and lint, then review the full diff for lock ordering and lifecycle semantics.
