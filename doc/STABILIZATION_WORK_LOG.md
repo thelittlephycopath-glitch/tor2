@@ -15,7 +15,7 @@
 
 ## Confirmed repository facts
 
-- The latest comparison on 2026-10-22 reports `security/performance-baseline` 24 commits ahead of `main` and 0 behind. Re-check immediately before any merge because the branch can advance.
+- The full comparison for head `bf7b112bab2a4c8bea402a79a448baa0374fe3fa` reported `security/performance-baseline` 30 commits ahead of `main` and 0 behind. Re-check immediately before any merge because the branch can advance.
 - Draft PR #1 currently includes changes to `TaskDebouncer.kt`, `TorVpnService.kt`, `TaskDebouncerTest.kt`, and this security/performance plan.
 - The existing GitLab pipeline defines `ktlintCheck`, `lintDebug`, `assembleStaging`, and `:app:testDebug` jobs. Its publish job is separate and must not be triggered for validation.
 - `settings.gradle.kts` resolves Onionmasq from the Tor Project Maven endpoint when configured with a token, or from `mavenLocal()` otherwise.
