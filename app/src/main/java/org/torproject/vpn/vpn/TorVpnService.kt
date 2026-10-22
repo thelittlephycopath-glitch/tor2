@@ -81,7 +81,7 @@ class TorVpnService : VpnService() {
     private var collectionJob: Job? = null
     private val coroutineScope = CoroutineScope(Dispatchers.IO + job)
     private var startCoroutineScope = CoroutineScope(Dispatchers.IO.limitedParallelism(1) + job)
-    private var actionDebouncer = TaskDebouncer()
+    @Volatile private var actionDebouncer = TaskDebouncer()
     private var observer: Observer<OnionmasqEvent>? = null
     private var vpnStateFlow = combine(
         VpnStatusObservable.statusLiveData,
@@ -225,6 +225,8 @@ class TorVpnService : VpnService() {
         Log.v(TAG, "service ($taskID): stopping")
         VpnStatusObservable.update(state)
         actionDebouncer.cancel()
+        // TaskDebouncer.cancel() is terminal; allow a later service start to enqueue work.
+        actionDebouncer = TaskDebouncer()
         startCoroutineScope.cancel()
         OnionMasq.stop()
         removeObservers()
