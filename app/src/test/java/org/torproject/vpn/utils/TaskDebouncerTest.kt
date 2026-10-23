@@ -58,7 +58,11 @@ class TaskDebouncerTest {
         try {
             debouncer.enqueueTask(taskId = -1, type = "blocker") {
                 blockerStarted.countDown()
-                check(releaseBlocker.await(5, TimeUnit.SECONDS)) { "Timed out waiting to release blocker" }
+                check(
+                    releaseBlocker.await(5, TimeUnit.SECONDS)
+                ) {
+                    "Timed out waiting to release blocker"
+                }
             }
             assertTrue("Blocking task should start", blockerStarted.await(5, TimeUnit.SECONDS))
 
