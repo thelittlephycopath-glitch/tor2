@@ -224,7 +224,6 @@ class TorVpnService : VpnService() {
         removeObservers()
         collectionJob?.cancel()
         job.cancel()
-        super.onDestroy()
 
         notificationManager.cancelNotifications()
         val errors = listOf(ConnectionState.CONNECTION_ERROR, ConnectionState.PRIVATE_DNS_ERROR)
@@ -233,6 +232,7 @@ class TorVpnService : VpnService() {
         }
         connectivityHandler.unregister()
         logObservable = null
+        super.onDestroy()
     }
 
     private fun stop(state: ConnectionState, taskID: Int) {
@@ -491,8 +491,7 @@ class TorVpnService : VpnService() {
     }
 
     private fun handleException(e: Exception, msg: String, taskID: Int) {
-        Log.w(TAG, "($taskID): $msg")
-        e.printStackTrace()
+        Log.e(TAG, "($taskID): $msg", e)
         when (e) {
             is SecurityException -> stop(ConnectionState.PRIVATE_DNS_ERROR, taskID)
             else -> stop(ConnectionState.CONNECTION_ERROR, taskID)
