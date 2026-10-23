@@ -84,7 +84,8 @@ class TorVpnService : VpnService() {
     private val coroutineScope = CoroutineScope(Dispatchers.IO + job)
     private var startCoroutineScope =
         CoroutineScope(Dispatchers.IO.limitedParallelism(1) + SupervisorJob(job))
-    @Volatile private var actionDebouncer = TaskDebouncer()
+    @Volatile
+    private var actionDebouncer = TaskDebouncer()
     private var observer: Observer<OnionmasqEvent>? = null
     private var vpnStateFlow = combine(
         VpnStatusObservable.statusLiveData,
