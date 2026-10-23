@@ -97,12 +97,12 @@ jobs:
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh
 
-      - name: Upload staging APKs for inspection
+      - name: Upload unsigned aligned release APKs for inspection
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: tor2-staging-apks
-          path: app/build/outputs/apk/staging/**/*.apk
+          name: tor2-unsigned-aligned-apks
+          path: build/*-release-unsigned.apk
           if-no-files-found: error
           retention-days: 7
 
@@ -160,7 +160,7 @@ jobs:
             bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
       - name: Publish APK download page
-        if: ${{ inputs.publish_release }}
+        if: ${{ github.event_name == 'push' || inputs.publish_release }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tor2-build-${{ github.run_number }}
