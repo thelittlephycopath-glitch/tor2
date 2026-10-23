@@ -106,11 +106,20 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Sign APKs with an ephemeral debug key and verify signatures
+      - name: Sign APKs and verify install metadata
         shell: bash
+        env:
+          TOR2_SIGNING_KEYSTORE_BASE64: ${{ secrets.TOR2_SIGNING_KEYSTORE_BASE64 }}
+          TOR2_SIGNING_KEYSTORE_PASSWORD: ${{ secrets.TOR2_SIGNING_KEYSTORE_PASSWORD }}
+          TOR2_SIGNING_KEY_ALIAS: ${{ secrets.TOR2_SIGNING_KEY_ALIAS }}
+          TOR2_SIGNING_KEY_PASSWORD: ${{ secrets.TOR2_SIGNING_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           docker run --rm \
+            -e "TOR2_SIGNING_KEYSTORE_BASE64=${TOR2_SIGNING_KEYSTORE_BASE64:-}" \
+            -e "TOR2_SIGNING_KEYSTORE_PASSWORD=${TOR2_SIGNING_KEYSTORE_PASSWORD:-}" \
+            -e "TOR2_SIGNING_KEY_ALIAS=${TOR2_SIGNING_KEY_ALIAS:-}" \
+            -e "TOR2_SIGNING_KEY_PASSWORD=${TOR2_SIGNING_KEY_PASSWORD:-}" \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
             --workdir /build/vpn \
             tor2-android-builder \
@@ -122,28 +131,74 @@ jobs:
                 echo "No release APKs were produced." >&2
                 exit 1
               fi
-              key=/tmp/tor2-debug.keystore
-              keytool -genkeypair -noprompt \
-                -keystore "$key" -storepass android -alias androiddebugkey \
-                -keypass android -dname "CN=Android Debug,O=Android,C=US" \
-                -keyalg RSA -keysize 2048 -validity 10000
+
+              key=/tmp/tor2-beta.keystore
+              if [[ -n "${TOR2_SIGNING_KEYSTORE_BASE64:-}" ]]; then
+                : "${TOR2_SIGNING_KEYSTORE_PASSWORD:?TOR2_SIGNING_KEYSTORE_PASSWORD secret is required}"
+                : "${TOR2_SIGNING_KEY_ALIAS:?TOR2_SIGNING_KEY_ALIAS secret is required}"
+                : "${TOR2_SIGNING_KEY_PASSWORD:?TOR2_SIGNING_KEY_PASSWORD secret is required}"
+                printf "%s" "$TOR2_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$key"
+                ks_args=(--ks "$key" --ks-pass "pass:$TOR2_SIGNING_KEYSTORE_PASSWORD" --ks-key-alias "$TOR2_SIGNING_KEY_ALIAS" --key-pass "pass:$TOR2_SIGNING_KEY_PASSWORD")
+                signing_mode="persistent repository beta signing key"
+              else
+                keytool -genkeypair -noprompt \
+                  -keystore "$key" -storepass android -alias androiddebugkey \
+                  -keypass android -dname "CN=Tor VPN Beta Debug,O=Community Build,C=BD" \
+                  -keyalg RSA -keysize 2048 -validity 10000
+                ks_args=(--ks "$key" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android)
+                signing_mode="temporary CI debug key; reinstalling over another build may require removing the previous beta first"
+                echo "::warning::No persistent signing key configured. To allow upgrades across CI builds, set TOR2_SIGNING_KEYSTORE_BASE64, TOR2_SIGNING_KEYSTORE_PASSWORD, TOR2_SIGNING_KEY_ALIAS, and TOR2_SIGNING_KEY_PASSWORD as GitHub Actions secrets."
+              fi
+
               mkdir -p dist
               for apk in "${apks[@]}"; do
-                name="$(basename "${apk%-unsigned.apk}")-debug-signed.apk"
-                out="dist/$name"
+                filename="$(basename "$apk")"
+                variant="${filename#app-}"
+                variant="${variant%-release-unsigned.apk}"
+                if [[ "$variant" == "$filename" || -z "$variant" ]]; then
+                  echo "Unexpected APK filename: $filename" >&2
+                  exit 1
+                fi
+                out="dist/TorVPN-Beta-$variant.apk"
                 "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" sign \
-                  --ks "$key" --ks-pass pass:android --key-pass pass:android \
-                  --out "$out" "$apk"
-                "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" verify --verbose "$out"
+                  "${ks_args[@]}" --out "$out" "$apk"
+                "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" verify --verbose --print-certs "$out"
+                echo "APK metadata for $(basename "$out"):"
+                "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/aapt" dump badging "$out" \
+                  | grep -E "^package:|^sdkVersion:|^targetSdkVersion:|^native-code:"
               done
+
+              cat > dist/INSTALL-INSTRUCTIONS.txt <<EOF
+Tor VPN Beta (tor2) — community test build
+==========================================
+
+Recommended for most Android phones: TorVPN-Beta-universal.apk
+Smaller option for modern ARM64 phones: TorVPN-Beta-arm64-v8a.apk
+
+Install one APK only. Do not install the artifact ZIP itself, and do not use
+the unsigned APKs from the inspection artifact.
+
+Package ID: org.torproject.vpn.tor2beta
+Signing mode: $signing_mode
+
+This is an experimental community build, not an official Tor Project release.
+EOF
+              {
+                echo "Source commit: $GITHUB_SHA"
+                echo "Workflow run: $GITHUB_RUN_ID"
+                echo "Signing mode: $signing_mode"
+                echo "Package ID: org.torproject.vpn.tor2beta"
+              } > dist/BUILD-INFO.txt
+              sha256sum dist/*.apk > dist/SHA256SUMS.txt
               rm -f "$key"
             '
-
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tor2-debug-signed-apks
-          path: dist/*.apk
+          name: tor2-beta-installable-apks
+          path: |
+            dist/*.apk
+            dist/*.txt
           if-no-files-found: error
           retention-days: 14
 
@@ -166,9 +221,19 @@ jobs:
           tag_name: tor2-build-${{ github.run_number }}
           name: Tor VPN Beta - tor2 build ${{ github.run_number }}
           body: |
-            Community-built debug-signed APKs compiled from this private repository.
+            Community-built experimental APKs from commit ${{ github.sha }}.
+
+            Recommended for most phones: TorVPN-Beta-universal.apk
+            Smaller ARM64 option: TorVPN-Beta-arm64-v8a.apk
 
             These are not official Tor Project releases and are not signed with Tor's release key.
-            This VPN software is experimental; do not rely on this build for sensitive activity.
-          files: dist/*.apk
+            A persistent community signing key is used only when the four TOR2_SIGNING_* secrets
+            are configured. Without them the workflow uses a temporary CI debug key, and Android
+            may require removal of an earlier beta build before installing a later build.
+            Do not rely on this experimental VPN build for sensitive activity.
+          files: |
+            dist/*.apk
+            dist/INSTALL-INSTRUCTIONS.txt
+            dist/BUILD-INFO.txt
+            dist/SHA256SUMS.txt
           fail_on_unmatched_files: true

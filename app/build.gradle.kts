@@ -26,7 +26,7 @@ android {
     namespace = "org.torproject.vpn"
 
     defaultConfig {
-        applicationId = "org.torproject.vpn"
+        applicationId = "org.torproject.vpn.tor2beta"
         minSdk = 24
         // Android 16 — https://developer.android.com/about/versions/16/behavior-changes-16
         targetSdk = 36
@@ -34,7 +34,7 @@ android {
         // in productFlavors we multiply by 10 and add abi specific offsets
         // to generate a set of unique versioncodes for our universal and single abi builds
         versionCode = 24
-        versionName = "1.9.1Beta"
+        versionName = "1.9.1Beta-tor2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
