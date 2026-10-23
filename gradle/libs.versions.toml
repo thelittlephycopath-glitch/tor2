@@ -95,7 +95,7 @@ leakcanary-android = { module = "com.android.tools.studio.leakcanary:leakcanary"
 #noinspection SimilarGradleDependency
 onionmasq-release = { module = "org.torproject:onionmasq", version = "1.9.1Beta-local-release" }
 #noinspection SimilarGradleDependency
-onionmasq-debug = { module = "org.torproject:onionmasq", version = "main-branch-debug" }
+onionmasq-debug = { module = "org.torproject:onionmasq", version = "1.9.1Beta-local-release" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 # Room
