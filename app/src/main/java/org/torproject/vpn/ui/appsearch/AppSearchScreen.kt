@@ -170,117 +170,117 @@ fun ScreenContent(
             }
         )
         Box(modifier = Modifier.weight(1f)) {
-        when {
-            queryState.text.isBlank() -> {
-                // We aren't searching for anything but have past search queries
-                if (state.recentQueries.isNotEmpty()) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        CategoryHeader(
-                            category = stringResource(R.string.category_header_recent)
-                        )
+            when {
+                queryState.text.isBlank() -> {
+                    // We aren't searching for anything but have past search queries
+                    if (state.recentQueries.isNotEmpty()) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            CategoryHeader(
+                                category = stringResource(R.string.category_header_recent)
+                            )
 
-                        state.recentQueries.forEach { query ->
-                            ListItem(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onRequestSearch(query) },
-                                leadingContent = {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_history),
-                                        contentDescription = null
-                                    )
-                                },
-                                headlineContent = {
-                                    Text(
-                                        text = query,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                            state.recentQueries.forEach { query ->
+                                ListItem(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onRequestSearch(query) },
+                                    leadingContent = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_history),
+                                            contentDescription = null
+                                        )
+                                    },
+                                    headlineContent = {
+                                        Text(
+                                            text = query,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Button(onClick = {
+                                    onEvent(AppSearchViewModel.Event.ClearSearchQueries)
+                                }) {
+                                    Text(text = stringResource(R.string.action_clear_all))
                                 }
+                            }
+                        }
+                    } else {
+                        // Nothing to show
+                    }
+                }
+
+                searchResults.itemCount == 0 -> {
+                    // Avoid flashing the "no results" state while the first page is still loading
+                    if (searchResults.loadState.refresh is LoadState.NotLoading) {
+                        // We are searching for something but have no matching results
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(
+                                dimensionResource(R.dimen.compact_padding),
+                                Alignment.CenterVertically
+                            )
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_binoculars),
+                                contentDescription = null
+                            )
+                            Text(
+                                text = stringResource(R.string.search_error_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = stringResource(R.string.search_error_message),
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+                    }
+                }
 
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Button(onClick = {
-                                onEvent(AppSearchViewModel.Event.ClearSearchQueries)
-                            }) {
-                                Text(text = stringResource(R.string.action_clear_all))
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        item {
+                            CategoryHeader(
+                                category = stringResource(R.string.category_header_results)
+                            )
+                        }
+                        items(
+                            count = searchResults.itemCount,
+                            key = searchResults.itemKey { it.packageName }
+                        ) { index ->
+                            searchResults[index]?.let { app ->
+                                AppListItem(
+                                    app = app,
+                                    onClick = {
+                                        onEvent(AppSearchViewModel.Event.OpenApp(app.name))
+                                        onNavigateToAppDetail(app.packageName)
+                                    },
+                                    onRoutingToggled = { enabled ->
+                                        onEvent(
+                                            AppSearchViewModel.Event.UpdateRouting(
+                                                app.packageName,
+                                                enabled
+                                            )
+                                        )
+                                    }
+                                )
                             }
                         }
                     }
-                } else {
-                    // Nothing to show
                 }
             }
-
-            searchResults.itemCount == 0 -> {
-                // Avoid flashing the "no results" state while the first page is still loading
-                if (searchResults.loadState.refresh is LoadState.NotLoading) {
-                    // We are searching for something but have no matching results
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(
-                            dimensionResource(R.dimen.compact_padding),
-                            Alignment.CenterVertically
-                        )
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_binoculars),
-                            contentDescription = null
-                        )
-                        Text(
-                            text = stringResource(R.string.search_error_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = stringResource(R.string.search_error_message),
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-
-            else -> {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    item {
-                        CategoryHeader(
-                            category = stringResource(R.string.category_header_results)
-                        )
-                    }
-                    items(
-                        count = searchResults.itemCount,
-                        key = searchResults.itemKey { it.packageName }
-                    ) { index ->
-                        searchResults[index]?.let { app ->
-                            AppListItem(
-                                app = app,
-                                onClick = {
-                                    onEvent(AppSearchViewModel.Event.OpenApp(app.name))
-                                    onNavigateToAppDetail(app.packageName)
-                                },
-                                onRoutingToggled = { enabled ->
-                                    onEvent(
-                                        AppSearchViewModel.Event.UpdateRouting(
-                                            app.packageName,
-                                            enabled
-                                        )
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
         }
     }
 }
