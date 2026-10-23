@@ -97,18 +97,6 @@ jobs:
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh
 
-      - name: Run unit tests, ktlint, Android lint, and staging build
-        shell: bash
-        run: |
-          set -euo pipefail
-          docker run --rm \
-            --volume "$GITHUB_WORKSPACE:/build/vpn" \
-            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
-            --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
-            --workdir /build/vpn \
-            tor2-android-builder \
-            bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
-
       - name: Upload staging APKs for inspection
         if: success()
         uses: actions/upload-artifact@v4
@@ -158,6 +146,18 @@ jobs:
           path: dist/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Run unit tests, ktlint, Android lint, and staging build
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
       - name: Publish APK download page
         if: ${{ inputs.publish_release }}
