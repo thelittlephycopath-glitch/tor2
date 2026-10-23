@@ -64,6 +64,10 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     buildFeatures {
         dataBinding = true
         buildConfig = true
