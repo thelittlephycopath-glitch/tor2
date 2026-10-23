@@ -269,65 +269,77 @@ class TorVpnService : VpnService() {
                         .addLog(getString(R.string.bootstrap_at, event.bootstrapStatus))
                 }
                 is NewConnectionEvent -> {
-                    LogObservable.getInstance().addLog(
-                        getString(
-                            R.string.new_connection,
-                            event.proxySrc,
-                            event.proxyDst,
-                            event.torDst,
-                            event.appId
-                        )
-                    )
-
-                    var verboseLogContent = ""
-                    for ((i, relay) in event.circuit.withIndex()) {
-                        val identity = relay.ed_identity ?: relay.rsa_identity ?: "unknown"
-                        val address =
-                            if (relay.addresses.size > 0) relay.addresses[0] else "unknown"
-
-                        verboseLogContent = "$verboseLogContent\n${getString(
-                            R.string.new_connection_hop,
-                            event.proxySrc,
-                            event.proxyDst,
-                            i,
-                            address,
-                            identity
-                        )}"
-                    }
-                    LogObservable.getInstance().addLog(verboseLogContent, true)
-                }
-                is FailedConnectionEvent -> {
-                    LogObservable.getInstance().addLog(
-                        getString(
-                            R.string.failed_connection,
-                            event.proxySrc,
-                            event.proxyDst,
-                            event.torDst,
-                            event.error,
-                            event.appId
-                        )
-                    )
-                }
-                is ClosedConnectionEvent -> {
-                    event.error?.let {
+                    if (preferenceHelper.verboseLogging) {
                         LogObservable.getInstance().addLog(
                             getString(
-                                R.string.failed_connection_closed,
+                                R.string.new_connection,
                                 event.proxySrc,
                                 event.proxyDst,
-                                event.error
-                            ),
-                            true
+                                event.torDst,
+                                event.appId
+                            )
                         )
-                    } ?: run {
+
+                        var verboseLogContent = ""
+                        for ((i, relay) in event.circuit.withIndex()) {
+                            val identity = relay.ed_identity ?: relay.rsa_identity ?: "unknown"
+                            val address =
+                                if (relay.addresses.size > 0) relay.addresses[0] else "unknown"
+
+                            verboseLogContent = "$verboseLogContent\n${getString(
+                                R.string.new_connection_hop,
+                                event.proxySrc,
+                                event.proxyDst,
+                                i,
+                                address,
+                                identity
+                            )}"
+                        }
+                        LogObservable.getInstance().addLog(verboseLogContent, true)
+                    } else {
+                        LogObservable.getInstance().addLog("New connection established")
+                    }
+                }
+                is FailedConnectionEvent -> {
+                    if (preferenceHelper.verboseLogging) {
                         LogObservable.getInstance().addLog(
                             getString(
-                                R.string.closed_connection,
+                                R.string.failed_connection,
                                 event.proxySrc,
-                                event.proxyDst
-                            ),
-                            true
+                                event.proxyDst,
+                                event.torDst,
+                                event.error,
+                                event.appId
+                            )
                         )
+                    } else {
+                        LogObservable.getInstance().addLog("Connection failed")
+                    }
+                }
+                is ClosedConnectionEvent -> {
+                    if (preferenceHelper.verboseLogging) {
+                        event.error?.let {
+                            LogObservable.getInstance().addLog(
+                                getString(
+                                    R.string.failed_connection_closed,
+                                    event.proxySrc,
+                                    event.proxyDst,
+                                    event.error
+                                ),
+                                true
+                            )
+                        } ?: run {
+                            LogObservable.getInstance().addLog(
+                                getString(
+                                    R.string.closed_connection,
+                                    event.proxySrc,
+                                    event.proxyDst
+                                ),
+                                true
+                            )
+                        }
+                    } else {
+                        LogObservable.getInstance().addLog("Connection closed")
                     }
                 }
                 is NewDirectoryEvent -> {
