@@ -104,7 +104,7 @@ class TorVPNTileService : TileService() {
 
     private fun onStatusChanged(connectionState: ConnectionState, hasInternet: Boolean) {
         val t = qsTile ?: return
-        Log.d("TILE_TOR_VPN", "CONNECTION STATE CHANGED: ${connectionState?.name}")
+        Log.d("TILE_TOR_VPN", "CONNECTION STATE CHANGED: ${connectionState.name}")
         when (connectionState) {
             INIT,
             DISCONNECTED -> {
@@ -161,6 +161,7 @@ class TorVPNTileService : TileService() {
     override fun onStartListening() {
         super.onStartListening()
         Log.d("TILE_TOR_VPN", "onStartListening")
+        collectionJob?.cancel()
         collectionJob = this.observerCoroutineScope.launch {
             vpnStateFlow.collect {
                 onStatusChanged(it.first, it.second)
@@ -178,6 +179,8 @@ class TorVPNTileService : TileService() {
     }
 
     override fun onDestroy() {
+        collectionJob?.cancel()
+        observerCoroutineScope.coroutineContext[Job]?.cancel()
         super.onDestroy()
         Log.d("TILE_TOR_VPN", "onDestroy")
     }
