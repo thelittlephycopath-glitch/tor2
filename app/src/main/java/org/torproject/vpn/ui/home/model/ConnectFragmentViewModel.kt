@@ -119,7 +119,7 @@ class ConnectFragmentViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
-            initialValue = VpnStatusObservable.statusLiveData.value ?: INIT
+            initialValue = VpnStatusObservable.statusLiveData.value
         )
 
     private val initState = State()
@@ -148,7 +148,7 @@ class ConnectFragmentViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
-            initialValue = VpnStatusObservable.hasInternetConnectivity.value ?: true
+            initialValue = VpnStatusObservable.hasInternetConnectivity.value
         )
 
     val toolBarTitle: StateFlow<String> = combine(
