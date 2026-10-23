@@ -74,6 +74,20 @@ else
   echo "Skipping Android App Bundle because BUILD_AAB=0"
 fi
 
+# The container build skips reproducible_fetch_deps.sh, so bootstrap the
+# APK alignment helper here as well. Keep this check close to its only use so
+# container and local builds both fail early with a clear error if Git is unavailable.
+if [[ ! -f bin/reproducible-apk-tools/zipalign.py ]]; then
+  echo "Fetching reproducible-apk-tools (required to align APKs)..."
+  mkdir -p bin
+  git clone --depth 1 https://github.com/obfusk/reproducible-apk-tools.git bin/reproducible-apk-tools
+fi
+
+if [[ ! -f bin/reproducible-apk-tools/zipalign.py ]]; then
+  echo "Missing bin/reproducible-apk-tools/zipalign.py after fetching alignment tools." >&2
+  exit 1
+fi
+
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue
   mv "$apk" "$apk.unaligned"
