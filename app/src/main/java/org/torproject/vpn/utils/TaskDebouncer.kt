@@ -99,6 +99,16 @@ open class TaskDebouncer(
     private val isCancelled = AtomicBoolean(false)
     private val lifecycleLock = Any()
 
+    // Android's local JVM test stubs throw when Log methods are called. Keep logging
+    // best-effort so a missing Android runtime can never break queue processing.
+    private fun logDebug(message: String) {
+        runCatching { Log.d(TAG, message) }
+    }
+
+    private fun logError(message: String, error: Throwable) {
+        runCatching { Log.e(TAG, message, error) }
+    }
+
     // Start consumer job.
     private fun start() {
         if (consumerJob?.isActive == true) return
@@ -128,7 +138,7 @@ open class TaskDebouncer(
                             if (hasTask.get() || !queue.isEmpty() || latestByType.isNotEmpty()) {
                                 continue
                             }
-                            Log.d(TAG, "TaskDebouncer hibernates")
+                            logDebug("TaskDebouncer hibernates")
                             break
                         }
 
@@ -160,7 +170,7 @@ open class TaskDebouncer(
 
                         when (claimResult) {
                             0 -> {
-                                Log.d(TAG, "TaskDebouncer - drop stale/cancelled item ${polled.id}")
+                                logDebug("TaskDebouncer - drop stale/cancelled item ${polled.id}")
                                 continue
                             }
                             2 -> {
@@ -179,7 +189,7 @@ open class TaskDebouncer(
                     } catch (e: Exception) {
                         // Keep the consumer alive after ordinary task failures, but do not swallow
                         // fatal JVM errors such as OutOfMemoryError or LinkageError.
-                        Log.e(TAG, "TaskDebouncer failed while processing queued work", e)
+                        logError("TaskDebouncer failed while processing queued work", e)
                     } finally {
                         runningType.set(null)
                     }
@@ -194,7 +204,7 @@ open class TaskDebouncer(
     // tasks are dropped.
     fun cancel() {
         synchronized(lifecycleLock) {
-            Log.d(TAG, "stopping TaskDebouncer")
+            logDebug("stopping TaskDebouncer")
             if (!isCancelled.compareAndSet(false, true)) return
             consumerJob?.cancel()
             consumerJob = null
@@ -207,7 +217,7 @@ open class TaskDebouncer(
 
     open fun process(item: QueuedTask) {
         if (isCancelled.get()) {
-            Log.d(TAG, "dropping enqueued task ${item.id}")
+            logDebug("dropping enqueued task ${item.id}")
             return
         }
         item.block()
@@ -222,7 +232,7 @@ open class TaskDebouncer(
     ) {
         synchronized(lifecycleLock) {
             if (isCancelled.get()) {
-                Log.d(TAG, "immediately dropping enqueued task $taskId")
+                logDebug("immediately dropping enqueued task $taskId")
                 return
             }
             val seq = counter.incrementAndGet()
