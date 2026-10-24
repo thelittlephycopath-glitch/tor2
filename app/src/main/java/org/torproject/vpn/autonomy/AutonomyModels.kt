@@ -54,6 +54,7 @@ enum class AutonomyEventType {
     LEAK_CHECK_FAILED,
     LOW_BATTERY,
     LOW_DATA_BUDGET,
+    RESOURCE_MONITOR_UNAVAILABLE,
     SERVICE_STOPPED
 }
 
