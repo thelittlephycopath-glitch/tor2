@@ -136,7 +136,7 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
             }
             AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE -> {
-                environmentalSignals = environmentalSignals.copy(batteryPercent = 0)
+                environmentalSignals = environmentalSignals.copy(batteryReadingAvailable = false)
                 lowBatteryActive = false
             }
             AutonomyEventType.SERVICE_CREATED,
@@ -177,12 +177,15 @@ class AutonomyCoordinator(
 
     /**
      * Supplies a validated battery reading from Android's sticky battery broadcast.
-     * Unknown/invalid readings are mapped to 0 by the monitor so optional traffic stays suppressed.
+     * Unknown readings use a separate unavailable state so they are not mislabeled as 0% battery.
      */
     @Synchronized
     fun updateBatteryPercent(percent: Int): AutonomyDecision {
         require(percent in 0..100) { "Battery percentage must be between 0 and 100" }
-        environmentalSignals = environmentalSignals.copy(batteryPercent = percent)
+        environmentalSignals = environmentalSignals.copy(
+            batteryPercent = percent,
+            batteryReadingAvailable = true
+        )
         val wasLow = lowBatteryActive
         lowBatteryActive = percent <= LOW_BATTERY_THRESHOLD_PERCENT
         if (lowBatteryActive && !wasLow) {

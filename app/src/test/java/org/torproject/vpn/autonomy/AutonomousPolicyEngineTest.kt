@@ -53,7 +53,9 @@ class AutonomousPolicyEngineTest {
         assertFalse(
             engine.evaluate(NetworkSignals(remainingDataBudgetMb = 10)).coverTrafficAllowedByBudget
         )
-        assertTrue(engine.evaluate(NetworkSignals()).coverTrafficAllowedByBudget)
+        assertTrue(
+            engine.evaluate(NetworkSignals(batteryReadingAvailable = true)).coverTrafficAllowedByBudget
+        )
     }
 
     @Test
@@ -133,6 +135,15 @@ class AutonomousPolicyEngineTest {
         )
         assertFalse(decision.recommendBridgeFailover)
         assertFalse(decision.recommendCircuitRefresh)
+    }
+
+    @Test
+    fun unavailableBatteryTelemetrySuppressesOptionalTrafficWithoutClaimingLowBattery() {
+        val decision = engine.evaluate(
+            NetworkSignals(batteryReadingAvailable = false, batteryPercent = 100)
+        )
+        assertFalse(decision.coverTrafficAllowedByBudget)
+        assertFalse(decision.reasons.contains("Battery budget is low"))
     }
 
     @Test

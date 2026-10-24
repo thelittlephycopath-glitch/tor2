@@ -46,7 +46,8 @@ class AutonomousPolicyEngine(
             reasons += "Repeated connection failures"
         }
 
-        val lowBattery = signals.batteryPercent <= lowBatteryThresholdPercent
+        val lowBattery = signals.batteryReadingAvailable &&
+            signals.batteryPercent <= lowBatteryThresholdPercent
         val lowData = signals.remainingDataBudgetMb?.let { it <= lowDataBudgetThresholdMb } == true
         if (lowBattery) reasons += "Battery budget is low"
         if (lowData) reasons += "Data budget is low"
@@ -86,7 +87,8 @@ class AutonomousPolicyEngine(
             actions += AutonomyAction.REQUEST_TUNNEL_RECONNECT
         }
 
-        val coverTrafficAllowedByBudget = !lowBattery && !lowData && !signals.mobileData
+        val coverTrafficAllowedByBudget =
+            signals.batteryReadingAvailable && !lowBattery && !lowData && !signals.mobileData
         if (signals.coverTrafficRequested && !coverTrafficAllowedByBudget) {
             actions += AutonomyAction.SUPPRESS_COVER_TRAFFIC
         }

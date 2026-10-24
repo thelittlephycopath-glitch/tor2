@@ -279,7 +279,7 @@ class AutonomyCoordinatorTest {
         )
 
         assertFalse(decision.coverTrafficAllowedByBudget)
-        assertEquals(0, coordinator.currentSignals().batteryPercent)
+        assertFalse(coordinator.currentSignals().batteryReadingAvailable)
         assertEquals(
             0,
             coordinator.journal.snapshot().count { it.type == AutonomyEventType.LOW_BATTERY }
