@@ -70,6 +70,30 @@ class AutonomyCoordinator(
                 leakChecksPassed = false
                 leakCheckFailed = false
             }
+            AutonomyEventType.DNS_HIJACK_SUSPECTED -> {
+                environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = true)
+                tunnelReady = false
+                leakChecksPassed = false
+                leakCheckFailed = false
+            }
+            AutonomyEventType.DNS_HIJACK_CLEARED -> {
+                environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = false)
+                tunnelReady = false
+                leakChecksPassed = false
+                leakCheckFailed = false
+            }
+            AutonomyEventType.TLS_INTERCEPTION_SUSPECTED -> {
+                environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = true)
+                tunnelReady = false
+                leakChecksPassed = false
+                leakCheckFailed = false
+            }
+            AutonomyEventType.TLS_INTERCEPTION_CLEARED -> {
+                environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = false)
+                tunnelReady = false
+                leakChecksPassed = false
+                leakCheckFailed = false
+            }
             AutonomyEventType.CAPTIVE_PORTAL_DETECTED -> {
                 environmentalSignals = environmentalSignals.copy(captivePortalDetected = true)
                 tunnelReady = false
@@ -123,6 +147,29 @@ class AutonomyCoordinator(
             leakChecksPassed = leakChecksPassed,
             leakCheckFailed = leakCheckFailed,
             // Only an explicit DNS_CONFIGURATION_CLEARED event may clear this service-owned latch.
+            dnsConfigurationConflict = environmentalSignals.dnsConfigurationConflict
+        )
+        return calculateDecision()
+    }
+
+    /**
+     * Updates the fields owned by the Android network callback without overwriting trust, anomaly,
+     * resource-budget, or service-owned DNS-conflict signals from other components.
+     */
+    @Synchronized
+    fun updateNetworkEnvironment(
+        networkAvailable: Boolean,
+        captivePortalDetected: Boolean,
+        mobileData: Boolean
+    ): AutonomyDecision {
+        environmentalSignals = environmentalSignals.copy(
+            networkAvailable = networkAvailable,
+            captivePortalDetected = captivePortalDetected,
+            mobileData = mobileData,
+            repeatedConnectionFailures = consecutiveFailures,
+            tunnelReady = tunnelReady,
+            leakChecksPassed = leakChecksPassed,
+            leakCheckFailed = leakCheckFailed,
             dnsConfigurationConflict = environmentalSignals.dnsConfigurationConflict
         )
         return calculateDecision()
