@@ -49,6 +49,9 @@ import org.torproject.onionmasq.logging.LogHelper
 import org.torproject.onionmasq.logging.LogObservable
 import org.torproject.vpn.BuildConfig
 import org.torproject.vpn.R
+import org.torproject.vpn.autonomy.AutonomyCoordinator
+import org.torproject.vpn.autonomy.AutonomyEventSource
+import org.torproject.vpn.autonomy.AutonomyEventType
 import org.torproject.vpn.ui.approuting.data.AppManager
 import org.torproject.vpn.utils.Country
 import org.torproject.vpn.utils.PreferenceHelper
@@ -72,6 +75,7 @@ class TorVpnService : VpnService() {
     private lateinit var appManager: AppManager
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var connectivityHandler: ConnectivityHandler
+    private val autonomyCoordinator = AutonomyCoordinator()
 
     private var logObservable: LogObservable? = null
 
@@ -128,6 +132,7 @@ class TorVpnService : VpnService() {
         logObservable = LogObservable.getInstance()
         connectivityHandler = ConnectivityHandler(this)
         connectivityHandler.register()
+        observeAutonomyEvent(AutonomyEventType.SERVICE_CREATED)
         OnionMasq.bindVPNService(TorVpnService::class.java)
         try {
             when (val country = preferenceHelper.exitNodeCountry) {
@@ -215,6 +220,7 @@ class TorVpnService : VpnService() {
 
     override fun onDestroy() {
         Log.d(TAG, "service: onDestroy")
+        observeAutonomyEvent(AutonomyEventType.SERVICE_STOPPED)
         // TaskDebouncer owns an independent scope, so cancelling the service job alone
         // does not terminate its consumer or discard queued callbacks.
         actionDebouncer.cancel()
@@ -236,6 +242,7 @@ class TorVpnService : VpnService() {
     }
 
     private fun stop(state: ConnectionState, taskID: Int) {
+        observeAutonomyEvent(AutonomyEventType.TUNNEL_STOPPED)
         Log.v(TAG, "service ($taskID): stopping")
         VpnStatusObservable.update(state)
         actionDebouncer.cancel()
@@ -264,6 +271,7 @@ class TorVpnService : VpnService() {
                 is BootstrapEvent -> {
                     if (event.isReadyForTraffic && event.bootstrapPercent == 100) {
                         VpnStatusObservable.update(ConnectionState.CONNECTED)
+                        observeAutonomyEvent(AutonomyEventType.TUNNEL_READY)
                     }
                     LogObservable.getInstance()
                         .addLog(getString(R.string.bootstrap_at, event.bootstrapStatus))
@@ -301,6 +309,7 @@ class TorVpnService : VpnService() {
                     }
                 }
                 is FailedConnectionEvent -> {
+                    observeAutonomyEvent(AutonomyEventType.CONNECTION_FAILED)
                     if (preferenceHelper.verboseLogging) {
                         LogObservable.getInstance().addLog(
                             getString(
@@ -354,10 +363,18 @@ class TorVpnService : VpnService() {
                     preferenceHelper.relayCountries = countriesWithSufficientExitNodes.toSet()
                 }
                 is ConnectivityEvent -> {
+                    observeAutonomyEvent(
+                        if (event.hasInternetConnectivity) {
+                            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED
+                        } else {
+                            AutonomyEventType.NETWORK_CONNECTIVITY_LOST
+                        }
+                    )
                     VpnStatusObservable.updateInternetConnectivity(event.hasInternetConnectivity)
                 }
                 is DNSConnectivityEvent -> {
                     if (connectivityHandler.isPrivateDnsEnforced()) {
+                        observeAutonomyEvent(AutonomyEventType.DNS_CONFIGURATION_CONFLICT)
                         notificationManager.notifyPrivateDnsError()
                         stop(ConnectionState.PRIVATE_DNS_ERROR, -1)
                         LogObservable.getInstance().addLog(
@@ -417,6 +434,7 @@ class TorVpnService : VpnService() {
 
     private fun establishVpn(taskID: Int) {
         try {
+            observeAutonomyEvent(AutonomyEventType.TUNNEL_START_REQUESTED)
             Log.v(TAG, "service ($taskID): starting vpn... ")
             if (OnionMasq.isRunning()) {
                 Log.v(TAG, "service ($taskID): stopping previous Tor session... ")
@@ -503,11 +521,17 @@ class TorVpnService : VpnService() {
     }
 
     private fun handleException(e: Exception, msg: String, taskID: Int) {
+        observeAutonomyEvent(AutonomyEventType.TUNNEL_FAILED)
         Log.e(TAG, "($taskID): $msg", e)
         when (e) {
             is SecurityException -> stop(ConnectionState.PRIVATE_DNS_ERROR, taskID)
             else -> stop(ConnectionState.CONNECTION_ERROR, taskID)
         }
+    }
+
+    private fun observeAutonomyEvent(type: AutonomyEventType) {
+        // Observe-only in this branch: the coordinator must never replace service enforcement.
+        autonomyCoordinator.observe(type, AutonomyEventSource.VPN_SERVICE)
     }
 
     private fun getBridgeLines(): String? {

@@ -14,6 +14,8 @@ class AutonomousPolicyEngineTest {
         assertEquals(ProtectionProfile.HIGH, decision.profile)
         assertTrue(decision.blockTrafficUntilTunnelVerified)
         assertFalse(decision.allowCaptivePortalOnly)
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(AutonomyAction.KEEP_TRAFFIC_BLOCKED in decision.recommendedActions)
     }
 
     @Test
@@ -34,6 +36,8 @@ class AutonomousPolicyEngineTest {
         )
         assertTrue(decision.allowCaptivePortalOnly)
         assertTrue(decision.blockTrafficUntilTunnelVerified)
+        assertTrue(AutonomyAction.ALLOW_CAPTIVE_PORTAL_ONLY in decision.recommendedActions)
+        assertFalse(decision.trafficReleaseEligible)
     }
 
     @Test
@@ -61,5 +65,58 @@ class AutonomousPolicyEngineTest {
     fun invalidSignalRangesAreRejected() {
         val exception = runCatching { NetworkSignals(batteryPercent = 101) }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
+        assertTrue(
+            runCatching { BridgeCandidate(Transport.OBFS4, Double.NaN, 1, 0) }
+                .exceptionOrNull() is IllegalArgumentException
+        )
+    }
+
+    @Test
+    fun tunnelReadyWithoutLeakChecksStillBlocksTraffic() {
+        val decision = engine.evaluate(
+            NetworkSignals(trust = NetworkTrust.TRUSTED, tunnelReady = true, leakChecksPassed = false)
+        )
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+        assertTrue(AutonomyAction.RUN_LEAK_CHECKS in decision.recommendedActions)
+    }
+
+    @Test
+    fun trafficReleaseRequiresEveryIndependentPredicate() {
+        val fullyVerified = NetworkSignals(
+            trust = NetworkTrust.TRUSTED,
+            networkAvailable = true,
+            tunnelReady = true,
+            leakChecksPassed = true
+        )
+        assertTrue(engine.evaluate(fullyVerified).trafficReleaseEligible)
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(leakCheckFailed = true)).trafficReleaseEligible
+        )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(dnsConfigurationConflict = true))
+                .trafficReleaseEligible
+        )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(networkAvailable = false)).trafficReleaseEligible
+        )
+    }
+
+    @Test
+    fun bridgeFailoverIsNotRecommendedWhenNetworkIsDown() {
+        val decision = engine.evaluate(
+            NetworkSignals(networkAvailable = false, repeatedConnectionFailures = 10)
+        )
+        assertFalse(decision.recommendBridgeFailover)
+        assertFalse(decision.recommendCircuitRefresh)
+    }
+
+    @Test
+    fun coverTrafficRequestIsSuppressedWhenBudgetIsInsufficient() {
+        val decision = engine.evaluate(
+            NetworkSignals(mobileData = true, coverTrafficRequested = true)
+        )
+        assertFalse(decision.coverTrafficAllowedByBudget)
+        assertTrue(AutonomyAction.SUPPRESS_COVER_TRAFFIC in decision.recommendedActions)
     }
 }
