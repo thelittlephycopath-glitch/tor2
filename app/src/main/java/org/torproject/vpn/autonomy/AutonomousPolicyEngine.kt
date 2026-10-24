@@ -53,7 +53,10 @@ class AutonomousPolicyEngine(
             signals.tunnelReady &&
             signals.leakChecksPassed &&
             !signals.leakCheckFailed &&
-            !signals.dnsConfigurationConflict
+            !signals.dnsConfigurationConflict &&
+            !signals.dnsHijackSuspected &&
+            !signals.tlsInterceptionSuspected &&
+            !signals.captivePortalDetected
 
         if (!trafficReleaseEligible) {
             actions += AutonomyAction.KEEP_TRAFFIC_BLOCKED
