@@ -74,34 +74,21 @@ else
   echo "Skipping Android App Bundle because BUILD_AAB=0"
 fi
 
-# Prefer the reproducible alignment helper. Container builds skip
-# reproducible_fetch_deps.sh, so try to fetch it here; a network/tooling
-# failure must not discard an otherwise valid APK when Android's pinned
-# zipalign is available as a fallback.
-if [[ ! -f bin/reproducible-apk-tools/zipalign.py ]]; then
-  echo "Fetching reproducible-apk-tools for reproducible APK alignment..."
-  mkdir -p bin
-  if command -v git >/dev/null 2>&1; then
-    git clone --depth 1 https://github.com/obfusk/reproducible-apk-tools.git bin/reproducible-apk-tools || \
-      echo "Could not fetch reproducible-apk-tools; falling back to Android SDK zipalign."
-  else
-    echo "Git is unavailable in the builder; falling back to Android SDK zipalign."
-  fi
-fi
-
+# Align APKs with the pinned Android SDK build-tools. This is available in
+# the reproducible builder and avoids relying on a separately cloned helper
+# whose checkout may be incomplete or whose interpreter may be unavailable.
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue
+  ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
+  if [[ ! -x "$ZIPALIGN" ]]; then
+    echo "Pinned Android SDK zipalign is unavailable at $ZIPALIGN" >&2
+    exit 1
+  fi
   mv "$apk" "$apk.unaligned"
-  if [[ -f bin/reproducible-apk-tools/zipalign.py ]]; then
-    ./bin/reproducible-apk-tools/zipalign.py --page-size 16 --pad-like-apksigner --replace "$apk.unaligned" "$apk"
-  else
-    ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
-    if [[ ! -x "$ZIPALIGN" ]]; then
-      echo "Neither reproducible zipalign.py nor Android SDK zipalign is available." >&2
-      mv "$apk.unaligned" "$apk"
-      exit 1
-    fi
-    "$ZIPALIGN" -P 16 -f 4 "$apk.unaligned" "$apk"
+  if ! "$ZIPALIGN" -P 16 -f 4 "$apk.unaligned" "$apk"; then
+    mv "$apk.unaligned" "$apk"
+    echo "APK alignment failed for $apk" >&2
+    exit 1
   fi
   rm "$apk.unaligned"
 done
