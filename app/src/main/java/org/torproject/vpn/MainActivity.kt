@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -96,9 +97,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hideBottomNavigationView(view: BottomNavigationView, animate: Boolean = true) {
-        view.clearAnimation()
-        val duration = if (animate) 300L else 0L
-        view.animate().translationY(view.height.toFloat()).duration = duration
+        view.animate().cancel()
+        val duration = if (animate) 260L else 0L
+        view.animate()
+            .translationY(view.height.toFloat())
+            .alpha(0f)
+            .setDuration(duration)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = true
         } else {
@@ -108,9 +114,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBottomNavigationView(view: BottomNavigationView, animate: Boolean = true) {
-        view.clearAnimation()
-        val duration = if (animate) 300L else 0L
-        view.animate().translationY(0f).duration = duration
+        view.animate().cancel()
+        val duration = if (animate) 260L else 0L
+        view.animate()
+            .translationY(0f)
+            .alpha(1f)
+            .setDuration(duration)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         } else {
