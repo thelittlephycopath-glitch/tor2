@@ -128,8 +128,13 @@ class AutonomyCoordinator(
                 leakChecksPassed = false
                 leakCheckFailed = false
             }
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
+                environmentalSignals = environmentalSignals.copy(networkAvailable = false)
+                tunnelReady = false
+                leakChecksPassed = false
+                leakCheckFailed = false
+            }
             AutonomyEventType.SERVICE_CREATED,
-            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
             AutonomyEventType.LOW_BATTERY,
             AutonomyEventType.LOW_DATA_BUDGET -> Unit
         }
