@@ -69,11 +69,7 @@ fun CategoryHeader(
                 trailingContent = {
                     Icon(
                         modifier = Modifier.graphicsLayer { rotationZ = arrowRotation },
-                        painter = if (isExpanded) {
-                            painterResource(R.drawable.carat_up)
-                        } else {
-                            painterResource(R.drawable.carat_down)
-                        },
+                        painter = painterResource(R.drawable.carat_down),
                         contentDescription = null
                     )
                 }
