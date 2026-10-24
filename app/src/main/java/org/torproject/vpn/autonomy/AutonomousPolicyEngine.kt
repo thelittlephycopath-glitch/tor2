@@ -73,7 +73,7 @@ class AutonomousPolicyEngine(
             actions += AutonomyAction.NOTIFY_USER
         }
         if (signals.captivePortalDetected) {
-            // This is a plan for a future narrowly scoped portal policy, not permission to bypass Tor.
+            // This future portal policy must not permit unrelated traffic to bypass Tor.
             actions += AutonomyAction.ALLOW_CAPTIVE_PORTAL_ONLY
         }
 
