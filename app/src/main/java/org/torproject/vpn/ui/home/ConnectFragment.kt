@@ -174,6 +174,13 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
         currentVpnState = connectFragmentViewModel.connectionState.value
         setUIState(currentVpnState, connectFragmentViewModel.internetConnectivity.value)
 
+        // Stagger the first render so the screen feels responsive without delaying VPN state.
+        if (savedInstanceState == null) {
+            animateEntrance(binding.toolbar, 0L)
+            animateEntrance(binding.includeStats.root, 70L)
+            animateEntrance(binding.clExitSelectionButton, 130L)
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -282,6 +289,19 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
         super.onDestroyView()
         _binding = null
         preferenceHelper.unregisterListener(this)
+    }
+
+    private fun animateEntrance(view: View, delayMillis: Long) {
+        view.animate().cancel()
+        view.alpha = 0f
+        view.translationY = getDpInPx(requireContext(), 10f).toFloat()
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setStartDelay(delayMillis)
+            .setDuration(360L)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
     private fun setUIState(vpnState: ConnectionState, hasInternetConnectivity: Boolean) {
