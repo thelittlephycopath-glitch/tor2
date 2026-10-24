@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
  * Feeds battery state into the optional-traffic budget only.
  *
  * It does not change VPN routing, start traffic generation, or expose battery data outside the
- * process. If the platform cannot supply a valid reading, the budget uses 0% conservatively.
+ * process. If the platform cannot supply a valid reading, optional traffic remains suppressed.
  */
 class AndroidResourceMonitor(
     context: Context,
@@ -44,11 +44,11 @@ class AndroidResourceMonitor(
             if (stickyIntent != null) {
                 updateBattery(stickyIntent)
             } else {
-                coordinator.updateBatteryPercent(0)
+                recordUnavailable()
             }
         } catch (_: RuntimeException) {
             // Never allow optional cover traffic when the battery budget cannot be read.
-            coordinator.updateBatteryPercent(0)
+            recordUnavailable()
         }
     }
 
@@ -59,11 +59,18 @@ class AndroidResourceMonitor(
         registered = false
     }
 
+    private fun recordUnavailable() {
+        coordinator.observe(
+            AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE,
+            source = AutonomyEventSource.RESOURCE_MONITOR
+        )
+    }
+
     private fun updateBattery(intent: Intent) {
         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
         if (level < 0 || scale <= 0) {
-            coordinator.updateBatteryPercent(0)
+            recordUnavailable()
             return
         }
 
