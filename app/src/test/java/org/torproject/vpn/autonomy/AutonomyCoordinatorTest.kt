@@ -227,6 +227,41 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun batteryBudgetSuppressesOptionalTrafficAndLogsOnlyThresholdTransitions() {
+        val coordinator = connectedCoordinator()
+        val lowBattery = coordinator.updateBatteryPercent(15)
+        assertEquals(15, coordinator.currentSignals().batteryPercent)
+        assertFalse(lowBattery.coverTrafficAllowedByBudget)
+        assertEquals(
+            1,
+            coordinator.journal.snapshot().count { it.type == AutonomyEventType.LOW_BATTERY }
+        )
+
+        coordinator.updateBatteryPercent(10)
+        assertEquals(
+            1,
+            coordinator.journal.snapshot().count { it.type == AutonomyEventType.LOW_BATTERY }
+        )
+
+        val recovered = coordinator.updateBatteryPercent(50)
+        assertTrue(recovered.coverTrafficAllowedByBudget)
+        coordinator.updateBatteryPercent(20)
+        assertEquals(
+            2,
+            coordinator.journal.snapshot().count { it.type == AutonomyEventType.LOW_BATTERY }
+        )
+    }
+
+    @Test
+    fun invalidBatteryReadingsAreRejectedByCoordinator() {
+        val coordinator = AutonomyCoordinator()
+        assertTrue(
+            runCatching { coordinator.updateBatteryPercent(101) }
+                .exceptionOrNull() is IllegalArgumentException
+        )
+    }
+
+    @Test
     fun invalidJournalCapacityIsRejected() {
         val exception = runCatching { AutonomyEventJournal(0) }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
