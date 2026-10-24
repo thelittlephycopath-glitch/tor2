@@ -73,6 +73,9 @@ class AutonomyCoordinatorTest {
         assertTrue(decision.blockTrafficUntilTunnelVerified)
         assertFalse(decision.trafficReleaseEligible)
         assertTrue(decision.recommendBridgeFailover)
+
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 6)
+        assertEquals(0, coordinator.currentSignals().repeatedConnectionFailures)
     }
 
     @Test
@@ -139,6 +142,50 @@ class AutonomyCoordinatorTest {
         assertTrue(decision.recommendBridgeFailover)
         assertTrue(decision.recommendCircuitRefresh)
         assertEquals(ProtectionProfile.MAXIMUM, decision.profile)
+    }
+
+    @Test
+    fun directNetworkUpdateInvalidatesOldTunnelVerification() {
+        val coordinator = AutonomyCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val afterNetworkChange = coordinator.updateNetworkEnvironment(
+            networkAvailable = false,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        assertTrue(afterNetworkChange.blockTrafficUntilTunnelVerified)
+        assertFalse(afterNetworkChange.trafficReleaseEligible)
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
+    @Test
+    fun networkUpdateDoesNotClearSuspectedDnsHijack() {
+        val coordinator = AutonomyCoordinator()
+        coordinator.observe(
+            AutonomyEventType.DNS_HIJACK_SUSPECTED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 1
+        )
+        val decision = coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        assertEquals(ProtectionProfile.MAXIMUM, decision.profile)
+        assertFalse(decision.trafficReleaseEligible)
     }
 
     @Test
