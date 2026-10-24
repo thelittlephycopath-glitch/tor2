@@ -17,6 +17,7 @@ class AutonomyCoordinator(
     private var leakChecksPassed = false
     private var leakCheckFailed = false
     private var consecutiveFailures = 0
+    private var lowBatteryActive = false
     private var lastDecision = policyEngine.evaluate(environmentalSignals)
 
     @Synchronized
@@ -170,6 +171,28 @@ class AutonomyCoordinator(
         return calculateDecision()
     }
 
+    /**
+     * Supplies a validated battery reading from Android's sticky battery broadcast.
+     * Unknown/invalid readings are mapped to 0 by the monitor so optional traffic stays suppressed.
+     */
+    @Synchronized
+    fun updateBatteryPercent(percent: Int): AutonomyDecision {
+        require(percent in 0..100) { "Battery percentage must be between 0 and 100" }
+        environmentalSignals = environmentalSignals.copy(batteryPercent = percent)
+        val wasLow = lowBatteryActive
+        lowBatteryActive = percent <= LOW_BATTERY_THRESHOLD_PERCENT
+        if (lowBatteryActive && !wasLow) {
+            journal.record(
+                AutonomyEvent(
+                    type = AutonomyEventType.LOW_BATTERY,
+                    source = AutonomyEventSource.RESOURCE_MONITOR,
+                    elapsedRealtimeMillis = elapsedRealtimeClock()
+                )
+            )
+        }
+        return calculateDecision()
+    }
+
     @Synchronized
     fun currentDecision(): AutonomyDecision = lastDecision
 
@@ -189,5 +212,8 @@ class AutonomyCoordinator(
             config.hasAutomationFeatureEnabled
         lastDecision = decision.copy(automationConfigured = automationConfigured)
         return lastDecision
+    }
+    companion object {
+        private const val LOW_BATTERY_THRESHOLD_PERCENT = 20
     }
 }
