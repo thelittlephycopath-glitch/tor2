@@ -316,7 +316,7 @@ class TorVpnService : VpnService() {
                     }
                 }
                 is FailedConnectionEvent -> {
-                    observeAutonomyEvent(AutonomyEventType.CONNECTION_FAILED)
+                    // A failed app stream is not proof that the Tor tunnel or bridge failed.
                     if (preferenceHelper.verboseLogging) {
                         LogObservable.getInstance().addLog(
                             getString(
@@ -370,13 +370,7 @@ class TorVpnService : VpnService() {
                     preferenceHelper.relayCountries = countriesWithSufficientExitNodes.toSet()
                 }
                 is ConnectivityEvent -> {
-                    observeAutonomyEvent(
-                        if (event.hasInternetConnectivity) {
-                            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED
-                        } else {
-                            AutonomyEventType.NETWORK_CONNECTIVITY_LOST
-                        }
-                    )
+                    // Onionmasq connectivity is not authoritative Android default-network state.
                     VpnStatusObservable.updateInternetConnectivity(event.hasInternetConnectivity)
                 }
                 is DNSConnectivityEvent -> {
