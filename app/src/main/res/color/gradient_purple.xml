@@ -7,15 +7,15 @@
     android:type="linear">
 
     <item
-        android:color="#BF89F5"
+        android:color="#BFBFBF"
         android:offset="0" />
 
     <item
-        android:color="#BF89F5"
+        android:color="#BFBFBF"
         android:offset="0" />
 
     <item
-        android:color="#A65AF2"
+        android:color="#666666"
         android:offset="1" />
 
 
