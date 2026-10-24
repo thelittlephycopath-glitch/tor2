@@ -100,6 +100,16 @@ class AutonomousPolicyEngineTest {
         assertFalse(
             engine.evaluate(fullyVerified.copy(networkAvailable = false)).trafficReleaseEligible
         )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(captivePortalDetected = true)).trafficReleaseEligible
+        )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(dnsHijackSuspected = true)).trafficReleaseEligible
+        )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(tlsInterceptionSuspected = true))
+                .trafficReleaseEligible
+        )
     }
 
     @Test
