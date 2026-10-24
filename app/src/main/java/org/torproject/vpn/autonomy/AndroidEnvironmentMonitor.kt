@@ -27,25 +27,30 @@ class AndroidEnvironmentMonitor(
     private var networkAvailable = false
     private var captivePortalDetected = false
     private var mobileData = false
-    private var previousPortalSignal = false
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            val shouldInvalidate = synchronized(lock) {
-                if (activeNetwork == network) {
-                    false
-                } else {
-                    val previouslyAvailable = networkAvailable
+            var shouldInvalidate = false
+            var shouldClearPortal = false
+            synchronized(lock) {
+                if (activeNetwork != network) {
+                    shouldInvalidate = networkAvailable
+                    shouldClearPortal = captivePortalDetected
                     activeNetwork = network
                     networkAvailable = false
                     captivePortalDetected = false
                     mobileData = false
-                    previouslyAvailable
                 }
             }
             if (shouldInvalidate) {
                 coordinator.observe(
                     AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                    source = AutonomyEventSource.NETWORK_MONITOR
+                )
+            }
+            if (shouldClearPortal) {
+                coordinator.observe(
+                    AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
                     source = AutonomyEventSource.NETWORK_MONITOR
                 )
             }
@@ -82,7 +87,6 @@ class AndroidEnvironmentMonitor(
                 } else if (wasPortal && !portalNow) {
                     portalEvent = AutonomyEventType.CAPTIVE_PORTAL_CLEARED
                 }
-                previousPortalSignal = portalNow
             }
             connectivityEvent?.let {
                 coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
@@ -102,7 +106,6 @@ class AndroidEnvironmentMonitor(
                     networkAvailable = false
                     captivePortalDetected = false
                     mobileData = false
-                    previousPortalSignal = false
                     true
                 }
             }
@@ -125,7 +128,6 @@ class AndroidEnvironmentMonitor(
                 networkAvailable = false
                 captivePortalDetected = false
                 mobileData = false
-                previousPortalSignal = false
             }
             coordinator.observe(
                 AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
@@ -147,6 +149,8 @@ class AndroidEnvironmentMonitor(
             registered = true
             publishEnvironment()
         } catch (_: RuntimeException) {
+            registered = false
+            runCatching { connectivityManager.unregisterNetworkCallback(networkCallback) }
             // A monitor failure is recorded without crashing the VPN service or failing open.
             coordinator.observe(
                 AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
@@ -165,20 +169,18 @@ class AndroidEnvironmentMonitor(
             networkAvailable = false
             captivePortalDetected = false
             mobileData = false
-            previousPortalSignal = false
         }
         publishEnvironment()
     }
 
     private fun publishEnvironment() {
-        val signals = synchronized(lock) {
-            NetworkSignals(
-                trust = NetworkTrust.UNKNOWN,
-                captivePortalDetected = captivePortalDetected,
-                mobileData = mobileData,
-                networkAvailable = networkAvailable
-            )
+        val state = synchronized(lock) {
+            Triple(networkAvailable, captivePortalDetected, mobileData)
         }
-        coordinator.updateEnvironment(signals)
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = state.first,
+            captivePortalDetected = state.second,
+            mobileData = state.third
+        )
     }
 }
