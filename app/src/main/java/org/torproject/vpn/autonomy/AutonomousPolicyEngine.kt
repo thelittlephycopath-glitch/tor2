@@ -33,11 +33,15 @@ class AutonomousPolicyEngine(
         }
 
         if (hostile) reasons += "Potential network interference detected"
-        if (signals.trust == NetworkTrust.PUBLIC) reasons += "Public network requires stricter policy"
+        if (signals.trust == NetworkTrust.PUBLIC) {
+            reasons += "Public network requires stricter policy"
+        }
         if (signals.trust == NetworkTrust.UNKNOWN) reasons += "Network has no trusted history"
         if (!signals.networkAvailable) reasons += "Network connectivity is unavailable"
         if (signals.captivePortalDetected) reasons += "Captive portal detected"
-        if (signals.dnsConfigurationConflict) reasons += "Device DNS policy conflicts with tunnel setup"
+        if (signals.dnsConfigurationConflict) {
+            reasons += "Device DNS policy conflicts with tunnel setup"
+        }
         if (signals.repeatedConnectionFailures >= repeatedFailureThreshold) {
             reasons += "Repeated connection failures"
         }
@@ -53,14 +57,14 @@ class AutonomousPolicyEngine(
             signals.tunnelReady &&
             signals.leakChecksPassed &&
             !signals.leakCheckFailed &&
+            !hostile &&
             !signals.dnsConfigurationConflict &&
-            !signals.dnsHijackSuspected &&
-            !signals.tlsInterceptionSuspected &&
             !signals.captivePortalDetected
 
         if (!trafficReleaseEligible) {
             actions += AutonomyAction.KEEP_TRAFFIC_BLOCKED
-            reasons += "Tunnel readiness and independent leak checks must both pass before traffic release"
+            reasons +=
+                "Tunnel readiness and independent leak checks must both pass before traffic release"
         }
         if (signals.tunnelReady && !signals.leakChecksPassed && !signals.leakCheckFailed) {
             actions += AutonomyAction.RUN_LEAK_CHECKS
