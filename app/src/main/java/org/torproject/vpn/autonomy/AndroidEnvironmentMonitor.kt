@@ -17,7 +17,7 @@ class AndroidEnvironmentMonitor(
     private val coordinator: AutonomyCoordinator
 ) {
     private val connectivityManager =
-        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     private val lock = Any()
 
     @Volatile
@@ -144,13 +144,21 @@ class AndroidEnvironmentMonitor(
     @Synchronized
     fun register() {
         if (registered) return
+        val manager = connectivityManager
+        if (manager == null) {
+            coordinator.observe(
+                AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
+                source = AutonomyEventSource.NETWORK_MONITOR
+            )
+            return
+        }
         try {
-            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+            manager.registerDefaultNetworkCallback(networkCallback)
             registered = true
             publishEnvironment()
         } catch (_: RuntimeException) {
             registered = false
-            runCatching { connectivityManager.unregisterNetworkCallback(networkCallback) }
+            runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
             // A monitor failure is recorded without crashing the VPN service or failing open.
             coordinator.observe(
                 AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
@@ -162,7 +170,7 @@ class AndroidEnvironmentMonitor(
     @Synchronized
     fun unregister() {
         if (!registered) return
-        runCatching { connectivityManager.unregisterNetworkCallback(networkCallback) }
+        runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
         registered = false
         synchronized(lock) {
             activeNetwork = null
