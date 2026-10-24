@@ -160,6 +160,19 @@ jobs:
             tor2-android-builder \
             bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
+      # The pinned builder runs as root inside Docker. Restore ownership so
+      # actions/cache can archive the mounted dependency directories during post-job cleanup.
+      - name: Fix dependency cache ownership
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git" "${RUNNER_TEMP}/tor2-maven/repository"; do
+            if [[ -d "$path" ]]; then
+              sudo chown -R "$(id -u):$(id -g)" "$path"
+            fi
+          done
+
       - name: Publish APK download page
         if: ${{ github.event_name == 'push' || inputs.publish_release }}
         uses: softprops/action-gh-release@v2
