@@ -119,7 +119,7 @@ data class NetworkSignals(
     val batteryPercent: Int = 100,
     val mobileData: Boolean = false,
     val remainingDataBudgetMb: Int? = null,
-    val networkAvailable: Boolean = true,
+    val networkAvailable: Boolean = false,
     val tunnelReady: Boolean = false,
     val leakChecksPassed: Boolean = false,
     val leakCheckFailed: Boolean = false,
