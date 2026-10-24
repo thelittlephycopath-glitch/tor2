@@ -74,23 +74,34 @@ else
   echo "Skipping Android App Bundle because BUILD_AAB=0"
 fi
 
-# The container build skips reproducible_fetch_deps.sh, so bootstrap the
-# APK alignment helper here as well. Keep this check close to its only use so
-# container and local builds both fail early with a clear error if Git is unavailable.
+# Prefer the reproducible alignment helper. Container builds skip
+# reproducible_fetch_deps.sh, so try to fetch it here; a network/tooling
+# failure must not discard an otherwise valid APK when Android's pinned
+# zipalign is available as a fallback.
 if [[ ! -f bin/reproducible-apk-tools/zipalign.py ]]; then
-  echo "Fetching reproducible-apk-tools (required to align APKs)..."
+  echo "Fetching reproducible-apk-tools for reproducible APK alignment..."
   mkdir -p bin
-  git clone --depth 1 https://github.com/obfusk/reproducible-apk-tools.git bin/reproducible-apk-tools
-fi
-
-if [[ ! -f bin/reproducible-apk-tools/zipalign.py ]]; then
-  echo "Missing bin/reproducible-apk-tools/zipalign.py after fetching alignment tools." >&2
-  exit 1
+  if command -v git >/dev/null 2>&1; then
+    git clone --depth 1 https://github.com/obfusk/reproducible-apk-tools.git bin/reproducible-apk-tools || \
+      echo "Could not fetch reproducible-apk-tools; falling back to Android SDK zipalign."
+  else
+    echo "Git is unavailable in the builder; falling back to Android SDK zipalign."
+  fi
 fi
 
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue
   mv "$apk" "$apk.unaligned"
-  ./bin/reproducible-apk-tools/zipalign.py --page-size 16 --pad-like-apksigner --replace "$apk.unaligned" "$apk"
+  if [[ -f bin/reproducible-apk-tools/zipalign.py ]]; then
+    ./bin/reproducible-apk-tools/zipalign.py --page-size 16 --pad-like-apksigner --replace "$apk.unaligned" "$apk"
+  else
+    ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
+    if [[ ! -x "$ZIPALIGN" ]]; then
+      echo "Neither reproducible zipalign.py nor Android SDK zipalign is available." >&2
+      mv "$apk.unaligned" "$apk"
+      exit 1
+    fi
+    "$ZIPALIGN" -P 16 -f 4 "$apk.unaligned" "$apk"
+  fi
   rm "$apk.unaligned"
 done
