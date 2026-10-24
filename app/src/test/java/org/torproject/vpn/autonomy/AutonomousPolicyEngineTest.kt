@@ -21,7 +21,11 @@ class AutonomousPolicyEngineTest {
     @Test
     fun suspectedDnsHijackSelectsMaximumProtectionAndRecommendsRecovery() {
         val decision = engine.evaluate(
-            NetworkSignals(trust = NetworkTrust.TRUSTED, dnsHijackSuspected = true)
+            NetworkSignals(
+                trust = NetworkTrust.TRUSTED,
+                networkAvailable = true,
+                dnsHijackSuspected = true
+            )
         )
         assertEquals(ProtectionProfile.MAXIMUM, decision.profile)
         assertTrue(decision.recommendBridgeFailover)
@@ -42,7 +46,9 @@ class AutonomousPolicyEngineTest {
 
     @Test
     fun coverTrafficBudgetGateDisablesOnMobileLowBatteryOrLowData() {
-        assertFalse(engine.evaluate(NetworkSignals(batteryPercent = 10)).coverTrafficAllowedByBudget)
+        assertFalse(
+            engine.evaluate(NetworkSignals(batteryPercent = 10)).coverTrafficAllowedByBudget
+        )
         assertFalse(engine.evaluate(NetworkSignals(mobileData = true)).coverTrafficAllowedByBudget)
         assertFalse(
             engine.evaluate(NetworkSignals(remainingDataBudgetMb = 10)).coverTrafficAllowedByBudget
@@ -74,7 +80,12 @@ class AutonomousPolicyEngineTest {
     @Test
     fun tunnelReadyWithoutLeakChecksStillBlocksTraffic() {
         val decision = engine.evaluate(
-            NetworkSignals(trust = NetworkTrust.TRUSTED, tunnelReady = true, leakChecksPassed = false)
+            NetworkSignals(
+                trust = NetworkTrust.TRUSTED,
+                networkAvailable = true,
+                tunnelReady = true,
+                leakChecksPassed = false
+            )
         )
         assertFalse(decision.trafficReleaseEligible)
         assertTrue(decision.blockTrafficUntilTunnelVerified)
@@ -102,6 +113,9 @@ class AutonomousPolicyEngineTest {
         )
         assertFalse(
             engine.evaluate(fullyVerified.copy(captivePortalDetected = true)).trafficReleaseEligible
+        )
+        assertFalse(
+            engine.evaluate(fullyVerified.copy(trust = NetworkTrust.HOSTILE)).trafficReleaseEligible
         )
         assertFalse(
             engine.evaluate(fullyVerified.copy(dnsHijackSuspected = true)).trafficReleaseEligible
