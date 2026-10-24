@@ -35,7 +35,7 @@ class TorVPNTileService : TileService() {
 
     private val observerCoroutineScope =
         CoroutineScope(
-            Dispatchers.Main.immediate + SupervisorJob(),
+            Dispatchers.Main.immediate + SupervisorJob()
         )
     private val vpnStateFlow: StateFlow<Pair<ConnectionState, Boolean>> = combine(
         VpnStatusObservable.statusLiveData,
