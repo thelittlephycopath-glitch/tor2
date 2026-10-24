@@ -6,10 +6,22 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AutonomyCoordinatorTest {
+    private fun connectedCoordinator(): AutonomyCoordinator =
+        AutonomyCoordinator().also {
+            it.updateNetworkEnvironment(
+                networkAvailable = true,
+                captivePortalDetected = false,
+                mobileData = false
+            )
+        }
+
     @Test
     fun tunnelReadyDoesNotReleaseTrafficUntilLeakCheckPasses() {
-        val coordinator = AutonomyCoordinator()
-        val bootstrapped = coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        val coordinator = connectedCoordinator()
+        val bootstrapped = coordinator.observe(
+            AutonomyEventType.TUNNEL_READY,
+            elapsedRealtimeMillis = 1
+        )
         assertTrue(bootstrapped.blockTrafficUntilTunnelVerified)
         assertFalse(bootstrapped.trafficReleaseEligible)
 
@@ -36,7 +48,7 @@ class AutonomyCoordinatorTest {
 
     @Test
     fun networkLossInvalidatesPreviouslyVerifiedTunnel() {
-        val coordinator = AutonomyCoordinator()
+        val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
             AutonomyEventType.LEAK_CHECK_PASSED,
@@ -56,7 +68,7 @@ class AutonomyCoordinatorTest {
 
     @Test
     fun failureRequiresRecoveryAndNeverKeepsOldVerification() {
-        val coordinator = AutonomyCoordinator()
+        val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
             AutonomyEventType.LEAK_CHECK_PASSED,
@@ -80,7 +92,7 @@ class AutonomyCoordinatorTest {
 
     @Test
     fun dnsConfigurationConflictPreventsTrafficRelease() {
-        val coordinator = AutonomyCoordinator()
+        val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
             AutonomyEventType.LEAK_CHECK_PASSED,
@@ -102,7 +114,9 @@ class AutonomyCoordinatorTest {
         val first = journal.record(
             AutonomyEvent(AutonomyEventType.SERVICE_CREATED, AutonomyEventSource.TEST, 1)
         )
-        journal.record(AutonomyEvent(AutonomyEventType.TUNNEL_START_REQUESTED, AutonomyEventSource.TEST, 2))
+        journal.record(
+            AutonomyEvent(AutonomyEventType.TUNNEL_START_REQUESTED, AutonomyEventSource.TEST, 2)
+        )
         journal.record(AutonomyEvent(AutonomyEventType.TUNNEL_FAILED, AutonomyEventSource.TEST, 3))
 
         assertEquals(1L, first.sequence)
@@ -118,13 +132,16 @@ class AutonomyCoordinatorTest {
     @Test
     fun automationDefaultsToDisabled() {
         val coordinator = AutonomyCoordinator()
-        val decision = coordinator.observe(AutonomyEventType.SERVICE_CREATED, elapsedRealtimeMillis = 1)
+        val decision = coordinator.observe(
+            AutonomyEventType.SERVICE_CREATED,
+            elapsedRealtimeMillis = 1
+        )
         assertFalse(decision.automationConfigured)
     }
 
     @Test
     fun suspectedDnsHijackInvalidatesVerificationAndRequestsRecovery() {
-        val coordinator = AutonomyCoordinator()
+        val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
             AutonomyEventType.LEAK_CHECK_PASSED,
@@ -146,7 +163,7 @@ class AutonomyCoordinatorTest {
 
     @Test
     fun directNetworkUpdateInvalidatesOldTunnelVerification() {
-        val coordinator = AutonomyCoordinator()
+        val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
             AutonomyEventType.LEAK_CHECK_PASSED,
@@ -189,7 +206,29 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun unavailableNetworkMonitorInvalidatesVerification() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val decision = coordinator.observe(
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 3
+        )
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+        assertFalse(decision.trafficReleaseEligible)
+        assertFalse(coordinator.currentSignals().networkAvailable)
+    }
+
+    @Test
     fun invalidJournalCapacityIsRejected() {
-        assertTrue(runCatching { AutonomyEventJournal(0) }.exceptionOrNull() is IllegalArgumentException)
+        val exception = runCatching { AutonomyEventJournal(0) }.exceptionOrNull()
+        assertTrue(exception is IllegalArgumentException)
     }
 }
