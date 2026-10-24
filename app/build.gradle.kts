@@ -26,7 +26,7 @@ android {
     namespace = "org.torproject.vpn"
 
     defaultConfig {
-        applicationId = "org.torproject.vpn.tor2beta"
+        applicationId = "org.torproject.vpn.tor2beta.dev"
         minSdk = 24
         // Android 16 — https://developer.android.com/about/versions/16/behavior-changes-16
         targetSdk = 36
