@@ -262,6 +262,37 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun unavailableResourceMonitorSuppressesOptionalTrafficWithoutFalseLowBatteryEvent() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val decision = coordinator.observe(
+            AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE,
+            source = AutonomyEventSource.RESOURCE_MONITOR,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertFalse(decision.coverTrafficAllowedByBudget)
+        assertEquals(0, coordinator.currentSignals().batteryPercent)
+        assertEquals(
+            0,
+            coordinator.journal.snapshot().count { it.type == AutonomyEventType.LOW_BATTERY }
+        )
+        assertEquals(
+            1,
+            coordinator.journal.snapshot().count {
+                it.type == AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE
+            }
+        )
+    }
+
+    @Test
     fun invalidJournalCapacityIsRejected() {
         val exception = runCatching { AutonomyEventJournal(0) }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
