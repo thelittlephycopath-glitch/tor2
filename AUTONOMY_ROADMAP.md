@@ -1,6 +1,6 @@
 # Tor VPN Beta 2 — additive autonomous backend architecture
 
-**Branch:** \`dangerous-experiment\`  
+**Branch:** `dangerous-experiment`  
 **Baseline:** existing Tor VPN Beta service, Onionmasq integration, app-routing database, preferences, and current UI  
 **Principle:** augment the current architecture; do not replace it. No UI/UX changes are part of this work.
 
@@ -13,12 +13,14 @@ The first autonomy foundation now lives beside the existing VPN code:
 - Deterministic policy evaluation and network-profile recommendations.
 - A bounded, privacy-minimised, in-memory event journal.
 - A stateful coordinator that receives VPN lifecycle observations.
-- The coordinator is wired to selected lifecycle events in \`TorVpnService\`.
+- The coordinator is wired to selected lifecycle events in `TorVpnService`.
+- An Android default-network callback observes validated connectivity, cellular transport, and captive-portal capability without reading SSIDs or changing routes.
+- Network loss/return invalidates previous tunnel/leak verification. Monitor registration failure is recorded instead of crashing the VPN service or failing open.
 - Tunnel bootstrap does **not** count as an independent leak-check pass.
 - The policy planner emits recommendations only; it does not bypass Android VPN behavior or call unverified Onionmasq operations.
 - All automation flags default off. The current UI is untouched.
 
-This is a foundation, not a claim that every item in the attached 17-section spec is finished. Automatic monitoring, actual recovery actions, leak probes, encrypted persistence, decoy files, cover traffic, ML, and device-level guarantees remain unimplemented and gated.
+This is a foundation, not a claim that every item in the attached 17-section spec is finished. Battery/data monitoring, network-trust and anomaly detection, actual recovery actions, leak probes, encrypted persistence, decoy files, cover traffic, ML, and device-level guarantees remain unimplemented and gated.
 
 ## 1. Compatibility contract: preserve the existing architecture
 
@@ -26,15 +28,15 @@ Existing subsystems remain the source of truth:
 
 | Existing subsystem | Role kept intact | New relationship |
 |---|---|---|
-| \`TorVpnService\` | Owns Android \`VpnService\` lifecycle, TUN setup, observers, and Onionmasq calls | Emits privacy-minimised lifecycle events to \`AutonomyCoordinator\` |
+| `TorVpnService` | Owns Android `VpnService` lifecycle, TUN setup, observers, and Onionmasq calls | Emits privacy-minimised lifecycle events to `AutonomyCoordinator` |
 | Onionmasq | Owns Tor networking, current transport/bridge behavior, and native TUN handling | Candidate source for future verified APIs; no speculative calls added |
-| \`VpnStatusObservable\` | Existing connection state and data usage | Not replaced with a second UI status model |
-| \`AppManager\` and app-routing database | Existing per-app route selection | Not bypassed or silently rewritten by the policy engine |
-| \`PreferenceHelper\` | Existing settings and migration behavior | No preference migration or default setting changed here |
+| `VpnStatusObservable` | Existing connection state and data usage | Not replaced with a second UI status model |
+| `AppManager` and app-routing database | Existing per-app route selection | Not bypassed or silently rewritten by the policy engine |
+| `PreferenceHelper` | Existing settings and migration behavior | No preference migration or default setting changed here |
 | Current UI and Quick Settings tile | User-facing workflows and affordances | No UI/UX changes |
 | Existing CI/build container | Pinned Android/Rust toolchain and APK packaging | Used to validate additive files on this branch |
 
-The autonomy subsystem is intentionally a sidecar module in package \`org.torproject.vpn.autonomy\`. The service sends observations into it; it does not hand the TUN descriptor, app database, or route policy to this module.
+The autonomy subsystem is intentionally a sidecar module in package `org.torproject.vpn.autonomy`. The service sends observations into it; it does not hand the TUN descriptor, app database, or route policy to this module.
 
 ## 2. Layered backend architecture
 
@@ -48,17 +50,17 @@ Proposed sources are separated by responsibility:
 - **Resource monitor — future:** battery percentage, charging state, and data-budget inputs.
 - **Bridge observation source — future:** recent outcomes already observed by the app, not unbounded active scans.
 
-Each source emits an enumerated \`AutonomyEventType\` and \`AutonomyEventSource\`. Event payloads do not accept free-form strings. Do not add raw SSIDs, destination hosts, IP addresses, DNS queries, app package names, account identifiers, browsing content, or credentials to the event record.
+Each source emits an enumerated `AutonomyEventType` and `AutonomyEventSource`. Event payloads do not accept free-form strings. Do not add raw SSIDs, destination hosts, IP addresses, DNS queries, app package names, account identifiers, browsing content, or credentials to the event record.
 
 ### 2.2 Event journal
 
-\`AutonomyEventJournal\` is a fixed-size, thread-safe ring buffer, capped at 4,096 entries (default 128). Each event has a type, source, monotonic elapsed-time timestamp, and in-process sequence number. Oldest entries are evicted when capacity is reached. Clearing the journal does not reset its sequence counter.
+`AutonomyEventJournal` is a fixed-size, thread-safe ring buffer, capped at 4,096 entries (default 128). Each event has a type, source, monotonic elapsed-time timestamp, and in-process sequence number. Oldest entries are evicted when capacity is reached. Clearing the journal does not reset its sequence counter.
 
 The journal is **in-memory only**. No unencrypted event log or ad hoc cryptography is introduced. Durable learning requires a separately reviewed Android storage design, encryption using an established library/platform mechanism, bounded retention, clear/reset semantics, and tests proving secrets never enter the record.
 
 ### 2.3 Policy engine
 
-\`AutonomousPolicyEngine\` is pure, deterministic Kotlin. It maps provided signals to a profile, reason codes, and proposed actions. It performs no network calls, no bridge probes, no filesystem writes, no device-identifier changes, and no route changes. The result is advisory until a separately reviewed executor exists.
+`AutonomousPolicyEngine` is pure, deterministic Kotlin. It maps provided signals to a profile, reason codes, and proposed actions. It performs no network calls, no bridge probes, no filesystem writes, no device-identifier changes, and no route changes. The result is advisory until a separately reviewed executor exists.
 
 Profiles currently map as follows:
 
@@ -73,13 +75,13 @@ The present service does not provide authoritative Wi-Fi trust, hostile-network,
 
 ### 2.4 Stateful coordinator
 
-\`AutonomyCoordinator\` combines the policy engine with service-observed state. On tunnel start, network changes, connection failures, DNS-policy conflict, stop, or leak-check events, it invalidates previous readiness as appropriate and recalculates the decision.
+`AutonomyCoordinator` combines the policy engine with service-observed state. On tunnel start, network changes, connection failures, DNS-policy conflict, stop, or leak-check events, it invalidates previous readiness as appropriate and recalculates the decision.
 
 Critical invariant:
 
 > Traffic is considered eligible for release by the planner only when the network is available, the tunnel is ready, an independent leak-check pass has been observed, no leak-check failure is active, and no unresolved DNS configuration conflict exists.
 
-A bootstrap event only sets tunnel readiness. It does **not** set \`leakChecksPassed\`. Network loss/restoration, tunnel failure, and a DNS conflict invalidate prior verification. A leak-check pass received before a ready tunnel is ignored.
+A bootstrap event only sets tunnel readiness. It does **not** set `leakChecksPassed`. Network loss/restoration, tunnel failure, and a DNS conflict invalidate prior verification. A leak-check pass received before a ready tunnel is ignored.
 
 This invariant is a **planner invariant**, not a device-enforced kill switch. The new coordinator does not itself block packets. Real lockdown depends on Android VPN/Always-on/lockdown behavior and must be separately validated on device.
 
@@ -107,7 +109,7 @@ A future optional history can use a local, rotating, app-scoped keyed digest for
 
 ### 3.2 Captive portals
 
-The planner exposes \`allowCaptivePortalOnly\` as a **future policy recommendation**. It does not create a direct-network exception today. A future implementation must use a tiny, explicit portal-only allowlist and ensure all unrelated app traffic remains contained; if the platform cannot enforce that boundary, remain blocked and explain the limitation rather than falling back to the open internet.
+The planner exposes `allowCaptivePortalOnly` as a **future policy recommendation**. It does not create a direct-network exception today. A future implementation must use a tiny, explicit portal-only allowlist and ensure all unrelated app traffic remains contained; if the platform cannot enforce that boundary, remain blocked and explain the limitation rather than falling back to the open internet.
 
 ### 3.3 DNS and IPv6
 
@@ -115,11 +117,11 @@ The existing tunnel setup retains its current DNS and route construction. The ne
 
 ### 3.4 Per-app routing
 
-Existing \`AppManager\` and \`TorVpnService.applyAppFilter\` remain authoritative. Future autonomous policy may propose app-routing changes, but must not silently broaden exclusions or change a user-configured app list. Default unknown-app behavior needs to be implemented only after a safe migration/default policy and backward-compatibility tests are designed.
+Existing `AppManager` and `TorVpnService.applyAppFilter` remain authoritative. Future autonomous policy may propose app-routing changes, but must not silently broaden exclusions or change a user-configured app list. Default unknown-app behavior needs to be implemented only after a safe migration/default policy and backward-compatibility tests are designed.
 
 ### 3.5 Bridges and circuits
 
-The current bridge selection is based on existing settings/assets. The policy's \`rankBridges\` only orders supplied observations, excludes candidates explicitly marked blocked, and uses deterministic tie-breaking. It performs no probes and selects no bridge on its own.
+The current bridge selection is based on existing settings/assets. The policy's `rankBridges` only orders supplied observations, excludes candidates explicitly marked blocked, and uses deterministic tie-breaking. It performs no probes and selects no bridge on its own.
 
 Before automatic bridge rotation/circuit refresh can be enabled, inspect the exact Onionmasq revision and expose a narrow adapter with verified contracts for: capability support, cancellation, state observation, cooldown, repeated-failure handling, and an upper bound on retries. If the adapter cannot verify a safe result, retain the current route policy or fail closed; never silently drop to direct internet.
 
@@ -182,12 +184,12 @@ Never upload browsing history, messages, contacts, credentials, personal files, 
 
 ## 8. Android lifecycle requirements for future monitors
 
-- Use supported \`ConnectivityManager.NetworkCallback\` events; unregister the callback on service destruction.
-- Do not create a competing foreground service; the existing \`TorVpnService\` remains the owner of tunnel lifecycle.
+- Use supported `ConnectivityManager.NetworkCallback` events; unregister the callback on service destruction.
+- Do not create a competing foreground service; the existing `TorVpnService` remains the owner of tunnel lifecycle.
 - Respect Android background-start restrictions, user VPN consent, and Always-on/lockdown semantics.
 - Bound retries with exponential backoff and jitter; add a maximum-attempt and cooldown policy.
-- Treat \`onRevoke\`, process death, cancellation, and Android network changes as explicit state transitions.
-- Do not keep raw \`ParcelFileDescriptor\` handles in the coordinator. TUN ownership stays inside the existing service/native boundary.
+- Treat `onRevoke`, process death, cancellation, and Android network changes as explicit state transitions.
+- Do not keep raw `ParcelFileDescriptor` handles in the coordinator. TUN ownership stays inside the existing service/native boundary.
 - Use monotonic time for intervals; wall time can change and must not drive retry logic.
 - Separate “service started,” “native backend running,” “Tor bootstrapped,” and “leak tests passed” states; one is not proof of the next.
 
@@ -242,7 +244,7 @@ Speculative capabilities are intentionally not bundled into Phase 0. A capabilit
 
 ## 11. Release and merge gate
 
-This branch is an experiment. Do not merge it into \`main\` until:
+This branch is an experiment. Do not merge it into `main` until:
 
 1. CI build, unit tests, ktlint, Android lint, and staging APK assembly pass.
 2. The exact failed/passed workflow logs are examined, not inferred from a started job.
