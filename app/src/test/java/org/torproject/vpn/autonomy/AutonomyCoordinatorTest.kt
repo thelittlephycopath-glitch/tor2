@@ -120,6 +120,28 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun suspectedDnsHijackInvalidatesVerificationAndRequestsRecovery() {
+        val coordinator = AutonomyCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        val decision = coordinator.observe(
+            AutonomyEventType.DNS_HIJACK_SUSPECTED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+        assertTrue(decision.recommendBridgeFailover)
+        assertTrue(decision.recommendCircuitRefresh)
+        assertEquals(ProtectionProfile.MAXIMUM, decision.profile)
+    }
+
+    @Test
     fun invalidJournalCapacityIsRejected() {
         assertTrue(runCatching { AutonomyEventJournal(0) }.exceptionOrNull() is IllegalArgumentException)
     }
