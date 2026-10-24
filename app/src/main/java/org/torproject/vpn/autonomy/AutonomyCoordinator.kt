@@ -104,6 +104,7 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
             }
             AutonomyEventType.SERVICE_CREATED,
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE,
             AutonomyEventType.LOW_BATTERY,
             AutonomyEventType.LOW_DATA_BUDGET -> Unit
         }
@@ -120,7 +121,9 @@ class AutonomyCoordinator(
             repeatedConnectionFailures = consecutiveFailures,
             tunnelReady = tunnelReady,
             leakChecksPassed = leakChecksPassed,
-            leakCheckFailed = leakCheckFailed
+            leakCheckFailed = leakCheckFailed,
+            // Only an explicit DNS_CONFIGURATION_CLEARED event may clear this service-owned latch.
+            dnsConfigurationConflict = environmentalSignals.dnsConfigurationConflict
         )
         return calculateDecision()
     }

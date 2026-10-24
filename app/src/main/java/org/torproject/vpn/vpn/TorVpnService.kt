@@ -49,6 +49,7 @@ import org.torproject.onionmasq.logging.LogHelper
 import org.torproject.onionmasq.logging.LogObservable
 import org.torproject.vpn.BuildConfig
 import org.torproject.vpn.R
+import org.torproject.vpn.autonomy.AndroidEnvironmentMonitor
 import org.torproject.vpn.autonomy.AutonomyCoordinator
 import org.torproject.vpn.autonomy.AutonomyEventSource
 import org.torproject.vpn.autonomy.AutonomyEventType
@@ -76,6 +77,7 @@ class TorVpnService : VpnService() {
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var connectivityHandler: ConnectivityHandler
     private val autonomyCoordinator = AutonomyCoordinator()
+    private var autonomyEnvironmentMonitor: AndroidEnvironmentMonitor? = null
 
     private var logObservable: LogObservable? = null
 
@@ -133,6 +135,9 @@ class TorVpnService : VpnService() {
         connectivityHandler = ConnectivityHandler(this)
         connectivityHandler.register()
         observeAutonomyEvent(AutonomyEventType.SERVICE_CREATED)
+        autonomyEnvironmentMonitor = AndroidEnvironmentMonitor(this, autonomyCoordinator).also {
+            it.register()
+        }
         OnionMasq.bindVPNService(TorVpnService::class.java)
         try {
             when (val country = preferenceHelper.exitNodeCountry) {
@@ -237,6 +242,8 @@ class TorVpnService : VpnService() {
             VpnStatusObservable.update(ConnectionState.DISCONNECTED)
         }
         connectivityHandler.unregister()
+        autonomyEnvironmentMonitor?.unregister()
+        autonomyEnvironmentMonitor = null
         logObservable = null
         super.onDestroy()
     }

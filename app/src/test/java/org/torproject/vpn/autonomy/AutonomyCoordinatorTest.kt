@@ -63,7 +63,12 @@ class AutonomyCoordinatorTest {
             source = AutonomyEventSource.LEAK_CHECKER,
             elapsedRealtimeMillis = 2
         )
-        val decision = coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 3)
+        coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 3)
+        coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 4)
+        val decision = coordinator.observe(
+            AutonomyEventType.CONNECTION_FAILED,
+            elapsedRealtimeMillis = 5
+        )
 
         assertTrue(decision.blockTrafficUntilTunnelVerified)
         assertFalse(decision.trafficReleaseEligible)
