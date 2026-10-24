@@ -16,8 +16,6 @@ The first autonomy foundation now lives beside the existing VPN code:
 - The coordinator is wired to selected lifecycle events in `TorVpnService`.
 - An Android default-network callback observes validated connectivity, cellular transport, and captive-portal capability without reading SSIDs or changing routes.
 - Network loss/return invalidates previous tunnel/leak verification. Monitor registration failure is recorded instead of crashing the VPN service or failing open.
-- An Android default-network callback observes validated connectivity, cellular transport, and captive-portal capability without reading SSIDs or changing routes.
-- Network loss/return invalidates previous tunnel/leak verification. Monitor registration failure is recorded instead of crashing the VPN service or failing open.
 - Tunnel bootstrap does **not** count as an independent leak-check pass.
 - The policy planner emits recommendations only; it does not bypass Android VPN behavior or call unverified Onionmasq operations.
 - All automation flags default off. The current UI is untouched.
