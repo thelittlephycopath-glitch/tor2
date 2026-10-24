@@ -135,6 +135,10 @@ class AutonomyCoordinator(
                 leakChecksPassed = false
                 leakCheckFailed = false
             }
+            AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE -> {
+                environmentalSignals = environmentalSignals.copy(batteryPercent = 0)
+                lowBatteryActive = false
+            }
             AutonomyEventType.SERVICE_CREATED,
             AutonomyEventType.LOW_BATTERY,
             AutonomyEventType.LOW_DATA_BUDGET -> Unit
