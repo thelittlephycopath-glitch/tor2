@@ -37,6 +37,7 @@ class AutonomyCoordinator(
                 tunnelReady = true
                 leakChecksPassed = false
                 leakCheckFailed = false
+                consecutiveFailures = 0
             }
             AutonomyEventType.TUNNEL_FAILED,
             AutonomyEventType.CONNECTION_FAILED -> {
@@ -136,23 +137,6 @@ class AutonomyCoordinator(
     }
 
     /**
-     * Updates environment facts supplied by a future Android monitor. Tunnel and leak-check state
-     * are coordinator-owned and cannot be set by this method's caller.
-     */
-    @Synchronized
-    fun updateEnvironment(signals: NetworkSignals): AutonomyDecision {
-        environmentalSignals = signals.copy(
-            repeatedConnectionFailures = consecutiveFailures,
-            tunnelReady = tunnelReady,
-            leakChecksPassed = leakChecksPassed,
-            leakCheckFailed = leakCheckFailed,
-            // Only an explicit DNS_CONFIGURATION_CLEARED event may clear this service-owned latch.
-            dnsConfigurationConflict = environmentalSignals.dnsConfigurationConflict
-        )
-        return calculateDecision()
-    }
-
-    /**
      * Updates the fields owned by the Android network callback without overwriting trust, anomaly,
      * resource-budget, or service-owned DNS-conflict signals from other components.
      */
@@ -162,6 +146,12 @@ class AutonomyCoordinator(
         captivePortalDetected: Boolean,
         mobileData: Boolean
     ): AutonomyDecision {
+        if (environmentalSignals.networkAvailable != networkAvailable) {
+            // A default-network change invalidates readiness regardless of callback ordering.
+            tunnelReady = false
+            leakChecksPassed = false
+            leakCheckFailed = false
+        }
         environmentalSignals = environmentalSignals.copy(
             networkAvailable = networkAvailable,
             captivePortalDetected = captivePortalDetected,
