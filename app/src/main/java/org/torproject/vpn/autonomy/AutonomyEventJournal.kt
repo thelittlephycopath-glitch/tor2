@@ -4,7 +4,8 @@ import java.util.ArrayDeque
 
 /**
  * Bounded in-memory diagnostic journal. It deliberately does not persist events or accept free-form
- * payloads. Persistence requires a reviewed encrypted-storage design and an explicit retention policy.
+ * payloads. Persistence requires a reviewed encrypted-storage design and an explicit retention
+ * policy.
  */
 class AutonomyEventJournal(capacity: Int = 128) {
     private val events = ArrayDeque<AutonomyEvent>()
