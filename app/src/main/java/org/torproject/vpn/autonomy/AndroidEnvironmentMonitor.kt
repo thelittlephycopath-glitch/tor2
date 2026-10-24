@@ -6,8 +6,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 
 /**
- * Observes Android's default-network capabilities only. It does not inspect SSIDs or query destinations,
- * change routes, or create a VPN exception. Unknown networks remain UNKNOWN.
+ * Observes Android's default-network capabilities only. It does not inspect SSIDs or query
+ * destinations, change routes, or create a VPN exception. Unknown networks remain UNKNOWN.
  *
  * This monitor is advisory: callback results update policy facts and invalidate old verification,
  * but cannot enforce an Android lockdown/kill switch.
