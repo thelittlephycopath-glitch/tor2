@@ -279,6 +279,8 @@ class TorVpnService : VpnService() {
                     if (event.isReadyForTraffic && event.bootstrapPercent == 100) {
                         VpnStatusObservable.update(ConnectionState.CONNECTED)
                         observeAutonomyEvent(AutonomyEventType.TUNNEL_READY)
+                    } else {
+                        observeAutonomyEvent(AutonomyEventType.TUNNEL_BOOTSTRAPPING)
                     }
                     LogObservable.getInstance()
                         .addLog(getString(R.string.bootstrap_at, event.bootstrapStatus))
