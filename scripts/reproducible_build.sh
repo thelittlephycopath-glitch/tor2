@@ -77,6 +77,8 @@ fi
 # Align APKs with the pinned Android SDK build-tools. This is available in
 # the reproducible builder and avoids relying on a separately cloned helper
 # whose checkout may be incomplete or whose interpreter may be unavailable.
+# Align APKs using the pinned Android SDK build-tools. Do not depend on a helper
+# script that is not part of this repository checkout.
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue
   ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
