@@ -15,12 +15,13 @@ The first autonomy foundation now lives beside the existing VPN code:
 - A stateful coordinator that receives VPN lifecycle observations.
 - The coordinator is wired to selected lifecycle events in `TorVpnService`.
 - An Android default-network callback observes validated connectivity, cellular transport, and captive-portal capability without reading SSIDs or changing routes.
+- An Android battery observer feeds battery percentage into the optional-traffic budget; monitor failure is a distinct event and keeps optional traffic suppressed.
 - Network loss/return invalidates previous tunnel/leak verification. Monitor registration failure is recorded instead of crashing the VPN service or failing open.
 - Tunnel bootstrap does **not** count as an independent leak-check pass.
 - The policy planner emits recommendations only; it does not bypass Android VPN behavior or call unverified Onionmasq operations.
 - All automation flags default off. The current UI is untouched.
 
-This is a foundation, not a claim that every item in the attached 17-section spec is finished. Battery/data monitoring, network-trust and anomaly detection, actual recovery actions, leak probes, encrypted persistence, decoy files, cover traffic, ML, and device-level guarantees remain unimplemented and gated.
+This is a foundation, not a claim that every item in the attached 17-section spec is finished. Data-budget/charging monitoring, network-trust classification, automated DNS/TLS anomaly detection, actual recovery actions, leak probes, encrypted persistence, decoy files, cover traffic, ML, and device-level guarantees remain unimplemented and gated.
 
 ## 1. Compatibility contract: preserve the existing architecture
 
@@ -45,9 +46,9 @@ The autonomy subsystem is intentionally a sidecar module in package `org.torproj
 Proposed sources are separated by responsibility:
 
 - **VPN lifecycle adapter:** service started/stopped, tunnel start requested, Onionmasq bootstrap completion, connection failures, and private-DNS configuration conflicts.
-- **Android network monitor — future:** network available/lost, validated connectivity, metered state, and captive-portal state through supported Android APIs.
+- **Android network monitor:** current implementation observes default-network availability, validated connectivity, cellular transport, and captive-portal capability. Trust classification and metered-state tracking remain future work.
 - **Leak-check adapter — future:** explicit test outcomes for DNS, IPv4/IPv6 routing, tunnel state, and reconnect isolation. No currently wired tester is allowed to emit a pass.
-- **Resource monitor — future:** battery percentage, charging state, and data-budget inputs.
+- **Resource monitor:** current implementation observes battery percentage through the system battery broadcast. Charging-state and daily data-budget inputs remain future work.
 - **Bridge observation source — future:** recent outcomes already observed by the app, not unbounded active scans.
 
 Each source emits an enumerated `AutonomyEventType` and `AutonomyEventSource`. Event payloads do not accept free-form strings. Do not add raw SSIDs, destination hosts, IP addresses, DNS queries, app package names, account identifiers, browsing content, or credentials to the event record.
@@ -71,7 +72,7 @@ Profiles currently map as follows:
 | Unknown network or no connectivity | High | Unknown is never silently promoted to trusted |
 | Explicitly trusted network with no risk signal | Balanced | A saved SSID alone must not establish trust |
 
-The present service does not provide authoritative Wi-Fi trust, hostile-network, battery, data-budget, or leak-check results. Until the respective monitors exist, those inputs remain unknown/defaulted and no automatic behavior is inferred from missing data.
+The present service does not provide authoritative Wi-Fi trust, hostile-network classification, data-budget, or leak-check results. Battery percentage is observed separately, but it does not establish network trust or tunnel health; unavailable battery telemetry suppresses optional traffic without being mislabeled as a low-battery event.
 
 ### 2.4 Stateful coordinator
 
@@ -140,7 +141,7 @@ Conceptual state is derived from events, not guessed from a start request:
 | DNS-policy conflict | Mark conflict and invalidate verification | Stop/resolve conflict; do not route around the policy |
 | Tunnel/service stopped | Invalidate verification | No protected state may survive a stop |
 
-The implemented thresholds (three consecutive connection failures, battery at or below 20%, and remaining data at or below 50 MB) are policy defaults used for recommendations only. They are not experimentally tuned values, and resource signals are not yet wired to Android monitors.
+The implemented thresholds (three consecutive connection failures and battery at or below 20%) are conservative policy defaults used for recommendations only, not experimentally tuned values. Battery percentage is wired to Android observation; daily data-budget thresholds remain unimplemented.
 
 ## 5. Resource and performance policy
 
@@ -232,7 +233,7 @@ A successful Gradle build proves compilation only. A successful APK signature ch
 | Phase | Included scope | Gate to proceed |
 |---|---|---|
 | **0 — Additive policy foundation (current)** | Models, deterministic policy, in-memory journal, coordinator, service lifecycle events, unit tests | PR CI build/tests/lint must pass |
-| **1 — Network/resource observations** | Android connectivity/captive portal callbacks, metered-network state, battery and budget input | No raw SSID or sensitive telemetry; lifecycle/unregister tests |
+| **1 — Network/resource observations** | Default-network/captive-portal callback and battery percentage observer are implemented; metered state, charging state, and data-budget inputs remain | No raw SSID or sensitive telemetry; lifecycle/unregister and missing-monitor tests |
 | **2 — Independent verification** | Safe probe framework, leak-check state and controlled endpoint tests | On-device evidence and false-negative analysis |
 | **3 — Guarded recovery** | Adapter for verified reconnect/bridge/circuit APIs; cooldowns, retry budget, idempotency | Integration tests prove no direct fallback or stale readiness |
 | **4 — Trust and local learning** | Explainable rules and aggregate bridge outcomes with retention/reset controls | Measurement shows benefit; privacy review approves persistence |
