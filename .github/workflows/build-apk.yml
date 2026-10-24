@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/tor2-gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle-wrapper.properties', '**/*.toml', 'settings.gradle.kts', 'gradle.properties') }}
+          key: ${{ runner.os }}-gradle-v1-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
