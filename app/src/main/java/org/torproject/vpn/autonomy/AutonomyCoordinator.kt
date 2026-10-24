@@ -220,6 +220,7 @@ class AutonomyCoordinator(
         lastDecision = decision.copy(automationConfigured = automationConfigured)
         return lastDecision
     }
+
     companion object {
         private const val LOW_BATTERY_THRESHOLD_PERCENT = 20
     }

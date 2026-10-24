@@ -54,7 +54,9 @@ class AutonomousPolicyEngineTest {
             engine.evaluate(NetworkSignals(remainingDataBudgetMb = 10)).coverTrafficAllowedByBudget
         )
         assertTrue(
-            engine.evaluate(NetworkSignals(batteryReadingAvailable = true)).coverTrafficAllowedByBudget
+            engine.evaluate(
+                NetworkSignals(batteryReadingAvailable = true)
+            ).coverTrafficAllowedByBudget
         )
     }
 

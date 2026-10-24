@@ -80,7 +80,7 @@ The present service does not provide authoritative Wi-Fi trust, hostile-network 
 
 Critical invariant:
 
-> Traffic is considered eligible for release by the planner only when the network is available, the tunnel is ready, an independent leak-check pass has been observed, no leak-check failure is active, and no unresolved DNS configuration conflict exists.
+> Traffic is considered eligible for release by the planner only when the network is available, the tunnel is ready, an independent leak-check pass has been observed, no leak-check failure is active, and no DNS-policy conflict, suspected DNS/TLS interference, or captive portal remains.
 
 A bootstrap event only sets tunnel readiness. It does **not** set `leakChecksPassed`. Network loss/restoration, tunnel failure, and a DNS conflict invalidate prior verification. A leak-check pass received before a ready tunnel is ignored.
 
