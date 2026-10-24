@@ -6,8 +6,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 
 /**
- * Observes only Android's default-network capabilities. It does not inspect SSIDs, query destinations,
- * change routes, or create an exception around the VPN. Unknown networks remain UNKNOWN.
+ * Observes Android's default-network capabilities only. It does not inspect SSIDs, query destinations,
+ * change routes, or create a VPN exception. Unknown networks remain UNKNOWN.
  *
  * This monitor is advisory: callback results update policy facts and invalidate old verification,
  * but cannot enforce an Android lockdown/kill switch.
@@ -16,8 +16,8 @@ class AndroidEnvironmentMonitor(
     context: Context,
     private val coordinator: AutonomyCoordinator
 ) {
-    private val connectivityManager =
-        context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+    private val connectivityManager = context.applicationContext
+        .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     private val lock = Any()
 
     @Volatile
