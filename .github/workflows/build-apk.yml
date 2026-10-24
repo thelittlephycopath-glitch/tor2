@@ -56,7 +56,7 @@ jobs:
           path: |
             ${{ runner.temp }}/tor2-cargo/registry
             ${{ runner.temp }}/tor2-cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('scripts/onionmasq.hash', 'scripts/reproducible_build.sh', 'scripts/reproducible_fetch_deps.sh', 'scripts/reproducible_fetch_rust_deps.sh') }}
+          key: ${{ runner.os }}-cargo-v1-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
