@@ -1,5 +1,11 @@
 package org.torproject.vpn.ui.composable
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +53,7 @@ fun AppListItem(
 ) {
     ListItem(
         modifier = modifier
+            .animateContentSize()
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .clickable(onClick = onClick),
@@ -81,7 +88,11 @@ fun AppListItem(
                         space = dimensionResource(R.dimen.default_padding)
                     )
                 ) {
-                    if (app.isRoutingEnabled) {
+                    AnimatedVisibility(
+                        visible = app.isRoutingEnabled,
+                        enter = fadeIn() + scaleIn(initialScale = 0.85f),
+                        exit = fadeOut() + scaleOut(targetScale = 0.85f)
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.circuit),
                             contentDescription = null

@@ -1,5 +1,6 @@
 package org.torproject.vpn.ui.composable
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +10,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,6 +34,11 @@ fun CategoryHeader(
     listSize: Int = 0,
     onExpand: (expand: Boolean) -> Unit = {}
 ) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "categoryHeaderArrowRotation"
+    )
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier.padding(
@@ -60,6 +68,7 @@ fun CategoryHeader(
                 },
                 trailingContent = {
                     Icon(
+                        modifier = Modifier.graphicsLayer { rotationZ = arrowRotation },
                         painter = if (isExpanded) {
                             painterResource(R.drawable.carat_up)
                         } else {
