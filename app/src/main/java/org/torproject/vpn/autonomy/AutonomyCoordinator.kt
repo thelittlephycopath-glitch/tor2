@@ -113,10 +113,16 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
             }
             AutonomyEventType.LEAK_CHECK_PASSED -> {
-                // A "pass" without a ready tunnel is deliberately ignored.
-                leakChecksPassed = tunnelReady &&
+                // Only the dedicated checker may assert a pass. Lifecycle/network adapters
+                // must not be able to spoof verification by emitting the same event type.
+                // A pass without a ready tunnel is deliberately ignored.
+                leakChecksPassed = source == AutonomyEventSource.LEAK_CHECKER &&
+                    tunnelReady &&
                     environmentalSignals.networkAvailable &&
-                    !environmentalSignals.dnsConfigurationConflict
+                    !environmentalSignals.dnsConfigurationConflict &&
+                    !environmentalSignals.dnsHijackSuspected &&
+                    !environmentalSignals.tlsInterceptionSuspected &&
+                    !environmentalSignals.captivePortalDetected
                 leakCheckFailed = false
             }
             AutonomyEventType.LEAK_CHECK_FAILED -> {
