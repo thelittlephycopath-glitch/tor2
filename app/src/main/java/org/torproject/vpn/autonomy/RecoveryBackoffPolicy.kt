@@ -28,7 +28,7 @@ class RecoveryBackoffPolicy(
 
         var delay = baseDelayMillis
         repeat(attempt - 1) {
-            delay = if (delay >= maximumDelayMillis / 2L) {
+            delay = if (delay > maximumDelayMillis / 2L) {
                 maximumDelayMillis
             } else {
                 (delay * 2L).coerceAtMost(maximumDelayMillis)
