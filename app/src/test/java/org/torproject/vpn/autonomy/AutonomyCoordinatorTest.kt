@@ -297,7 +297,6 @@ class AutonomyCoordinatorTest {
         assertTrue(exception is IllegalArgumentException)
     }
 
-
     @Test
     fun leakCheckPassFromNonCheckerCannotAuthorizeTraffic() {
         val coordinator = connectedCoordinator()
@@ -345,5 +344,49 @@ class AutonomyCoordinatorTest {
         )
         assertFalse(tlsCoordinator.currentSignals().leakChecksPassed)
         assertFalse(tlsDecision.trafficReleaseEligible)
+    }
+
+    @Test
+    fun tunnelStoppedInvalidatesPreviouslyVerifiedState() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val stopped = coordinator.observe(
+            AutonomyEventType.TUNNEL_STOPPED,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertFalse(coordinator.currentSignals().tunnelReady)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(stopped.trafficReleaseEligible)
+        assertTrue(stopped.blockTrafficUntilTunnelVerified)
+    }
+
+    @Test
+    fun leakCheckFailureInvalidatesPreviousPass() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val failed = coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_FAILED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertFalse(failed.trafficReleaseEligible)
+        assertTrue(failed.blockTrafficUntilTunnelVerified)
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
     }
 }
