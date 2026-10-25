@@ -256,3 +256,14 @@ This branch is an experiment. Do not merge it into `main` until:
 7. The generated community APK is identified as debug-key signed unless an official release process supplies a production key.
 
 The project must remain honest about its guarantees: Tor VPN can reduce exposure, but no client can fully defeat a compromised device, a malicious endpoint, or all traffic-correlation adversaries.
+
+## 12. Additional hardening from the specification review
+
+The coordinator now treats a leak-check pass as a privileged observation rather than a generic event:
+
+- Only events sourced from `AutonomyEventSource.LEAK_CHECKER` can set the planner's leak-check-pass state.
+- A pass is rejected while the tunnel is not ready, the network is unavailable, DNS policy conflicts, a DNS hijack is suspected, TLS interception is suspected, or a captive portal is active.
+- A service or network-monitor event cannot spoof a successful leak test by reusing the event type.
+- Regression tests cover non-checker spoofing and unsafe pass events during captive-portal/TLS-interception conditions.
+
+This still does **not** mean a real leak checker exists. The source enum is a trust boundary inside the app's architecture, not cryptographic authentication; integration must ensure only the future dedicated checker can publish this event. Until that checker is implemented and independently tested, automation remains disabled and no traffic-release action is executed.
