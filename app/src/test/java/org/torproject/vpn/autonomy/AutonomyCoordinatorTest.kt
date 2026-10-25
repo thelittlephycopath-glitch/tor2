@@ -6,12 +6,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AutonomyCoordinatorTest {
-    private fun connectedCoordinator(): AutonomyCoordinator = AutonomyCoordinator().also {
-        it.updateNetworkEnvironment(
-            networkAvailable = true,
-            captivePortalDetected = false,
-            mobileData = false
-        )
+    private fun connectedCoordinator(): AutonomyCoordinator {
+        return AutonomyCoordinator().also {
+            it.updateNetworkEnvironment(
+                networkAvailable = true,
+                captivePortalDetected = false,
+                mobileData = false
+            )
+        }
     }
 
     @Test
