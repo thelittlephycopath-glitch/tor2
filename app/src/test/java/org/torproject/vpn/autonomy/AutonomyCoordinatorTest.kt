@@ -371,6 +371,33 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun spoofedLeakEventsCannotClearAnExistingFailure() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_FAILED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
+
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_STARTED,
+            source = AutonomyEventSource.VPN_SERVICE,
+            elapsedRealtimeMillis = 3
+        )
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.VPN_SERVICE,
+            elapsedRealtimeMillis = 4
+        )
+
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
+    @Test
     fun leakCheckFailureInvalidatesPreviousPass() {
         val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)

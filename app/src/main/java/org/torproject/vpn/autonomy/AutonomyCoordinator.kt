@@ -109,21 +109,26 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
             }
             AutonomyEventType.LEAK_CHECK_STARTED -> {
-                leakChecksPassed = false
-                leakCheckFailed = false
+                // Only the checker owns the verification lifecycle. Other adapters cannot clear a
+                // previous failure by emitting a similarly named event.
+                if (source == AutonomyEventSource.LEAK_CHECKER) {
+                    leakChecksPassed = false
+                    leakCheckFailed = false
+                }
             }
             AutonomyEventType.LEAK_CHECK_PASSED -> {
-                // Only the dedicated checker may assert a pass. Lifecycle/network adapters
-                // must not be able to spoof verification by emitting the same event type.
-                // A pass without a ready tunnel is deliberately ignored.
-                leakChecksPassed = source == AutonomyEventSource.LEAK_CHECKER &&
-                    tunnelReady &&
-                    environmentalSignals.networkAvailable &&
-                    !environmentalSignals.dnsConfigurationConflict &&
-                    !environmentalSignals.dnsHijackSuspected &&
-                    !environmentalSignals.tlsInterceptionSuspected &&
-                    !environmentalSignals.captivePortalDetected
-                leakCheckFailed = false
+                // A pass is accepted only from the checker and only against the current safe state.
+                // Invalid or spoofed events must not clear an existing failure.
+                if (source == AutonomyEventSource.LEAK_CHECKER) {
+                    val passIsSafe = tunnelReady &&
+                        environmentalSignals.networkAvailable &&
+                        !environmentalSignals.dnsConfigurationConflict &&
+                        !environmentalSignals.dnsHijackSuspected &&
+                        !environmentalSignals.tlsInterceptionSuspected &&
+                        !environmentalSignals.captivePortalDetected
+                    leakChecksPassed = passIsSafe
+                    if (passIsSafe) leakCheckFailed = false
+                }
             }
             AutonomyEventType.LEAK_CHECK_FAILED -> {
                 leakChecksPassed = false
