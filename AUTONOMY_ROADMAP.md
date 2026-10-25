@@ -267,3 +267,11 @@ The coordinator now treats a leak-check pass as a privileged observation rather 
 - Regression tests cover non-checker spoofing and unsafe pass events during captive-portal/TLS-interception conditions.
 
 This still does **not** mean a real leak checker exists. The source enum is a trust boundary inside the app's architecture, not cryptographic authentication; integration must ensure only the future dedicated checker can publish this event. Until that checker is implemented and independently tested, automation remains disabled and no traffic-release action is executed.
+
+## Latest experiment iteration — transition hardening
+
+- Added coordinator regression tests proving that a previously verified state is invalidated by `TUNNEL_STOPPED` and by `LEAK_CHECK_FAILED`.
+- Corrected the autonomy test helper's Kotlin formatting after CI reported a ktlint violation in `AutonomyCoordinatorTest.kt`.
+- The previous validation run compiled both Debug and Staging Kotlin sources and reached unit tests and ktlint; it failed at `ktlintTestSourceSetCheck`, not at the app Kotlin compile. The newer run logs must still be checked to confirm the formatting fix resolved the reported failure.
+- These tests and changes are committed on `dangerous-experiment`; they are not yet considered verified until the current head passes the validation workflow.
+- No action executor, route changes, automatic bridge/circuit operation, traffic generation, decoy files, or UI changes are introduced by this iteration.
