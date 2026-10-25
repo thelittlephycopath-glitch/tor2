@@ -98,13 +98,30 @@ jobs:
             tor2-android-builder \
             env BUILD_AAB=0 bash scripts/reproducible_build.sh
 
-      - name: Upload unsigned aligned release APKs for inspection
-        if: success()
+      - name: Diagnose and preserve APK outputs
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Build directory:"
+          find build app/build/outputs/apk -maxdepth 5 -type f \\( -name '*.apk' -o -name '*.aab' \\) -print 2>/dev/null || true
+          echo "Pinned zipalign:"
+          if [[ -x "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" ]]; then
+            "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -h | head -n 3 || true
+          else
+            echo "Not available in runner; pinned tool is inside the builder container."
+          fi
+
+      - name: Upload APK outputs for inspection
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tor2-unsigned-aligned-apks
-          path: build/*-release-unsigned.apk
-          if-no-files-found: error
+          name: tor2-apk-build-outputs
+          path: |
+            build/*-release-unsigned.apk
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/staging/**/*.apk
+          if-no-files-found: warn
           retention-days: 7
 
       - name: Sign APKs with an ephemeral debug key and verify signatures
