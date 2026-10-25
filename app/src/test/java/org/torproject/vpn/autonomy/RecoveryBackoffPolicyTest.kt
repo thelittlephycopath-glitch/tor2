@@ -57,7 +57,7 @@ class RecoveryBackoffPolicyTest {
         )
 
         assertEquals(Long.MAX_VALUE / 3L, policy.delayBeforeAttempt(1))
-        assertEquals(Long.MAX_VALUE * 2L / 3L, policy.delayBeforeAttempt(2))
+        assertEquals(Long.MAX_VALUE / 3L * 2L, policy.delayBeforeAttempt(2))
         assertEquals(Long.MAX_VALUE, policy.delayBeforeAttempt(3))
         assertEquals(Long.MAX_VALUE, policy.delayBeforeAttempt(5))
     }
