@@ -1,6 +1,6 @@
 # Tor VPN Beta — Security, Stability, and Performance Plan
 
-> **Status:** Source review in progress. The working branch has not been compiled or device-tested in this review session. Do not treat it as production-ready.
+> **Status (updated 2026-10-25):** Stabilization and CI recovery are in progress on GitHub. The current main branch has recent automated validation failures/cancellations; no verified installable APK or device-test evidence is recorded here. Do not treat the app as production-ready.
 
 ## Goals
 
@@ -12,10 +12,11 @@
 
 ## Current evidence and limits
 
-- The repository contains a GitLab CI pipeline in `.gitlab-ci.yml`. It defines lint, staging assembly, unit-test, integration-test, and conditional publish jobs.
-- GitHub status lookup for the latest descriptor-cleanup commit returned no status checks. This does **not** establish whether GitLab CI has run; the GitLab pipeline must be checked separately.
-- `settings.gradle.kts` requires access to the Tor Project Onionmasq Maven artifact or a locally published equivalent. A clean build needs the documented dependency setup.
-- The reproducible-build script builds Onionmasq from a pinned revision, then builds an unsigned release APK (and, by default, an AAB). Do not run a publishing or signing workflow as a substitute for a safe validation build.
+- The active repository is `thelittlephycopath-glitch/tor2`; GitHub Actions workflows are present under `.github/workflows/`, including `build-apk.yml`, `diagnostic-build.yml`, and `validate-pr.yml`.
+- Recent GitHub Actions validation attempts on 2026-10-25 include failures and cancellations. The latest observed main commit during this plan update is `c4bf29deefb56a46c8c57a40de1b547f710cefd2` (`style: sort AppListItem imports for ktlint`). Job-log retrieval returned no stored log payload for the sampled failed run, so the exact current failure must be recovered from a fresh run or GitHub Actions UI before changing code.
+- `settings.gradle.kts` and the build workflow must be treated as the source of truth for Onionmasq dependency setup and the pinned Android/Rust toolchain. Confirm these in CI rather than assuming a local cache makes a clean build reproducible.
+- Build, validation, and diagnostic workflows can overlap. Prefer one authoritative validation run per commit; avoid rapid speculative commits while a run is queued or building, because superseded runs can be cancelled and obscure the first real failure.
+- Keep validation builds separate from release publishing/signing. Development signing is not a production signing key.
 - Existing README documentation explicitly describes the app as experimental and warns that it may leak information. Keep that warning until tests justify a change.
 
 ## Findings under review
@@ -125,3 +126,79 @@ Optimize measured bottlenecks one at a time. Do not weaken encryption, route tra
 - Added `app/src/test/java/org/torproject/vpn/utils/TaskDebouncerTest.kt` with regression coverage for newest-pending-task behavior, concurrent producers while the consumer is occupied, and cancellation/rejection after cancellation.
 - The concurrency test uses a blocking task to hold the consumer while producers enqueue, making the newest-per-type assertion less dependent on machine timing. The tests are committed but have **not yet been executed** because this environment has no project checkout, Gradle wrapper runtime, Android SDK dependency cache, or Onionmasq artifact configured.
 
+
+
+## Upgraded execution roadmap — build first, then harden
+
+This roadmap extends the existing stabilization work; it is **not** a restart or redesign. Preserve the current app architecture and existing UI/UX exactly unless the user explicitly authorizes a UI/UX change. Do not add features or perform broad refactors while the build is red.
+
+### Phase 0 — Establish one trustworthy baseline
+
+1. Record the current `main` SHA and inspect the exact workflow/job/step that failed.
+2. Trigger or use one validation run for that SHA; do not make unrelated commits while it is running.
+3. Capture the first actionable error (not just the final Gradle failure summary), toolchain versions, dependency resolution output, and failing task.
+4. Classify the failure as dependency/toolchain, Kotlin/Compose compilation, Rust/Onionmasq compilation, unit test, lint, packaging, signing, or workflow infrastructure.
+5. Fix the earliest root cause only, commit a narrowly scoped change, and rerun the same validation workflow.
+
+**Exit gate:** a fresh run reaches the actual compile tasks and reports a deterministic result. A cancelled run or missing log is not a pass.
+
+### Phase 1 — Produce a verifiable debug/staging APK
+
+1. Build from a clean runner using the repository's pinned Android SDK, JDK, Gradle, Rust, and Onionmasq revisions.
+2. Confirm the correct app variant and supported ABI set; avoid changing SDK/dependency versions speculatively.
+3. Run Android packaging, then verify the APK exists, is non-empty, has the expected package/application ID, and passes `apksigner verify` (or the equivalent workflow check).
+4. Record SHA-256, commit SHA, variant, ABI, signing type, and artifact expiry. Clearly label debug/staging signing; never imply it is a production release key.
+5. Download the actual workflow artifact and confirm it can be accessed. A successful workflow without a published APK artifact does not satisfy this phase.
+
+**Exit gate:** one downloadable, signature-verified APK artifact tied to a known commit.
+
+### Phase 2 — Restore automated quality gates
+
+Run and fix in this order, stopping at the first failure:
+1. Kotlin/Compose compilation and Rust/Onionmasq compilation.
+2. Unit tests, including `TaskDebouncerTest` concurrency and cancellation regressions.
+3. ktlint and Android lint.
+4. Instrumented/UI tests where the configured runner supports them.
+5. Rebuild the staging APK after all fixes.
+
+Do not suppress tests, weaken lint rules, or delete failing assertions simply to obtain green CI. Add a regression test when a defect is reproducible and the existing test framework supports it.
+
+**Exit gate:** a single commit has green build, unit-test, and lint results, plus a verified staging artifact.
+
+### Phase 3 — VPN lifecycle and privacy verification
+
+Prioritize the high-risk boundaries already identified above:
+- Establish the real native Onionmasq startup/readiness contract; replace any “coroutine started” inference with a verified readiness signal.
+- Prove TUN descriptor ownership and cleanup on success, exception, cancellation, and service stop.
+- Test start → stop → start, duplicate commands, stop-during-start, native-start failure, service recreation, permission revocation, and process death.
+- Validate DNS, IPv4/IPv6, handover, temporary network loss, disconnect, always-on VPN, and lockdown on physical devices or a documented emulator/network test setup.
+- Trace diagnostic logging through the actual Onionmasq implementation and confirm retention, export, and backup behavior before reducing or changing logs.
+- Review manifest permissions against actual features; remove permissions only when behavior and tests prove they are unnecessary.
+
+**Exit gate:** recorded test results and no unresolved critical/high-severity lifecycle or traffic-leak issue. If device testing is unavailable, explicitly mark the corresponding items unverified.
+
+### Phase 4 — Measure performance before optimizing
+
+Record baseline device model, Android version, network type, Tor bootstrap time, reconnect time, throughput, latency, CPU, memory, battery, and wakeups. Repeat measurements under the same conditions after each isolated change. Prefer profiling evidence over guessed optimizations. Never bypass Tor, weaken encryption, leak traffic outside the tunnel, or change routing merely to improve a benchmark.
+
+**Exit gate:** measurable comparison against baseline with no regression in privacy, correctness, or reliability.
+
+### Phase 5 — Release readiness
+
+- [ ] Build/test/lint pass on one exact commit.
+- [ ] APK signature and checksum verified; package ID, version, and ABI confirmed.
+- [ ] Artifact download link works for the user.
+- [ ] Device-level lifecycle and network checks are recorded.
+- [ ] Known limitations, especially any untested leak/lockdown scenarios, are disclosed.
+- [ ] Release signing credentials are managed separately and never committed.
+- [ ] Existing UI/UX remains unchanged unless explicitly authorized.
+- [ ] Experimental status and privacy claims match the available evidence.
+
+### Operating rules for each loop
+
+1. Inspect → identify the first root cause → patch the smallest surface → commit → wait for that commit's CI → inspect results.
+2. Do not stack dependency upgrades on top of unresolved dependency or compilation errors without confirming the API/version mapping.
+3. Do not treat “queued,” “in progress,” “cancelled,” a missing log, or source inspection as a successful test.
+4. Do not merge additional experimental changes while the current validation run is still the only evidence.
+5. Keep a dated iteration note with commit SHA, failing task, exact cause, patch, and post-fix result.
+6. If CI fails before compilation due to runner/dependency infrastructure, fix or isolate that infrastructure issue before editing app source.
