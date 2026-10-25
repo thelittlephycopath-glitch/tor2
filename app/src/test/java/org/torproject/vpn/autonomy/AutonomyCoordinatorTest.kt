@@ -296,4 +296,54 @@ class AutonomyCoordinatorTest {
         val exception = runCatching { AutonomyEventJournal(0) }.exceptionOrNull()
         assertTrue(exception is IllegalArgumentException)
     }
+
+
+    @Test
+    fun leakCheckPassFromNonCheckerCannotAuthorizeTraffic() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+
+        val decision = coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.VPN_SERVICE,
+            elapsedRealtimeMillis = 2
+        )
+
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+    }
+
+    @Test
+    fun leakCheckPassDuringCaptivePortalOrSuspectedInterceptionIsRejected() {
+        val portalCoordinator = connectedCoordinator()
+        portalCoordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        portalCoordinator.observe(
+            AutonomyEventType.CAPTIVE_PORTAL_DETECTED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 2
+        )
+        val portalDecision = portalCoordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 3
+        )
+        assertFalse(portalCoordinator.currentSignals().leakChecksPassed)
+        assertFalse(portalDecision.trafficReleaseEligible)
+
+        val tlsCoordinator = connectedCoordinator()
+        tlsCoordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        tlsCoordinator.observe(
+            AutonomyEventType.TLS_INTERCEPTION_SUSPECTED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 2
+        )
+        val tlsDecision = tlsCoordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 3
+        )
+        assertFalse(tlsCoordinator.currentSignals().leakChecksPassed)
+        assertFalse(tlsDecision.trafficReleaseEligible)
+    }
 }
