@@ -7,12 +7,12 @@ import org.junit.Test
 
 class AutonomyCoordinatorTest {
     private fun connectedCoordinator(): AutonomyCoordinator = AutonomyCoordinator().also {
-            it.updateNetworkEnvironment(
-                networkAvailable = true,
-                captivePortalDetected = false,
-                mobileData = false
-            )
-        }
+        it.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+    }
 
     @Test
     fun tunnelReadyDoesNotReleaseTrafficUntilLeakCheckPasses() {
