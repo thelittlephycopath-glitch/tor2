@@ -81,9 +81,17 @@ fi
 # script that is not part of this repository checkout.
 for apk in build/*.apk; do
   [[ -f "$apk" ]] || continue
-  ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
-  if [[ ! -x "$ZIPALIGN" ]]; then
-    echo "Pinned Android SDK zipalign is unavailable at $ZIPALIGN" >&2
+  ZIPALIGN=""
+  if [[ -n "${ANDROID_BUILD_TOOLS:-}" && -x "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" ]]; then
+    ZIPALIGN="$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign"
+  else
+    # Keep the pinned path first, but tolerate SDK images that expose the
+    # installed build-tools directory without exporting ANDROID_BUILD_TOOLS.
+    ZIPALIGN="$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name zipalign -perm -u+x 2>/dev/null | sort -V | tail -n 1)"
+  fi
+  if [[ -z "$ZIPALIGN" || ! -x "$ZIPALIGN" ]]; then
+    echo "Android SDK zipalign was not found under $ANDROID_HOME/build-tools" >&2
+    find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name zipalign -print 2>/dev/null || true
     exit 1
   fi
   mv "$apk" "$apk.unaligned"
