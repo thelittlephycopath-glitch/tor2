@@ -6,8 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AutonomyCoordinatorTest {
-    private fun connectedCoordinator(): AutonomyCoordinator =
-        AutonomyCoordinator().also {
+    private fun connectedCoordinator(): AutonomyCoordinator = AutonomyCoordinator().also {
             it.updateNetworkEnvironment(
                 networkAvailable = true,
                 captivePortalDetected = false,
