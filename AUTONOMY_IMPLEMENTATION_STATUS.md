@@ -19,7 +19,7 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 
 ## Deliberately not claimed as complete
 
-The report gate is a contract for a separate verifier; it does **not** perform DNS, IPv6, firewall, Android lockdown, or per-app route probes. The recovery planner is advisory; it does **not** enqueue reconnection, restart the VPN service, choose a different bridge, or rotate circuits. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
+The report gate is a contract for a separate verifier; the read-only Android probe checks exposed route/DNS/lockdown settings but does **not** run end-to-end DNS or IPv6 leak probes, firewall enforcement tests, or per-app routing verification. The recovery and circuit-refresh planners are advisory; they do **not** enqueue reconnection, restart the VPN service, choose a different bridge, or rotate circuits. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
 
 The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. It does not yet establish that a network is public/trusted, detect DNS hijacking, detect TLS interception, or learn per-network history. These must not be inferred from the current signals.
 
@@ -29,8 +29,8 @@ The current Android environment monitor reads default-network validation, captiv
 - [x] Existing foreground VPN service and boot-time start mechanism preserved.
 - [x] Additive policy/event/bridge-health model and bounded event journal.
 - [x] Conservative network-trust classifier and evidence freshness checks.
-- [ ] Verified Android always-on/lockdown status provider.
-- [ ] Live leak verifier covering IPv4, IPv6, DNS, app routing, and system lockdown.
+- [x] Read-only Android probe for VPN default routes, Tor DNS addresses, and reported always-on/lockdown settings (per-app routing remains unverified).
+- [ ] Live end-to-end leak verifier covering IPv4, IPv6, DNS, app routing, and system lockdown.
 - [ ] Runtime kill-switch/lockdown confirmation on a supported Android device.
 - [ ] Full Android build, unit tests, lint, and emulator smoke test.
 
@@ -39,7 +39,8 @@ The current Android environment monitor reads default-network validation, captiv
 - [x] Rank bridge candidates from bounded recent outcomes.
 - [ ] Wire ranked candidate selection into Tor/Onionmasq using supported APIs.
 - [ ] Execute failover through a single serialized service lifecycle.
-- [ ] Circuit-refresh control using a supported Tor control interface.
+- [x] Pure advisory circuit-refresh planner with fresh telemetry checks, bounded thresholds, and cooldown.
+- [ ] Circuit-refresh execution using a supported Tor/Onionmasq control interface.
 - [ ] Live routing and no-direct-fallback tests.
 
 ### Phase 3 — Autonomous Censorship Intelligence
