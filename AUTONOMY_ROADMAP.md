@@ -15,7 +15,7 @@ The first autonomy foundation now lives beside the existing VPN code:
 - A stateful coordinator that receives VPN lifecycle observations.
 - The coordinator is wired to selected lifecycle events in `TorVpnService`.
 - An Android default-network callback observes validated connectivity, cellular transport, and captive-portal capability without reading SSIDs or changing routes.
-- An Android battery observer feeds battery percentage into the optional-traffic budget; monitor failure is a distinct event and keeps optional traffic suppressed.
+- An Android resource observer feeds battery percentage and explicit charging-state availability into the policy snapshot; monitor failure is a distinct event and keeps optional traffic suppressed.
 - Network loss/return invalidates previous tunnel/leak verification. Monitor registration failure is recorded instead of crashing the VPN service or failing open.
 - Tunnel bootstrap does **not** count as an independent leak-check pass.
 - The policy planner emits recommendations only; it does not bypass Android VPN behavior or call unverified Onionmasq operations.
