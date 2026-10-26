@@ -28,6 +28,13 @@ class OptInNetworkLearningStoreTest {
     }
 
     @Test
+    fun optingOutClearsRecordsBeforeValidatingIrrelevantObservationData() {
+        store.recordFingerprint(digestA, 99L, true, 100L)
+        assertFalse(store.recordFingerprint("not-a-digest", -1L, false, -1L))
+        assertEquals(null, storage.value)
+    }
+
+    @Test
     fun retainsOnlyBoundedMostRecentEntries() {
         store.recordFingerprint(digestA, 80L, true, 100L)
         store.recordFingerprint(digestB, 90L, true, 100L)
