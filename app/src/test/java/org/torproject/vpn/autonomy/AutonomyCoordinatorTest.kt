@@ -483,4 +483,28 @@ class AutonomyCoordinatorTest {
         assertTrue(afterTransportChange.blockTrafficUntilTunnelVerified)
         assertFalse(afterTransportChange.trafficReleaseEligible)
     }
+
+    @Test
+    fun bridgeFailureLearningIsResetWhenTransportChanges() {
+        val coordinator = connectedCoordinator()
+        repeat(4) { index ->
+            coordinator.recordBridgeOutcome(
+                transport = Transport.SNOWFLAKE,
+                succeeded = false,
+                latencyMillis = 0,
+                elapsedRealtimeMillis = index + 1L
+            )
+        }
+        assertFalse(coordinator.rankedBridgeCandidates().any { it.transport == Transport.SNOWFLAKE })
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = true
+        )
+
+        assertTrue(coordinator.rankedBridgeCandidates().any {
+            it.transport == Transport.SNOWFLAKE && !it.knownBlocked
+        })
+    }
 }
