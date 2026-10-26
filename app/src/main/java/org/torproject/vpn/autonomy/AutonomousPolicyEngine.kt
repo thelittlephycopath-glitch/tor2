@@ -108,17 +108,28 @@ class AutonomousPolicyEngine(
     }
 
     /**
-     * Ranks observed candidates only. No bridge is probed and no fallback is executed here.
-     * Reliability is the primary signal; failures and latency break ties deterministically.
+     * Ranks observed candidates without probing or switching routes.
+     *
+     * A bounded composite score balances success rate, repeated failures, and latency so a tiny
+     * latency improvement cannot outweigh a substantial reliability regression. Tie-breakers keep
+     * output deterministic, which makes decisions testable and explainable.
      */
     fun rankBridges(candidates: List<BridgeCandidate>): List<BridgeCandidate> =
         candidates.asSequence()
             .filterNot { it.knownBlocked }
             .sortedWith(
-                compareByDescending<BridgeCandidate> { it.recentSuccessRate }
+                compareByDescending<BridgeCandidate> { bridgeScore(it) }
+                    .thenByDescending { it.recentSuccessRate }
                     .thenBy { it.recentFailures }
                     .thenBy { it.latencyMillis }
                     .thenBy { it.transport.ordinal }
             )
             .toList()
+
+    internal fun bridgeScore(candidate: BridgeCandidate): Double {
+        val failurePenalty = (candidate.recentFailures * 0.06).coerceAtMost(0.30)
+        val latencyPenalty =
+            (candidate.latencyMillis.toDouble() / 10_000.0).coerceIn(0.0, 1.0) * 0.20
+        return candidate.recentSuccessRate * 0.80 - failurePenalty - latencyPenalty
+    }
 }
