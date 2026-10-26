@@ -12,7 +12,7 @@ on:
         default: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: tor2-android-build-${{ github.ref }}
@@ -250,9 +250,25 @@ jobs:
             fi
           done
 
+
+  publish:
+    name: Publish verified APKs from main
+    needs: build
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: tor2-debug-signed-apks
+          path: dist
+
       - name: Publish APK download page
-        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
         uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: tor2-build-${{ github.run_number }}
           name: Tor VPN Beta - tor2 build ${{ github.run_number }}
