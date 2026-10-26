@@ -45,14 +45,14 @@ class OptInNetworkLearningStoreTest {
     @Test
     fun removesExpiredFutureDatedMalformedAndDuplicateRecords() {
         storage.value = listOf(
-            "$digestA|1",
+            "$digestA|0",
             "$digestB|99",
-            "$digestC|101",
+            "$digestC|102",
             "not-a-digest|99",
             "$digestB|99",
             "$digestA|malformed"
         ).joinToString("\n")
-        assertEquals(listOf(digestB), store.readFingerprints(100L, true).map { it.digest })
+        assertEquals(listOf(digestB), store.readFingerprints(101L, true).map { it.digest })
         assertEquals("$digestB|99", storage.value)
     }
 
