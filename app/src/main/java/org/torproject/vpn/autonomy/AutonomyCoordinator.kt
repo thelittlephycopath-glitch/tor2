@@ -53,13 +53,18 @@ class AutonomyCoordinator(
                 tunnelReady = false
                 leakChecksPassed = false
                 leakCheckFailed = false
+                // Transport outcomes from the previous network are not reliable evidence here.
+                bridgeHealthLedger.clear()
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED -> {
                 environmentalSignals = environmentalSignals.copy(networkAvailable = true)
-                // A network return invalidates the previous tunnel verification.
+                // A network return invalidates both the old tunnel verification and old transport
+                // learning. Failure streaks from a previous network must not trigger false failover.
                 tunnelReady = false
                 leakChecksPassed = false
                 leakCheckFailed = false
+                consecutiveFailures = 0
+                bridgeHealthLedger.clear()
             }
             AutonomyEventType.DNS_CONFIGURATION_CONFLICT -> {
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = true)
@@ -174,15 +179,17 @@ class AutonomyCoordinator(
         captivePortalDetected: Boolean,
         mobileData: Boolean
     ): AutonomyDecision {
-        if (
+        val networkChanged =
             environmentalSignals.networkAvailable != networkAvailable ||
-            environmentalSignals.captivePortalDetected != captivePortalDetected ||
-            environmentalSignals.mobileData != mobileData
-        ) {
-            // Network or captive-portal state changes invalidate the previous verification.
+                environmentalSignals.captivePortalDetected != captivePortalDetected ||
+                environmentalSignals.mobileData != mobileData
+        if (networkChanged) {
+            // Network or transport changes invalidate verification and session-scoped learning.
             tunnelReady = false
             leakChecksPassed = false
             leakCheckFailed = false
+            consecutiveFailures = 0
+            bridgeHealthLedger.clear()
         }
         environmentalSignals = environmentalSignals.copy(
             networkAvailable = networkAvailable,
