@@ -332,8 +332,8 @@ class AutonomyCoordinatorTest {
             source = AutonomyEventSource.NETWORK_MONITOR,
             elapsedRealtimeMillis = 2
         )
-        val portalDecision = val portalCoordinatorResult = submitPassingLeakCheck(portalCoordinator, timestamp = 3L)
-        val portalCoordinatorDecision = portalCoordinator.currentDecision()
+        val portalCoordinatorResult = submitPassingLeakCheck(portalCoordinator, timestamp = 3L)
+        val portalDecision = portalCoordinator.currentDecision()
         assertFalse(portalCoordinator.currentSignals().leakChecksPassed)
         assertFalse(portalDecision.trafficReleaseEligible)
         assertFalse(portalCoordinatorResult.passed)
@@ -346,8 +346,8 @@ class AutonomyCoordinatorTest {
             source = AutonomyEventSource.NETWORK_MONITOR,
             elapsedRealtimeMillis = 2
         )
-        val tlsDecision = val tlsCoordinatorResult = submitPassingLeakCheck(tlsCoordinator, timestamp = 3L)
-        val tlsCoordinatorDecision = tlsCoordinator.currentDecision()
+        val tlsCoordinatorResult = submitPassingLeakCheck(tlsCoordinator, timestamp = 3L)
+        val tlsDecision = tlsCoordinator.currentDecision()
         assertFalse(tlsCoordinator.currentSignals().leakChecksPassed)
         assertFalse(tlsDecision.trafficReleaseEligible)
         assertFalse(tlsCoordinatorResult.passed)
