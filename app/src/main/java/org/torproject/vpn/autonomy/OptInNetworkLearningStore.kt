@@ -74,11 +74,12 @@ class OptInNetworkLearningStore(
         nowEpochMillis: Long,
         optedIn: Boolean
     ): List<NetworkLearningRecord> {
-        require(nowEpochMillis >= 0L) { "Current time cannot be negative" }
+        // Opt-out is a deletion request; it must win even if the unused clock input is invalid.
         if (!optedIn) {
             clear()
             return emptyList()
         }
+        require(nowEpochMillis >= 0L) { "Current time cannot be negative" }
         val valid = readValidRecords(nowEpochMillis)
         persist(valid)
         return valid.toList()
