@@ -15,18 +15,25 @@ class AutonomyRecoveryPlannerTest {
         )
     )
 
+    private fun plan(planner: AutonomyRecoveryPlanner) = planner.planReconnect(
+        networkAvailable = true,
+        tunnelReady = false,
+        leakChecksPassed = false,
+        recoveryRequired = true
+    )
+
     @Test
     fun schedulesBoundedBackoffAndKeepsTrafficBlocked() {
         val planner = planner()
+        val first = plan(planner)
 
-        val first = planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
         assertTrue(first.shouldScheduleReconnect)
         assertEquals(1, first.attempt)
         assertEquals(1_000L, first.delayMillis)
         assertTrue(first.keepTrafficBlocked)
 
         assertTrue(planner.markAttemptStarted(1))
-        val second = planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
+        val second = plan(planner)
         assertTrue(second.shouldScheduleReconnect)
         assertEquals(2, second.attempt)
         assertEquals(2_000L, second.delayMillis)
@@ -36,8 +43,8 @@ class AutonomyRecoveryPlannerTest {
     @Test
     fun duplicatePlansDoNotScheduleParallelReconnects() {
         val planner = planner()
-        val first = planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
-        val duplicate = planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
+        val first = plan(planner)
+        val duplicate = plan(planner)
 
         assertTrue(first.shouldScheduleReconnect)
         assertFalse(duplicate.shouldScheduleReconnect)
@@ -51,22 +58,19 @@ class AutonomyRecoveryPlannerTest {
     @Test
     fun noNetworkCancelsPendingPlanWithoutConsumingAttempt() {
         val planner = planner()
-        planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
+        plan(planner)
 
         val offline = planner.planReconnect(
             networkAvailable = false,
             tunnelReady = false,
-            leakChecksPassed = false
+            leakChecksPassed = false,
+            recoveryRequired = true
         )
         assertFalse(offline.shouldScheduleReconnect)
         assertTrue(offline.keepTrafficBlocked)
         assertEquals(0, planner.attemptsStarted())
 
-        val online = planner.planReconnect(
-            networkAvailable = true,
-            tunnelReady = false,
-            leakChecksPassed = false
-        )
+        val online = plan(planner)
         assertEquals(1, online.attempt)
         assertEquals(1_000L, online.delayMillis)
     }
@@ -75,21 +79,13 @@ class AutonomyRecoveryPlannerTest {
     fun retryBudgetExhaustionNeverPermitsTraffic() {
         val planner = planner()
         repeat(3) { index ->
-            val plan = planner.planReconnect(
-                networkAvailable = true,
-                tunnelReady = false,
-                leakChecksPassed = false
-            )
-            assertTrue(plan.shouldScheduleReconnect)
-            assertTrue(plan.keepTrafficBlocked)
+            val scheduled = plan(planner)
+            assertTrue(scheduled.shouldScheduleReconnect)
+            assertTrue(scheduled.keepTrafficBlocked)
             assertTrue(planner.markAttemptStarted(index + 1))
         }
 
-        val exhausted = planner.planReconnect(
-            networkAvailable = true,
-            tunnelReady = false,
-            leakChecksPassed = false
-        )
+        val exhausted = plan(planner)
         assertFalse(exhausted.shouldScheduleReconnect)
         assertTrue(exhausted.keepTrafficBlocked)
         assertEquals("Reconnect retry budget exhausted", exhausted.reason)
@@ -98,7 +94,6 @@ class AutonomyRecoveryPlannerTest {
     @Test
     fun startupOrPendingLeakCheckDoesNotCauseReconnectLoop() {
         val planner = planner()
-
         val starting = planner.planReconnect(
             networkAvailable = true,
             tunnelReady = false,
@@ -122,28 +117,24 @@ class AutonomyRecoveryPlannerTest {
     @Test
     fun verifiedTunnelAndNetworkChangeResetRetryBudget() {
         val planner = planner()
-        val first = planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true)
+        val first = plan(planner)
         assertTrue(planner.markAttemptStarted(first.attempt!!))
 
         val verified = planner.planReconnect(
             networkAvailable = true,
             tunnelReady = true,
-            leakChecksPassed = true
+            leakChecksPassed = true,
+            recoveryRequired = false
         )
         assertFalse(verified.shouldScheduleReconnect)
         assertFalse(verified.keepTrafficBlocked)
         assertEquals(0, planner.attemptsStarted())
 
-        planner.markAttemptStarted(
-            planner.planReconnect(networkAvailable = true, tunnelReady = false, leakChecksPassed = false, recoveryRequired = true).attempt!!
-        )
+        val pending = plan(planner)
+        assertTrue(planner.markAttemptStarted(pending.attempt!!))
         planner.onNetworkChanged()
         assertEquals(0, planner.attemptsStarted())
-        val afterChange = planner.planReconnect(
-            networkAvailable = true,
-            tunnelReady = false,
-            leakChecksPassed = false
-        )
+        val afterChange = plan(planner)
         assertEquals(1, afterChange.attempt)
         assertEquals(1_000L, afterChange.delayMillis)
     }
