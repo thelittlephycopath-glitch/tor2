@@ -82,15 +82,9 @@ class AutonomyActionGate {
      * suppressed even when their opt-in flags are enabled.
      */
     private fun isImplemented(action: AutonomyAction): Boolean = when (action) {
-        AutonomyAction.RUN_LEAK_CHECKS,
-        AutonomyAction.REQUEST_TUNNEL_RECONNECT,
-        AutonomyAction.REQUEST_BRIDGE_FAILOVER,
-        AutonomyAction.REQUEST_CIRCUIT_REFRESH,
-        AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC -> false
         AutonomyAction.KEEP_TRAFFIC_BLOCKED,
-        AutonomyAction.SUPPRESS_COVER_TRAFFIC,
-        AutonomyAction.NOTIFY_USER,
-        AutonomyAction.ALLOW_CAPTIVE_PORTAL_ONLY -> false
+        AutonomyAction.SUPPRESS_COVER_TRAFFIC -> true
+        else -> false
     }
 
     private fun isFeatureEnabled(config: AutonomyConfig, action: AutonomyAction): Boolean =
