@@ -86,8 +86,10 @@ jobs:
       - name: Compile Tor VPN and Onionmasq
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git" "${RUNNER_TEMP}/tor2-maven/repository"
+          log="${RUNNER_TEMP}/tor2-build.log"
+          set +e
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/build/vpn" \
             --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
@@ -96,7 +98,22 @@ jobs:
             --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
             --workdir /build/vpn \
             tor2-android-builder \
-            env BUILD_AAB=0 bash scripts/reproducible_build.sh
+            env BUILD_AAB=0 bash scripts/reproducible_build.sh 2>&1 | tee "$log"
+          status=${PIPESTATUS[0]}
+          set -e
+          echo "TOR2_BUILD_EXIT_CODE=$status" | tee "${RUNNER_TEMP}/tor2-build-status.txt"
+          exit "$status"
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tor2-build-diagnostics
+          path: |
+            ${{ runner.temp }}/tor2-build.log
+            ${{ runner.temp }}/tor2-build-status.txt
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Diagnose and preserve APK outputs
         if: always()
