@@ -670,6 +670,8 @@ class AutonomyCoordinatorTest {
 
         assertEquals(NetworkTrust.HOSTILE, coordinator.currentSignals().trust)
         assertEquals(ProtectionProfile.MAXIMUM, hostile.profile)
+        assertFalse(coordinator.currentSignals().tunnelReady)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
         assertFalse(hostile.trafficReleaseEligible)
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }

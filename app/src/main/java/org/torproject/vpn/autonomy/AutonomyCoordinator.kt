@@ -335,6 +335,13 @@ class AutonomyCoordinator(
         nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
     ): AutonomyDecision {
         val classifiedTrust = trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
+        if (classifiedTrust == NetworkTrust.HOSTILE) {
+            // Previously successful tunnel/leak checks do not remain authoritative after a hostile
+            // network indicator. Record the classification without pretending a leak probe ran.
+            tunnelReady = false
+            leakChecksPassed = false
+            validatedLeakReportReady = false
+        }
         environmentalSignals = environmentalSignals.copy(trust = classifiedTrust)
         return calculateDecision()
     }
