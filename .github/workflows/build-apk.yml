@@ -2,7 +2,7 @@ name: Build Tor VPN Beta APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, dangerous-experiment]
   workflow_dispatch:
     inputs:
       publish_release:
@@ -35,8 +35,10 @@ jobs:
           echo "Disk space before cleanup:"
           df -h /
           # The build uses its own pinned Android SDK inside the container.
-          sudo rm -rf /usr/local/lib/android/sdk /usr/share/dotnet /opt/ghc /usr/local/share/boost
-          timeout 90s docker system prune --all --force || echo "Docker prune timed out or failed; continuing."
+          for path in /usr/local/lib/android/sdk /usr/share/dotnet /opt/ghc /usr/local/share/boost; do
+            timeout 30s sudo rm -rf "$path" || echo "Timed out removing $path; continuing."
+          done
+          timeout 60s docker system prune --all --force || echo "Docker prune timed out or failed; continuing."
           echo "Disk space after cleanup:"
           df -h /
 
@@ -193,6 +195,48 @@ jobs:
             tor2-android-builder \
             bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
+      - name: Set up Java for Android emulator tooling
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK tooling
+        uses: android-actions/setup-android@v3
+
+      - name: Boot Android emulator and smoke-test the signed APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -no-audio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            apk="$(find dist -maxdepth 1 -type f -name '*universal*debug-signed.apk' -print -quit)"
+            if [[ -z "$apk" ]]; then
+              echo "Universal debug-signed APK was not produced." >&2
+              find dist -maxdepth 1 -type f -name '*.apk' -print >&2
+              exit 1
+            fi
+            adb install "$apk"
+            adb shell monkey -p org.torproject.vpn.tor2beta.dev 1
+            for attempt in $(seq 1 20); do
+              if adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
+                echo "Tor VPN Beta process started in Android emulator."
+                break
+              fi
+              sleep 2
+            done
+            if ! adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
+              echo "Tor VPN Beta process did not remain alive after launch." >&2
+              adb logcat -d -t 500 >&2
+              exit 1
+            fi
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true
+
       # The pinned builder runs as root inside Docker. Restore ownership so
       # actions/cache can archive the mounted dependency directories during post-job cleanup.
       - name: Fix dependency cache ownership
@@ -207,7 +251,7 @@ jobs:
           done
 
       - name: Publish APK download page
-        if: ${{ github.event_name == 'push' || inputs.publish_release }}
+        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tor2-build-${{ github.run_number }}
