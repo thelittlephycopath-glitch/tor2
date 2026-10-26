@@ -579,4 +579,43 @@ class AutonomyCoordinatorTest {
         assertFalse(decision.trafficReleaseEligible)
         assertTrue(decision.blockTrafficUntilTunnelVerified)
     }
+
+    @Test
+    fun coordinatorExposesCircuitRefreshRecommendationWithoutExecutingIt() {
+        val coordinator = connectedCoordinator()
+        val decision = coordinator.assessCircuitRefresh(
+            telemetry = CircuitTelemetry(
+                observedAtElapsedRealtimeMillis = 100L,
+                circuitAgeMillis = 600_000L,
+                latencyMillis = 100L,
+                recentStreamFailures = 0
+            ),
+            nowElapsedRealtimeMillis = 100L
+        )
+
+        assertTrue(decision.shouldRefresh)
+        assertEquals(CircuitRefreshReason.CIRCUIT_TOO_OLD, decision.reason)
+    }
+
+    @Test
+    fun coordinatorCoverTrafficGateRejectsUncontrolledTargets() {
+        val coordinator = connectedCoordinator()
+        val decision = coordinator.assessCoverTrafficPolicy(
+            CoverTrafficPolicyInputs(
+                enabled = true,
+                targetIsUserControlled = false,
+                threatLevel = CoverTrafficThreatLevel.CRITICAL,
+                transport = CoverTrafficTransport.WIFI,
+                batteryPercent = 90,
+                charging = false,
+                wifiOnly = true,
+                coverTrafficUsedTodayMb = 0L,
+                dailyCoverTrafficBudgetMb = 300L
+            )
+        )
+
+        assertFalse(decision.enabled)
+        assertEquals(CoverTrafficDecisionReason.TARGET_NOT_USER_CONTROLLED, decision.reason)
+        assertTrue(decision.onlyUserControlledTargets)
+    }
 }

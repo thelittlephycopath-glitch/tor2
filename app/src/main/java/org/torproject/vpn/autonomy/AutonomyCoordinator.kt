@@ -13,7 +13,9 @@ class AutonomyCoordinator(
     private val bridgeHealthLedger: BridgeHealthLedger = BridgeHealthLedger(),
     private val elapsedRealtimeClock: () -> Long = { System.nanoTime() / 1_000_000L },
     private val recoveryPlanner: AutonomyRecoveryPlanner = AutonomyRecoveryPlanner(),
-    private val leakVerificationGate: LeakVerificationGate = LeakVerificationGate()
+    private val leakVerificationGate: LeakVerificationGate = LeakVerificationGate(),
+    private val circuitRefreshPlanner: TorCircuitRefreshPlanner = TorCircuitRefreshPlanner(),
+    private val coverTrafficPolicyPlanner: CoverTrafficPolicyPlanner = CoverTrafficPolicyPlanner()
 ) {
     private var environmentalSignals = NetworkSignals()
     private var tunnelReady = false
@@ -321,6 +323,27 @@ class AutonomyCoordinator(
         }
         return result
     }
+
+    /**
+     * Evaluates caller-supplied circuit telemetry without opening a Tor control connection.
+     * The result is advisory until a supported executor and no-direct-fallback tests exist.
+     */
+    @Synchronized
+    fun assessCircuitRefresh(
+        telemetry: CircuitTelemetry,
+        nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
+    ): CircuitRefreshDecision = circuitRefreshPlanner.assess(
+        telemetry = telemetry,
+        nowElapsedRealtimeMillis = nowElapsedRealtimeMillis
+    )
+
+    /**
+     * Applies explicit cover-traffic opt-in, target ownership, battery, transport, and data-budget
+     * limits. This method never generates packets or contacts destinations.
+     */
+    @Synchronized
+    fun assessCoverTrafficPolicy(inputs: CoverTrafficPolicyInputs): CoverTrafficPolicyDecision =
+        coverTrafficPolicyPlanner.assess(inputs)
 
     /**
      * Returns a bounded reconnect recommendation for a future service executor.
