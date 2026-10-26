@@ -115,10 +115,13 @@ fi
 
 echo "  Rust $MSRV OK!"
 
-if [ ! -d bin/Android/Sdk ]; then
-  echo "  Android SDK not found. Installing..."
-  echo ""
-  # Determine platform-specific cmdline-tools
+SDK_ROOT="$PWD/bin/Android/Sdk"
+SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+# Bootstrap command-line tools independently of the SDK directory. A prior failed install may
+# have left a partial SDK tree; package installation below always runs to repair missing packages.
+if [ ! -x "$SDKMANAGER" ]; then
+  echo "  Android SDK command-line tools not found. Installing..."
   if [ "$OS" = "Darwin" ]; then
     CMDLINE_TOOLS_PLATFORM="mac"
   else
@@ -126,28 +129,42 @@ if [ ! -d bin/Android/Sdk ]; then
   fi
   CMDLINE_TOOLS_ZIP="commandlinetools-${CMDLINE_TOOLS_PLATFORM}-13114758_latest.zip"
 
-  mkdir -p bin/Android/Sdk/cmdline-tools
-  pushd bin/Android/Sdk/cmdline-tools
-  curl "https://dl.google.com/android/repository/${CMDLINE_TOOLS_ZIP}" -o "$CMDLINE_TOOLS_ZIP"
-  # todo: if no unzip, fails, and further runs thinks the ndk is installed
-  unzip -qq "$CMDLINE_TOOLS_ZIP"
-  mv cmdline-tools latest
-  cd latest/bin
-  yes | ./sdkmanager --licenses
-  ./sdkmanager --install "platforms;android-36"
-  ./sdkmanager --install "platforms;android-37.0"
-  ./sdkmanager --install "build-tools;36.0.0"
-  ./sdkmanager --install "build-tools;37.0.0"
+  mkdir -p "$SDK_ROOT/cmdline-tools"
+  pushd "$SDK_ROOT/cmdline-tools"
+  rm -rf .latest-staging
+  mkdir -p .latest-staging
+  curl --fail --location --silent --show-error \
+    "https://dl.google.com/android/repository/${CMDLINE_TOOLS_ZIP}" \
+    -o "$CMDLINE_TOOLS_ZIP"
+  unzip -qq "$CMDLINE_TOOLS_ZIP" -d .latest-staging
+  rm -f "$CMDLINE_TOOLS_ZIP"
+  rm -rf latest
+  mv .latest-staging/cmdline-tools latest
+  rmdir .latest-staging
   popd
 fi
 
-export ANDROID_HOME=$PWD/bin/Android/Sdk
+SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+if [ ! -x "$SDKMANAGER" ]; then
+  echo "Error: Android SDK command-line tools were not installed successfully" >&2
+  exit 1
+fi
+
+export ANDROID_HOME="$SDK_ROOT"
+yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
+
+# Android 17/API 37 is in the preview channel; Onionmasq remains on stable API 36.
+"$SDKMANAGER" --sdk_root="$ANDROID_HOME" --channel=0 --install \
+  "platforms;android-36" "build-tools;36.0.0"
+"$SDKMANAGER" --sdk_root="$ANDROID_HOME" --channel=3 --install \
+  "platforms;android-37" "build-tools;37.0.0"
+
 
 if [ ! -d $ANDROID_HOME/ndk/27.3.13750724 ]; then
   echo "  Android NDK not found. Installing..."
   echo ""
   pushd $ANDROID_HOME/cmdline-tools/latest/bin
-  ./sdkmanager --install "ndk;27.3.13750724"
+  "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --channel=0 --install "ndk;27.3.13750724"
   popd
 fi
 export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.3.13750724
