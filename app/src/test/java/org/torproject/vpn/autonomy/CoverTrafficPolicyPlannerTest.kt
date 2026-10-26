@@ -72,6 +72,13 @@ class CoverTrafficPolicyPlannerTest {
     fun cellularUseRequiresExplicitPolicyCriticalRiskAndPowerBudget() {
         assertEquals(CoverTrafficDecisionReason.WIFI_ONLY_POLICY,
             planner.assess(input(transport = CoverTrafficTransport.CELLULAR)).reason)
+        assertEquals(CoverTrafficDecisionReason.CELLULAR_REQUIRES_CRITICAL_RISK,
+            planner.assess(input(
+                threat = CoverTrafficThreatLevel.HIGH,
+                transport = CoverTrafficTransport.CELLULAR,
+                wifiOnly = false,
+                battery = 75
+            )).reason)
         val decision = planner.assess(input(
             threat = CoverTrafficThreatLevel.CRITICAL,
             transport = CoverTrafficTransport.CELLULAR,

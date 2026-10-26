@@ -12,6 +12,7 @@ enum class CoverTrafficDecisionReason {
     BATTERY_UNKNOWN,
     LOW_BATTERY,
     RISK_TOO_LOW,
+    CELLULAR_REQUIRES_CRITICAL_RISK,
     BUDGET_EXHAUSTED,
     STANDARD_WIFI_BUDGET,
     LOW_WIFI_BUDGET,
@@ -124,7 +125,7 @@ class CoverTrafficPolicyPlanner(
         // Cellular use is only eligible when the caller explicitly disables Wi-Fi-only mode,
         // threat is critical, and the power budget is healthy. It remains very tightly capped.
         if (inputs.threatLevel != CoverTrafficThreatLevel.CRITICAL) {
-            return off(CoverTrafficDecisionReason.WIFI_ONLY_POLICY)
+            return off(CoverTrafficDecisionReason.CELLULAR_REQUIRES_CRITICAL_RISK)
         }
         if (!inputs.charging && battery < criticalCellularBatteryThresholdPercent) {
             return off(CoverTrafficDecisionReason.LOW_BATTERY)
