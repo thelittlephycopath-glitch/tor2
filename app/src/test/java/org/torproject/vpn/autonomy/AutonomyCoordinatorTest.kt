@@ -463,4 +463,24 @@ class AutonomyCoordinatorTest {
         assertTrue(decision.blockTrafficUntilTunnelVerified)
     }
 
+
+    @Test
+    fun mobileTransportChangeInvalidatesPreviouslyVerifiedTunnel() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val afterTransportChange = coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = true
+        )
+        assertTrue(afterTransportChange.blockTrafficUntilTunnelVerified)
+        assertFalse(afterTransportChange.trafficReleaseEligible)
+    }
 }
