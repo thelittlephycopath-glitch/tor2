@@ -1,0 +1,29 @@
+name: Diagnose GitHub Actions runner availability
+
+on:
+  push:
+    branches: [main, dangerous-experiment]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runner-diagnostic:
+    name: Minimal runner and shell check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Confirm the runner was assigned
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "RUNNER_DIAGNOSTIC_STARTED=true"
+          echo "RUNNER_OS=$RUNNER_OS"
+          echo "RUNNER_ARCH=$RUNNER_ARCH"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "WORKSPACE=$GITHUB_WORKSPACE"
+          echo "Disk space:"
+          df -h /
+          echo "Shell check passed."
