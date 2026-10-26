@@ -4,8 +4,7 @@ package org.torproject.vpn.autonomy
  * Pure, bounded reconnect planner for a future reviewed Android recovery executor.
  *
  * This class never schedules work or starts/stops the VPN. A caller must enforce the returned
- * delay, single active service operation, cancellation, and traffic-blocking policy. A retry plan
- * always keeps traffic blocked until both tunnel readiness and independent leak checks are true.
+ * delay, single active service operation, cancellation, and fail-closed traffic policy.
  */
 data class RecoveryPlan(
     val shouldScheduleReconnect: Boolean,
@@ -26,9 +25,9 @@ data class RecoveryPlan(
 /**
  * Coordinates bounded recovery recommendations without owning service lifecycle or traffic routing.
  *
- * Only one retry may be pending. Attempt count advances when a caller confirms that the scheduled
- * attempt actually started, not when a plan is merely calculated. Network changes and verified
- * recovery reset the budget so failures on an old network do not poison the next one.
+ * A retry is recommended only after the caller reports an actual recovery trigger. A tunnel that is
+ * bootstrapping, or ready but awaiting independent leak verification, must not cause reconnect loops.
+ * Attempt count advances when the caller confirms the scheduled attempt actually started.
  */
 class AutonomyRecoveryPlanner(
     private val backoffPolicy: RecoveryBackoffPolicy = RecoveryBackoffPolicy()
@@ -40,7 +39,8 @@ class AutonomyRecoveryPlanner(
     fun planReconnect(
         networkAvailable: Boolean,
         tunnelReady: Boolean,
-        leakChecksPassed: Boolean
+        leakChecksPassed: Boolean,
+        recoveryRequired: Boolean
     ): RecoveryPlan {
         if (tunnelReady && leakChecksPassed) {
             reset()
@@ -58,6 +58,18 @@ class AutonomyRecoveryPlanner(
                 shouldScheduleReconnect = false,
                 keepTrafficBlocked = true,
                 reason = "Network unavailable; remain blocked"
+            )
+        }
+
+        if (!recoveryRequired) {
+            return RecoveryPlan(
+                shouldScheduleReconnect = false,
+                keepTrafficBlocked = true,
+                reason = if (tunnelReady) {
+                    "Tunnel is ready; await independent leak verification"
+                } else {
+                    "No recovery trigger; do not reconnect during normal startup"
+                }
             )
         }
 
@@ -83,7 +95,7 @@ class AutonomyRecoveryPlanner(
             attempt = attempt,
             delayMillis = delay,
             keepTrafficBlocked = true,
-            reason = "Tunnel is not independently verified; schedule bounded reconnect"
+            reason = "Recovery trigger observed; schedule bounded reconnect"
         )
     }
 
