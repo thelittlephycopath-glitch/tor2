@@ -507,4 +507,44 @@ class AutonomyCoordinatorTest {
             it.transport == Transport.SNOWFLAKE && !it.knownBlocked
         })
     }
+    @Test
+    fun recoveryPlanningIsBoundedAndRemainsAdvisory() {
+        val coordinator = connectedCoordinator()
+        val first = coordinator.planRecovery()
+
+        assertTrue(first.shouldScheduleReconnect)
+        assertTrue(first.keepTrafficBlocked)
+        assertEquals(1, first.attempt)
+        assertEquals(1_000L, first.delayMillis)
+
+        val duplicate = coordinator.planRecovery()
+        assertFalse(duplicate.shouldScheduleReconnect)
+        assertEquals(first.attempt, duplicate.attempt)
+
+        assertTrue(coordinator.markRecoveryAttemptStarted(1))
+        assertFalse(coordinator.markRecoveryAttemptStarted(1))
+        val second = coordinator.planRecovery()
+        assertTrue(second.shouldScheduleReconnect)
+        assertEquals(2, second.attempt)
+        assertEquals(2_000L, second.delayMillis)
+    }
+
+    @Test
+    fun networkChangeResetsRecoveryBudget() {
+        val coordinator = connectedCoordinator()
+        val first = coordinator.planRecovery()
+        assertTrue(coordinator.markRecoveryAttemptStarted(first.attempt!!))
+        val second = coordinator.planRecovery()
+        assertEquals(2, second.attempt)
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = true
+        )
+        val afterChange = coordinator.planRecovery()
+        assertEquals(1, afterChange.attempt)
+        assertEquals(1_000L, afterChange.delayMillis)
+    }
+
 }
