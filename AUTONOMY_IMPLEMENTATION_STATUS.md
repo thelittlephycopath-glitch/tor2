@@ -29,7 +29,7 @@ The current Android environment monitor reads default-network validation, captiv
 - [x] Existing foreground VPN service and boot-time start mechanism preserved.
 - [x] Additive policy/event/bridge-health model and bounded event journal.
 - [x] Conservative network-trust classifier and evidence freshness checks.
-- [x] Read-only Android probe for VPN default routes, Tor DNS addresses, and reported always-on/lockdown settings (per-app routing remains unverified).
+- [x] Read-only Android probe records VPN-route/DNS/always-on settings as diagnostic observations only; it supplies no enforcement-verification evidence.
 - [ ] Live end-to-end leak verifier covering IPv4, IPv6, DNS, app routing, and system lockdown.
 - [ ] Runtime kill-switch/lockdown confirmation on a supported Android device.
 - [ ] Full Android build, unit tests, lint, and emulator smoke test.

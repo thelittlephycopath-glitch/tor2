@@ -12,22 +12,46 @@ import java.net.Inet6Address
 import java.net.InetAddress
 
 /**
- * Read-only snapshot of facts the Android public APIs expose about the current VPN network.
+ * Diagnostic facts visible through Android's public network APIs.
  *
- * It does not generate network traffic, perform external DNS tests, change routes, or inspect
- * another app's private state. App-specific routing is left unverified because this app cannot
- * independently prove per-app routing through these APIs alone.
+ * Route/DNS configuration is not proof of leak resistance: this snapshot deliberately makes no
+ * claim about packet enforcement, active DNS resolution, IPv6 leakage, firewall behavior, or
+ * per-app allow/disallow rules. Use the separately verified facts to decide what a real verifier
+ * still needs to measure.
+ */
+data class AndroidVpnPathSnapshot(
+    val observedAtElapsedRealtimeMillis: Long,
+    val vpnTransportActive: Boolean,
+    val ipv4DefaultRoutePresent: Boolean,
+    val ipv6DefaultRoutePresent: Boolean,
+    val expectedTorDnsServersPresent: Boolean,
+    val alwaysOnVpnPackageMatches: Boolean,
+    val lockdownSettingEnabled: Boolean
+) {
+    init {
+        require(observedAtElapsedRealtimeMillis >= 0L) {
+            "Observation timestamp must not be negative"
+        }
+    }
+
+    val alwaysOnLockdownSettingsConfigured: Boolean
+        get() = alwaysOnVpnPackageMatches && lockdownSettingEnabled
+}
+
+/**
+ * Read-only diagnostic probe. It does not generate network traffic, perform external DNS probes,
+ * change routes, or inspect another app's private state.
  */
 class AndroidLeakVerificationProbe(context: Context) {
     private val appContext = context.applicationContext
     private val connectivityManager = appContext
         .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
 
-    fun collectEvidence(
-        checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime()
-    ): LeakVerificationEvidence {
-        require(checkedAtElapsedRealtimeMillis >= 0L) {
-            "Verification timestamp must not be negative"
+    fun collectSnapshot(
+        observedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime()
+    ): AndroidVpnPathSnapshot {
+        require(observedAtElapsedRealtimeMillis >= 0L) {
+            "Observation timestamp must not be negative"
         }
 
         val manager = connectivityManager
@@ -40,32 +64,9 @@ class AndroidLeakVerificationProbe(context: Context) {
         }
         val vpnNetworkActive = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
         val routes = properties?.routes.orEmpty()
-        val ipv4DefaultRouteProtected = vpnNetworkActive && routes.hasDefaultRoute<Inet4Address>()
-        val ipv6ContainedOrBlocked = vpnNetworkActive && routes.hasDefaultRoute<Inet6Address>()
-        val dnsProtectedByTunnel = vpnNetworkActive &&
-            ipv4DefaultRouteProtected &&
-            properties?.hasExpectedTorDnsServers() == true
 
-        val lockdownVerified = readPlatformLockdownState()
-
-        return LeakVerificationEvidence(
-            checkedAtElapsedRealtimeMillis = checkedAtElapsedRealtimeMillis,
-            ipv4DefaultRouteProtected = ipv4DefaultRouteProtected,
-            ipv6ContainedOrBlocked = ipv6ContainedOrBlocked,
-            dnsProtectedByTunnel = dnsProtectedByTunnel,
-            systemLockdownVerified = lockdownVerified,
-            // Android doesn't expose a reliable read-back of this app's full allow/disallow list.
-            // Do not infer per-app routing success from the existence of default routes.
-            appRoutingVerified = false
-        )
-    }
-
-    private fun readPlatformLockdownState(): Boolean {
         val alwaysOnPackage = runCatching {
-            Settings.Secure.getString(
-                appContext.contentResolver,
-                ALWAYS_ON_VPN_APP_SETTING
-            )
+            Settings.Secure.getString(appContext.contentResolver, ALWAYS_ON_VPN_APP_SETTING)
         }.getOrNull()
         val lockdownEnabled = runCatching {
             Settings.Secure.getInt(
@@ -74,7 +75,37 @@ class AndroidLeakVerificationProbe(context: Context) {
                 0
             ) == 1
         }.getOrDefault(false)
-        return alwaysOnPackage == appContext.packageName && lockdownEnabled
+
+        return AndroidVpnPathSnapshot(
+            observedAtElapsedRealtimeMillis = observedAtElapsedRealtimeMillis,
+            vpnTransportActive = vpnNetworkActive,
+            ipv4DefaultRoutePresent = vpnNetworkActive && routes.hasDefaultRoute<Inet4Address>(),
+            ipv6DefaultRoutePresent = vpnNetworkActive && routes.hasDefaultRoute<Inet6Address>(),
+            expectedTorDnsServersPresent = vpnNetworkActive && properties?.hasExpectedTorDnsServers() == true,
+            alwaysOnVpnPackageMatches = alwaysOnPackage == appContext.packageName,
+            lockdownSettingEnabled = lockdownEnabled
+        )
+    }
+
+    /**
+     * Returns deliberately non-authoritative evidence until independent leak tests are implemented.
+     *
+     * A route table and the presence of expected DNS server addresses only describe configuration;
+     * they cannot prove that packets are contained or that app routing/system lockdown are enforced.
+     * Keeping every protection flag false prevents this diagnostic probe from authorizing traffic.
+     */
+    fun collectEvidence(
+        checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime()
+    ): LeakVerificationEvidence {
+        collectSnapshot(checkedAtElapsedRealtimeMillis)
+        return LeakVerificationEvidence(
+            checkedAtElapsedRealtimeMillis = checkedAtElapsedRealtimeMillis,
+            ipv4DefaultRouteProtected = false,
+            ipv6ContainedOrBlocked = false,
+            dnsProtectedByTunnel = false,
+            systemLockdownVerified = false,
+            appRoutingVerified = false
+        )
     }
 
     private inline fun <reified T : InetAddress> List<RouteInfo>.hasDefaultRoute(): Boolean =
