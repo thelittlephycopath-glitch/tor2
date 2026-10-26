@@ -418,4 +418,49 @@ class AutonomyCoordinatorTest {
         assertTrue(failed.blockTrafficUntilTunnelVerified)
         assertTrue(coordinator.currentSignals().leakCheckFailed)
     }
+    @Test
+    fun spoofedLeakFailureFromNonCheckerCannotInvalidateVerifiedState() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val decision = coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_FAILED,
+            source = AutonomyEventSource.POLICY_ENGINE,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertTrue(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(coordinator.currentSignals().leakCheckFailed)
+        assertTrue(decision.trafficReleaseEligible)
+    }
+
+    @Test
+    fun captivePortalTransitionInvalidatesPreviouslyVerifiedTunnel() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val decision = coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = true,
+            mobileData = false
+        )
+
+        assertFalse(coordinator.currentSignals().tunnelReady)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+    }
+
 }
