@@ -162,6 +162,15 @@ jobs:
             tor2-android-builder \
             bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
+      - name: Set up Java for Android emulator tooling
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK tooling
+        uses: android-actions/setup-android@v3
+
       - name: Boot Android emulator and smoke-test the signed APK
         uses: reactivecircus/android-emulator-runner@v2
         with:
