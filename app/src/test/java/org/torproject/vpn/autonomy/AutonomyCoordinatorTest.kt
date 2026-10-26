@@ -403,6 +403,35 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun startingNewLeakCheckDoesNotClearPreviousFailure() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_FAILED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
+
+        val inProgress = coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_STARTED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 3
+        )
+
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(inProgress.trafficReleaseEligible)
+        assertTrue(inProgress.blockTrafficUntilTunnelVerified)
+
+        // Only a fresh, complete report can clear the earlier failure.
+        val verified = submitPassingLeakCheck(coordinator, timestamp = 4L)
+        assertTrue(verified.passed)
+        assertFalse(coordinator.currentSignals().leakCheckFailed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
+    @Test
     fun leakCheckFailureInvalidatesPreviousPass() {
         val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
