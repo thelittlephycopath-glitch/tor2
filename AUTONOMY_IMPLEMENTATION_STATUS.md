@@ -15,13 +15,14 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 - [x] Leak-verification reports require fresh evidence for IPv4 routing, IPv6 containment, DNS protection, system lockdown, and app routing.
 - [x] Raw `LEAK_CHECK_PASSED` events cannot authorize the coordinator without a validated evidence report.
 - [x] One coordinator now exposes trust classification, bounded reconnect planning, circuit-refresh recommendations, and cover-traffic budget decisions as advisory APIs.
+- [x] A separate allow-list gates proposed actions by explicit config flags; observation-only mode remains non-executing, captive-portal-only routing and notifications remain deferred, and traffic restoration requires a safe decision plus passing leak evidence.
 - [x] The release workflow uses read-only repository permissions for its build job and grants release-write permission only to the main-branch publish job.
 - [x] The signed APK artifact upload is ordered after unit tests, lint, and emulator smoke testing, so failed verification does not produce the signed download artifact.
 - [x] The reproducible build script runs release unit tests before producing the release APK.
 
 ## Deliberately not claimed as complete
 
-The report gate is a contract for a separate verifier; the read-only Android probe checks exposed route/DNS/lockdown settings but does **not** run end-to-end DNS or IPv6 leak probes, firewall enforcement tests, or per-app routing verification. The recovery, circuit-refresh, and cover-traffic planners are advisory; they do **not** enqueue reconnection, restart the VPN service, choose a different bridge, rotate circuits, or generate packets. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
+The report gate is a contract for a separate verifier; the read-only Android probe checks exposed route/DNS/lockdown settings but does **not** run end-to-end DNS or IPv6 leak probes, firewall enforcement tests, or per-app routing verification. The recovery, circuit-refresh, and cover-traffic planners and the action gate are advisory; they do **not** enqueue reconnection, restart the VPN service, choose a different bridge, rotate circuits, send notifications, allow captive-portal bypass, or generate packets. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
 
 The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. It does not yet establish that a network is public/trusted, detect DNS hijacking, detect TLS interception, or learn per-network history. These must not be inferred from the current signals.
 
