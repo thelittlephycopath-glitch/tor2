@@ -10,9 +10,10 @@ permissions:
 
 jobs:
   runner-diagnostic:
-    name: Minimal runner and shell check
-    # Test a different supported image to distinguish image-pool issues from account/repo runner availability.
-    runs-on: ubuntu-22.04
+    name: Cross-platform hosted-runner check
+    # Windows is used only to distinguish a Linux runner-pool issue from a broader
+    # repository/account Actions restriction. This job never builds or changes the app.
+    runs-on: windows-latest
     timeout-minutes: 2
     steps:
       - name: Confirm the runner was assigned
@@ -24,7 +25,6 @@ jobs:
           echo "RUNNER_ARCH=$RUNNER_ARCH"
           echo "GITHUB_REF=$GITHUB_REF"
           echo "GITHUB_SHA=$GITHUB_SHA"
-          echo "WORKSPACE=$GITHUB_WORKSPACE"
-          echo "Disk space:"
-          df -h /
+          pwd
+          git --version
           echo "Shell check passed."
