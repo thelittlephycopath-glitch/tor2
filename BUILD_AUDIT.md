@@ -7,7 +7,7 @@ Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 ## Confirmed issues fixed in this workspace
 
 1. **Malformed Containerfile package-install chain.** The mkdir line lacked an `&&`, so apt-get clean could be interpreted as extra mkdir arguments. The chain is now explicit and apt metadata is cleaned.
-2. **Stable SDK package mismatch.** CI logs confirmed that `sdkmanager` on the stable channel cannot find `platforms;android-37`. The app and container are now pinned to stable Android API 36, matching the configured target SDK, and duplicate SDK package requests were removed. The next CI run must verify that this gets past toolchain provisioning and that the source compiles against API 36.
+2. **SDK package IDs and separate app/Onionmasq toolchains.** The app compiles against Android 17/API 37 while the native Onionmasq sub-build remains pinned to API 36. The Containerfile now requests the exact SDK package IDs `platforms;android-37` and `platforms;android-36` (without a `.0` suffix), and installs Build Tools 37.0.0 for the app plus 36.0.0 for Onionmasq. See the [Android 17 SDK setup](https://developer.android.com/about/versions/17/setup-sdk) and [`sdkmanager` package syntax](https://developer.android.com/tools/sdkmanager).
 3. **Unstable Android SDK location.** `ANDROID_HOME` now uses `/opt/android-sdk` rather than relying on build-time PWD expansion.
 4. **Incorrect NDK toolchain PATH.** The old LLVM/PATH values referenced a relative version directory instead of the installed NDK path.
 5. **APK output directory not guaranteed.** The reproducible build script copied APKs into `build/` after clean without ensuring the directory existed; it now creates it.
@@ -18,8 +18,8 @@ Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 ## Verification status
 
 - Static review of the container recipe and reproducible build scripts completed.
-- Two CI runs failed at the same confirmed point: SDK provisioning could not locate `platforms;android-37` on the stable SDK channel. The full build had not reached app compilation.
-- The container and app compile SDK have now been changed to API 36. The triggered workflow must verify SDK provisioning, Rust/Onionmasq compilation, Gradle compilation, signing, and artifact upload in sequence.
+- Earlier CI evidence showed SDK provisioning failures before app compilation. A further static review found the package request used the invalid `platforms;android-37.0` identifier and omitted the API 36 platform needed by Onionmasq; the Containerfile now installs both exact platform IDs and their respective Build Tools versions.
+- The app compile SDK remains API 37, its target SDK remains API 36, and Onionmasq remains pinned to API 36. A post-fix build is still required to verify SDK provisioning, Rust/Onionmasq compilation, Gradle compilation, signing, and artifact upload in sequence.
 - No verified APK exists until a workflow run completes successfully and its artifact/signature are checked.
 - APKs are signed with an ephemeral debug key, not Tor Project's official release key. They will not update over an official Tor-signed installation.
 
