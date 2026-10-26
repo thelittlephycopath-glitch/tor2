@@ -71,10 +71,20 @@ class AndroidResourceMonitor(
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
         if (level < 0 || scale <= 0) {
             recordUnavailable()
+            coordinator.updateChargingState(isCharging = false, readingAvailable = false)
             return
         }
 
         val percent = (level * 100f / scale).roundToInt().coerceIn(0, 100)
         coordinator.updateBatteryPercent(percent)
+
+        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val chargingKnown = status != -1
+        val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            status == BatteryManager.BATTERY_STATUS_FULL
+        coordinator.updateChargingState(
+            isCharging = charging,
+            readingAvailable = chargingKnown
+        )
     }
 }
