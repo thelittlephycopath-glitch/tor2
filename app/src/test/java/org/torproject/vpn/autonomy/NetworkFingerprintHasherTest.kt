@@ -52,13 +52,18 @@ class NetworkFingerprintHasherTest {
     }
 
     @Test
-    fun ssidNormalizationIsStableWithoutDiscardingCaseSensitivity() {
-        val composed = hasher.fingerprint(input(ssid = "\u00e9-Cafe", bssid = null))
-        val decomposed = hasher.fingerprint(input(ssid = "e\u0301-Cafe", bssid = null))
-        assertEquals(composed, decomposed)
+    fun ssidIsPreservedExactlyAndRemainsCaseSensitive() {
+        assertNotEquals(
+            hasher.fingerprint(input(ssid = "\u00e9-Cafe", bssid = null)),
+            hasher.fingerprint(input(ssid = "e\u0301-Cafe", bssid = null))
+        )
         assertNotEquals(
             hasher.fingerprint(input(ssid = "Library-WiFi", bssid = null)),
             hasher.fingerprint(input(ssid = "library-wifi", bssid = null))
+        )
+        assertNotEquals(
+            hasher.fingerprint(input(ssid = " Library-WiFi", bssid = null)),
+            hasher.fingerprint(input(ssid = "Library-WiFi", bssid = null))
         )
     }
 
@@ -68,7 +73,7 @@ class NetworkFingerprintHasherTest {
             NetworkFingerprintHasher(ByteArray(16))
         }
         assertThrows(IllegalArgumentException::class.java) {
-            hasher.fingerprint(input(ssid = " ", bssid = " "))
+            hasher.fingerprint(input(ssid = "", bssid = " "))
         }
         assertThrows(IllegalArgumentException::class.java) {
             NetworkFingerprintInput(

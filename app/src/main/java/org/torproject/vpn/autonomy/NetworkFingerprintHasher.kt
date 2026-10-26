@@ -2,7 +2,6 @@ package org.torproject.vpn.autonomy
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.text.Normalizer
 import java.util.Locale
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -11,7 +10,7 @@ enum class PhysicalNetworkTransport { WIFI, CELLULAR, ETHERNET, UNKNOWN }
 
 /**
  * Ephemeral caller-supplied identity material. Do not persist or log this object.
- * SSID is Unicode-normalized but remains case-sensitive; BSSID and security type are normalized.
+ * SSID is preserved exactly as supplied (including case and whitespace); BSSID and security type are normalized.
  */
 data class NetworkFingerprintInput(
     val transport: PhysicalNetworkTransport,
@@ -53,9 +52,7 @@ class NetworkFingerprintHasher(secretKey: ByteArray) {
     private val key = createKey(secretKey)
 
     fun fingerprint(input: NetworkFingerprintInput): String {
-        val ssid = input.ssid
-            ?.let { Normalizer.normalize(it, Normalizer.Form.NFC) }
-            ?.takeIf { it.isNotBlank() }
+        val ssid = input.ssid?.takeIf { it.isNotEmpty() }
         val bssid = input.bssid?.trim()?.lowercase(Locale.ROOT)?.takeIf { it.isNotEmpty() }
         val securityType = input.securityType?.trim()?.lowercase(Locale.ROOT)?.takeIf { it.isNotEmpty() }
 
@@ -85,7 +82,7 @@ class NetworkFingerprintHasher(secretKey: ByteArray) {
 
     private fun createKey(secretKey: ByteArray): SecretKeySpec {
         require(secretKey.size >= MIN_KEY_BYTES) {
-            "Fingerprint key must contain at least 256 bits of entropy"
+            "Fingerprint key must be at least 32 bytes long"
         }
         return SecretKeySpec(secretKey.copyOf(), HMAC_SHA_256)
     }

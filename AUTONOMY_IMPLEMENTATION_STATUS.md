@@ -49,7 +49,7 @@ The current Android environment monitor reads default-network validation, captiv
 ### Phase 3 — Autonomous Censorship Intelligence
 - [x] Detect OS-reported captive-portal state and validated-network transitions.
 - [x] Forget bridge outcome history on network/transport changes.
-- [x] HMAC-SHA-256 fingerprint derivation uses a strong per-install key, domain separation, normalization, length-prefixed fields, and no raw identifier output.
+- [x] HMAC-SHA-256 fingerprint derivation uses a per-install secret, domain separation, length-prefixed fields, BSSID/security-type normalization, exact SSID preservation, and no raw identifier output.
 - [ ] Connect fingerprint key management to Android Keystore and persist only digests after explicit opt-in and a bounded retention policy.
 - [ ] Add real DNS anomaly/TLS interception signals with explicit false-positive handling.
 - [ ] Implement portal completion without bypassing the platform's captive-portal flow.
