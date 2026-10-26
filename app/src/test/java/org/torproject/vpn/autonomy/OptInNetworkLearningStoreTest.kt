@@ -59,6 +59,22 @@ class OptInNetworkLearningStoreTest {
     }
 
     @Test
+    fun outOfOrderObservationsCannotDisplaceNewerRecordsOrRegressDuplicateTimestamp() {
+        store.recordFingerprint(digestA, 99L, true, 100L)
+        store.recordFingerprint(digestB, 98L, true, 100L)
+        store.recordFingerprint(digestC, 50L, true, 100L)
+        assertEquals(
+            listOf(NetworkLearningRecord(digestB, 98L), NetworkLearningRecord(digestA, 99L)),
+            store.readFingerprints(100L, true)
+        )
+        store.recordFingerprint(digestA, 60L, true, 100L)
+        assertEquals(
+            listOf(NetworkLearningRecord(digestB, 98L), NetworkLearningRecord(digestA, 99L)),
+            store.readFingerprints(100L, true)
+        )
+    }
+
+    @Test
     fun rejectsInvalidDigestAndInvalidTime() {
         try {
             store.recordFingerprint("ssid-name", 99L, true, 100L)
