@@ -119,6 +119,13 @@ class OptInNetworkLearningStoreTest {
     }
 
     @Test
+    fun oversizedPersistedPayloadIsDiscardedAndCleared() {
+        storage.value = List(1_000) { "$digestA|99" }.joinToString("\n")
+        assertTrue(store.readFingerprints(100L, true).isEmpty())
+        assertEquals(null, storage.value)
+    }
+
+    @Test
     fun rejectsUnreasonablyLargeCapacityAndRetention() {
         try {
             OptInNetworkLearningStore(MemoryStorage(), maxEntries = 513)
