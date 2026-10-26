@@ -2,7 +2,7 @@ name: Build Tor VPN Beta APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, dangerous-experiment]
   workflow_dispatch:
     inputs:
       publish_release:
@@ -176,7 +176,7 @@ jobs:
           done
 
       - name: Publish APK download page
-        if: ${{ github.event_name == 'push' || inputs.publish_release }}
+        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tor2-build-${{ github.run_number }}
