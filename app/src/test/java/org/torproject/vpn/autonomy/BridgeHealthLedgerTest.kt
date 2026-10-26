@@ -82,4 +82,26 @@ class BridgeHealthLedgerTest {
         assertEquals(listOf(Transport.SNOWFLAKE, Transport.WEBTUNNEL), ranked.map { it.transport })
         assertFalse(ranked.any { it.knownBlocked })
     }
+    @Test
+    fun randomizedOutcomeStreamPreservesBoundsAndValidStatistics() {
+        val ledger = BridgeHealthLedger(maxSamplesPerTransport = 32)
+        Transport.entries.forEach { transport ->
+            repeat(200) { index ->
+                ledger.record(
+                    transport = transport,
+                    succeeded = index % 5 != 0,
+                    latencyMillis = (index * 7L) % 4_000L,
+                    elapsedRealtimeMillis = index.toLong()
+                )
+            }
+
+            val health = ledger.snapshot(transport)
+            assertEquals(32, health.sampleCount)
+            assertTrue(health.successRate in 0.0..1.0)
+            assertTrue(health.meanLatencyMillis > 0L)
+            assertTrue(health.consecutiveFailures in 0..32)
+            assertEquals(199L, health.lastObservedElapsedRealtimeMillis)
+        }
+    }
+
 }
