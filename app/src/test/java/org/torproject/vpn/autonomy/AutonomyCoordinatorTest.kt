@@ -507,6 +507,7 @@ class AutonomyCoordinatorTest {
             it.transport == Transport.SNOWFLAKE && !it.knownBlocked
         })
     }
+
     @Test
     fun recoveryPlanningIsBoundedAndRemainsAdvisory() {
         val coordinator = connectedCoordinator()
@@ -544,9 +545,22 @@ class AutonomyCoordinatorTest {
             captivePortalDetected = false,
             mobileData = true
         )
+        coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 2)
         val afterChange = coordinator.planRecovery()
         assertEquals(1, afterChange.attempt)
         assertEquals(1_000L, afterChange.delayMillis)
     }
 
+
+    @Test
+    fun recoveryPlannerDoesNotTreatStartupOrPendingLeakCheckAsFailure() {
+        val coordinator = connectedCoordinator()
+
+        assertFalse(coordinator.planRecovery().shouldScheduleReconnect)
+
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        val awaitingLeakCheck = coordinator.planRecovery()
+        assertFalse(awaitingLeakCheck.shouldScheduleReconnect)
+        assertTrue(awaitingLeakCheck.keepTrafficBlocked)
+    }
 }
