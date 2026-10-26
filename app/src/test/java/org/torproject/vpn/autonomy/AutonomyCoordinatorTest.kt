@@ -510,6 +510,7 @@ class AutonomyCoordinatorTest {
     @Test
     fun recoveryPlanningIsBoundedAndRemainsAdvisory() {
         val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 1)
         val first = coordinator.planRecovery()
 
         assertTrue(first.shouldScheduleReconnect)
@@ -532,6 +533,7 @@ class AutonomyCoordinatorTest {
     @Test
     fun networkChangeResetsRecoveryBudget() {
         val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.CONNECTION_FAILED, elapsedRealtimeMillis = 1)
         val first = coordinator.planRecovery()
         assertTrue(coordinator.markRecoveryAttemptStarted(first.attempt!!))
         val second = coordinator.planRecovery()
