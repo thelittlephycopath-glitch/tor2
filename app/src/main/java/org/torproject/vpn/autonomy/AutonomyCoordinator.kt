@@ -11,7 +11,8 @@ class AutonomyCoordinator(
     val journal: AutonomyEventJournal = AutonomyEventJournal(),
     private val config: AutonomyConfig = AutonomyConfig(),
     private val bridgeHealthLedger: BridgeHealthLedger = BridgeHealthLedger(),
-    private val elapsedRealtimeClock: () -> Long = { System.nanoTime() / 1_000_000L }
+    private val elapsedRealtimeClock: () -> Long = { System.nanoTime() / 1_000_000L },
+    private val recoveryPlanner: AutonomyRecoveryPlanner = AutonomyRecoveryPlanner()
 ) {
     private var environmentalSignals = NetworkSignals()
     private var tunnelReady = false
@@ -55,6 +56,7 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
                 // Transport outcomes from the previous network are not reliable evidence here.
                 bridgeHealthLedger.clear()
+                recoveryPlanner.onNetworkChanged()
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED -> {
                 environmentalSignals = environmentalSignals.copy(networkAvailable = true)
@@ -65,6 +67,7 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
                 consecutiveFailures = 0
                 bridgeHealthLedger.clear()
+                recoveryPlanner.onNetworkChanged()
             }
             AutonomyEventType.DNS_CONFIGURATION_CONFLICT -> {
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = true)
@@ -190,6 +193,7 @@ class AutonomyCoordinator(
             leakCheckFailed = false
             consecutiveFailures = 0
             bridgeHealthLedger.clear()
+            recoveryPlanner.onNetworkChanged()
         }
         environmentalSignals = environmentalSignals.copy(
             networkAvailable = networkAvailable,
@@ -264,6 +268,22 @@ class AutonomyCoordinator(
     @Synchronized
     fun rankedBridgeCandidates(): List<BridgeCandidate> =
         policyEngine.rankBridges(bridgeHealthLedger.candidates())
+
+    /**
+     * Returns a bounded reconnect recommendation for a future service executor.
+     * This method only plans; it never schedules Android work or modifies routing.
+     */
+    @Synchronized
+    fun planRecovery(): RecoveryPlan = recoveryPlanner.planReconnect(
+        networkAvailable = environmentalSignals.networkAvailable,
+        tunnelReady = tunnelReady,
+        leakChecksPassed = leakChecksPassed
+    )
+
+    /** Confirms that a previously planned attempt actually began, preventing duplicate work. */
+    @Synchronized
+    fun markRecoveryAttemptStarted(attempt: Int): Boolean =
+        recoveryPlanner.markAttemptStarted(attempt)
 
     @Synchronized
     fun currentDecision(): AutonomyDecision = lastDecision
