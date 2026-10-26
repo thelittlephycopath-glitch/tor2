@@ -618,4 +618,59 @@ class AutonomyCoordinatorTest {
         assertEquals(CoverTrafficDecisionReason.TARGET_NOT_USER_CONTROLLED, decision.reason)
         assertTrue(decision.onlyUserControlledTargets)
     }
+
+    @Test
+    fun coordinatorClassifiesFreshPublicNetworkEvidenceConservatively() {
+        val coordinator = connectedCoordinator()
+        val decision = coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 100L,
+                internetValidated = true,
+                knownPublicNetwork = true
+            ),
+            nowElapsedRealtimeMillis = 100L
+        )
+
+        assertEquals(NetworkTrust.PUBLIC, coordinator.currentSignals().trust)
+        assertEquals(ProtectionProfile.MAXIMUM, decision.profile)
+        assertFalse(decision.trafficReleaseEligible)
+    }
+
+    @Test
+    fun coordinatorDoesNotTrustStaleNetworkEvidence() {
+        val coordinator = connectedCoordinator()
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 1L,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis =
+                NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 2L
+        )
+
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+    }
+
+    @Test
+    fun hostileNetworkEvidenceInvalidatesPreviouslyEligibleDecision() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        assertTrue(submitPassingLeakCheck(coordinator).passed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        val hostile = coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 3L,
+                internetValidated = true,
+                dnsHijackSuspected = true
+            ),
+            nowElapsedRealtimeMillis = 3L
+        )
+
+        assertEquals(NetworkTrust.HOSTILE, coordinator.currentSignals().trust)
+        assertEquals(ProtectionProfile.MAXIMUM, hostile.profile)
+        assertFalse(hostile.trafficReleaseEligible)
+        assertTrue(hostile.blockTrafficUntilTunnelVerified)
+    }
 }

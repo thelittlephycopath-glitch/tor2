@@ -15,7 +15,8 @@ class AutonomyCoordinator(
     private val recoveryPlanner: AutonomyRecoveryPlanner = AutonomyRecoveryPlanner(),
     private val leakVerificationGate: LeakVerificationGate = LeakVerificationGate(),
     private val circuitRefreshPlanner: TorCircuitRefreshPlanner = TorCircuitRefreshPlanner(),
-    private val coverTrafficPolicyPlanner: CoverTrafficPolicyPlanner = CoverTrafficPolicyPlanner()
+    private val coverTrafficPolicyPlanner: CoverTrafficPolicyPlanner = CoverTrafficPolicyPlanner(),
+    private val trustClassifier: NetworkTrustClassifier = NetworkTrustClassifier()
 ) {
     private var environmentalSignals = NetworkSignals()
     private var tunnelReady = false
@@ -322,6 +323,20 @@ class AutonomyCoordinator(
             )
         }
         return result
+    }
+
+    /**
+     * Applies fresh caller-supplied trust evidence to the policy snapshot.
+     * Classification is advisory and never changes routes or service lifecycle.
+     */
+    @Synchronized
+    fun updateNetworkTrust(
+        evidence: NetworkTrustEvidence,
+        nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
+    ): AutonomyDecision {
+        val classifiedTrust = trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
+        environmentalSignals = environmentalSignals.copy(trust = classifiedTrust)
+        return calculateDecision()
     }
 
     /**
