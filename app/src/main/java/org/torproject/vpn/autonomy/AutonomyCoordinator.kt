@@ -123,11 +123,10 @@ class AutonomyCoordinator(
                 leakCheckFailed = false
             }
             AutonomyEventType.LEAK_CHECK_STARTED -> {
-                // Only the checker owns the verification lifecycle. Other adapters cannot clear a
-                // previous failure by emitting a similarly named event.
+                // Starting a new check invalidates any previous pass, but does not erase a recorded
+                // failure. Only a fresh, complete, safe report may clear that failure.
                 if (source == AutonomyEventSource.LEAK_CHECKER) {
                     leakChecksPassed = false
-                    leakCheckFailed = false
                     validatedLeakReportReady = false
                 }
             }
