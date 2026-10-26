@@ -79,7 +79,7 @@ class TorVpnService : VpnService() {
     private lateinit var appManager: AppManager
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var connectivityHandler: ConnectivityHandler
-    private val autonomyCoordinator = AutonomyCoordinator()
+    private val autonomyCoordinator = AutonomyCoordinator(\n        elapsedRealtimeClock = { SystemClock.elapsedRealtime() }\n    )
     private var autonomyTunnelAttemptStartedAtMillis: Long? = null
     @Volatile
     private var autonomyOnionMasqStartAttempted = false
