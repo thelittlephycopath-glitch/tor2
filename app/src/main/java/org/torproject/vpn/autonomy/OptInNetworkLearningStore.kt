@@ -55,10 +55,17 @@ class OptInNetworkLearningStore(
         }
 
         val records = readValidRecords(nowEpochMillis)
-            .filterNot { it.digest == digest }
-            .toMutableList()
-        records += NetworkLearningRecord(digest, observedAtEpochMillis)
-        persist(records.takeLast(maxEntries))
+        val existingTimestamp = records
+            .firstOrNull { it.digest == digest }
+            ?.observedAtEpochMillis
+        val record = NetworkLearningRecord(
+            digest = digest,
+            observedAtEpochMillis = maxOf(existingTimestamp ?: 0L, observedAtEpochMillis)
+        )
+        val bounded = (records.filterNot { it.digest == digest } + record)
+            .sortedBy { it.observedAtEpochMillis }
+            .takeLast(maxEntries)
+        persist(bounded)
         return true
     }
 
