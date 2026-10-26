@@ -12,12 +12,14 @@ class AutonomyCoordinator(
     private val config: AutonomyConfig = AutonomyConfig(),
     private val bridgeHealthLedger: BridgeHealthLedger = BridgeHealthLedger(),
     private val elapsedRealtimeClock: () -> Long = { System.nanoTime() / 1_000_000L },
-    private val recoveryPlanner: AutonomyRecoveryPlanner = AutonomyRecoveryPlanner()
+    private val recoveryPlanner: AutonomyRecoveryPlanner = AutonomyRecoveryPlanner(),
+    private val leakVerificationGate: LeakVerificationGate = LeakVerificationGate()
 ) {
     private var environmentalSignals = NetworkSignals()
     private var tunnelReady = false
     private var leakChecksPassed = false
     private var leakCheckFailed = false
+    private var validatedLeakReportReady = false
     private var consecutiveFailures = 0
     private var lowBatteryActive = false
     private var lastDecision = policyEngine.evaluate(environmentalSignals)
@@ -123,12 +125,14 @@ class AutonomyCoordinator(
                 if (source == AutonomyEventSource.LEAK_CHECKER) {
                     leakChecksPassed = false
                     leakCheckFailed = false
+                    validatedLeakReportReady = false
                 }
             }
             AutonomyEventType.LEAK_CHECK_PASSED -> {
                 // A pass is accepted only from the checker and only against the current safe state.
                 // Invalid or spoofed events must not clear an existing failure.
-                if (source == AutonomyEventSource.LEAK_CHECKER) {
+                if (source == AutonomyEventSource.LEAK_CHECKER && validatedLeakReportReady) {
+                    validatedLeakReportReady = false
                     val passIsSafe = tunnelReady &&
                         environmentalSignals.networkAvailable &&
                         !environmentalSignals.dnsConfigurationConflict &&
@@ -146,6 +150,7 @@ class AutonomyCoordinator(
                 // A failed verification is authoritative only when emitted by the leak checker.
                 // Other adapters may record observations but cannot forge a check result.
                 if (source == AutonomyEventSource.LEAK_CHECKER) {
+                    validatedLeakReportReady = false
                     leakChecksPassed = false
                     leakCheckFailed = true
                 }
@@ -271,6 +276,51 @@ class AutonomyCoordinator(
     @Synchronized
     fun rankedBridgeCandidates(): List<BridgeCandidate> =
         policyEngine.rankBridges(bridgeHealthLedger.candidates())
+
+    /**
+     * Accepts a report only when every required control is fresh and explicitly verified and the
+     * current coordinator state is safe. Unknown platform checks are failures, never implicit passes.
+     *
+     * The caller is responsible for independently measuring the evidence fields. This method does
+     * not perform external leak probes or change VPN routing.
+     */
+    @Synchronized
+    fun submitLeakCheckEvidence(
+        evidence: LeakVerificationEvidence,
+        nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
+    ): LeakVerificationResult {
+        val failures = leakVerificationGate.evaluate(evidence, nowElapsedRealtimeMillis)
+            .failures.toMutableList()
+        if (!tunnelReady) failures += LeakVerificationFailure.TUNNEL_NOT_READY
+        if (!environmentalSignals.networkAvailable) failures += LeakVerificationFailure.NETWORK_NOT_AVAILABLE
+        if (environmentalSignals.dnsConfigurationConflict) {
+            failures += LeakVerificationFailure.DNS_CONFIGURATION_CONFLICT
+        }
+        if (environmentalSignals.dnsHijackSuspected || environmentalSignals.tlsInterceptionSuspected) {
+            failures += LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR
+        }
+        if (environmentalSignals.captivePortalDetected) {
+            failures += LeakVerificationFailure.CAPTIVE_PORTAL_ACTIVE
+        }
+
+        val result = LeakVerificationResult(failures.distinct())
+        if (result.passed) {
+            validatedLeakReportReady = true
+            observe(
+                AutonomyEventType.LEAK_CHECK_PASSED,
+                source = AutonomyEventSource.LEAK_CHECKER,
+                elapsedRealtimeMillis = nowElapsedRealtimeMillis
+            )
+        } else {
+            validatedLeakReportReady = false
+            observe(
+                AutonomyEventType.LEAK_CHECK_FAILED,
+                source = AutonomyEventSource.LEAK_CHECKER,
+                elapsedRealtimeMillis = nowElapsedRealtimeMillis
+            )
+        }
+        return result
+    }
 
     /**
      * Returns a bounded reconnect recommendation for a future service executor.
