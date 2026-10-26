@@ -136,7 +136,10 @@ class AutonomyCoordinator(
                         !environmentalSignals.tlsInterceptionSuspected &&
                         !environmentalSignals.captivePortalDetected
                     leakChecksPassed = passIsSafe
-                    if (passIsSafe) leakCheckFailed = false
+                    if (passIsSafe) {
+                        leakCheckFailed = false
+                        recoveryPlanner.resetAfterVerifiedTunnel()
+                    }
                 }
             }
             AutonomyEventType.LEAK_CHECK_FAILED -> {
@@ -277,7 +280,8 @@ class AutonomyCoordinator(
     fun planRecovery(): RecoveryPlan = recoveryPlanner.planReconnect(
         networkAvailable = environmentalSignals.networkAvailable,
         tunnelReady = tunnelReady,
-        leakChecksPassed = leakChecksPassed
+        leakChecksPassed = leakChecksPassed,
+        recoveryRequired = consecutiveFailures > 0 || leakCheckFailed
     )
 
     /** Confirms that a previously planned attempt actually began, preventing duplicate work. */
