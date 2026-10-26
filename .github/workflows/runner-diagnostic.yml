@@ -11,7 +11,8 @@ permissions:
 jobs:
   runner-diagnostic:
     name: Minimal runner and shell check
-    runs-on: ubuntu-24.04
+    # Test a different supported image to distinguish image-pool issues from account/repo runner availability.
+    runs-on: ubuntu-22.04
     timeout-minutes: 2
     steps:
       - name: Confirm the runner was assigned
