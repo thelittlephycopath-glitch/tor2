@@ -35,6 +35,16 @@ class OptInNetworkLearningStoreTest {
     }
 
     @Test
+    fun readOptOutClearsBeforeValidatingUnusedClock() {
+        store.recordFingerprint(digestA, 99L, true, 100L)
+
+        val records = store.readFingerprints(nowEpochMillis = -1L, optedIn = false)
+
+        assertTrue(records.isEmpty())
+        assertEquals(null, storage.value)
+    }
+
+    @Test
     fun retainsOnlyBoundedMostRecentEntries() {
         store.recordFingerprint(digestA, 80L, true, 100L)
         store.recordFingerprint(digestB, 90L, true, 100L)
