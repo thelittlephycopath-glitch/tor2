@@ -1,6 +1,6 @@
 # Tor VPN Beta 2 — Autonomous Backend Status
 
-Last updated: 2026-10-26  
+Last updated: 2026-10-27  
 Working branch: `dangerous-experiment`  
 Integration rule: keep changes additive; do not change the existing UI/UX; do not merge this branch into `main` until build and verification gates pass.
 
@@ -24,7 +24,7 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 
 The report gate is a contract for a separate verifier; the read-only Android probe checks exposed route/DNS/lockdown settings but does **not** run end-to-end DNS or IPv6 leak probes, firewall enforcement tests, or per-app routing verification. The recovery, circuit-refresh, and cover-traffic planners and the action gate are advisory; they do **not** enqueue reconnection, restart the VPN service, choose a different bridge, rotate circuits, launch leak-check commands, send notifications, allow captive-portal bypass, restore tunneled traffic, or generate packets. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
 
-The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. The HMAC utility and Android Keystore provider do not collect identifiers or persist history; opt-in persistence, public/trusted-network evidence, and real DNS/TLS anomaly signals remain unimplemented. The Android Keystore provider has not yet been validated by an Android build or device test. None should be inferred from the current signals.
+The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. The HMAC utility and Android Keystore provider do not collect identifiers. An isolated storage adapter now persists keyed digests and timestamps only, but it is not wired to collection or a user-facing consent setting. Public/trusted-network evidence and real DNS/TLS anomaly signals remain unimplemented. The Android Keystore provider has not yet been validated by an Android build or device test. None should be inferred from the current signals.
 
 ## Phase checklist from the backend specification
 
@@ -51,7 +51,8 @@ The current Android environment monitor reads default-network validation, captiv
 - [x] Forget bridge outcome history on network/transport changes.
 - [x] HMAC-SHA-256 fingerprint derivation uses a per-install secret, domain separation, length-prefixed fields, BSSID/security-type normalization, exact SSID preservation, and no raw identifier output.
 - [x] Add isolated Android Keystore generation/readback for a per-install non-exportable HMAC key.
-- [ ] Wire key management only after explicit opt-in, then persist only keyed digests with bounded retention and a deletion path.
+- [x] Add isolated private-app storage for keyed digests only, requiring explicit opt-in on every read/write, bounded capacity, bounded retention, corruption filtering, and deletion.
+- [ ] Wire consent into a user-controlled setting and connect key management/storage to the live network-learning path only after UI and Android-device verification.
 - [ ] Add real DNS anomaly/TLS interception signals with explicit false-positive handling.
 - [ ] Implement portal completion without bypassing the platform's captive-portal flow.
 - [ ] Validate on real Wi-Fi and cellular networks.
@@ -74,7 +75,7 @@ The current Android environment monitor reads default-network validation, captiv
 
 ## Build blocker
 
-GitHub Actions is triggering for pushes but the latest inspected jobs terminate before any workflow step starts: the job has an empty step list, no runner name, and no log output. Static review corrected invalid Android SDK package identifiers in both the `Containerfile` and `scripts/reproducible_fetch_deps.sh`; API 37 is now requested through `--channel=3`, while API 36 and its Build Tools come from stable. The standalone setup now retries package installation when a partial SDK already exists and explicitly pins the SDK root for the NDK install. The revised installer section passes `bash -n` and five static assertions for package IDs, channels, SDK-root selection, and repair of partial installs; this does not verify downloads or the Android build. These changes still need an actual successful container build. This is an infrastructure/runner-startup blocker, not evidence that the Kotlin source compiles or fails to compile. Isolated local Kotlin smoke harnesses have passed 24 recovery-planning assertions, 7 leak-gate assertions, 14 circuit-refresh assertions, 15 cover-traffic budget assertions, 12 fingerprint-hasher assertions using both byte-array and SecretKey constructors, and 8 action-gate assertions confirming unimplemented commands remain suppressed even with feature flags enabled. These are manually compiled standalone harnesses, not the repository's Gradle test suite.
+GitHub Actions is triggering for pushes but the latest inspected jobs terminate before any workflow step starts: the job has an empty step list, no runner name, and no log output. Static review corrected invalid Android SDK package identifiers in both the `Containerfile` and `scripts/reproducible_fetch_deps.sh`; API 37 is now requested through `--channel=3`, while API 36 and its Build Tools come from stable. The standalone setup now retries package installation when a partial SDK already exists and explicitly pins the SDK root for the NDK install. The revised installer section passes `bash -n` and five static assertions for package IDs, channels, SDK-root selection, and repair of partial installs; this does not verify downloads or the Android build. These changes still need an actual successful container build. This is an infrastructure/runner-startup blocker, not evidence that the Kotlin source compiles or fails to compile. Isolated local Kotlin smoke harnesses have passed 24 recovery-planning assertions, 7 leak-gate assertions, 14 circuit-refresh assertions, 15 cover-traffic budget assertions, 12 fingerprint-hasher assertions using both byte-array and SecretKey constructors, and 8 action-gate assertions confirming unimplemented commands remain suppressed even with feature flags enabled. The new opt-in storage tests have been added to the Gradle suite but have not yet been executed. These are manually compiled standalone harnesses, not the repository's Gradle test suite.
 
 A separate minimal runner-diagnostic workflow was tried with both `ubuntu-latest` and the explicit `ubuntu-24.04` label. Both failed with zero steps, `runner_id: 0`, an empty runner name, no job logs URL, and no artifacts. This rules out the runner-label alias as the simple cause; the failure is still before workflow commands, and the exact account/repository billing or Actions-policy cause cannot be identified through the available repository APIs.
 
