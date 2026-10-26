@@ -7,6 +7,7 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 ## Verification status
 
 - [x] Existing VPN lifecycle and network/resource observations feed an in-memory, bounded autonomy coordinator.
+- [x] Android resource monitoring now records battery percentage plus charging-state availability; monitor loss clears both readings so stale charging telemetry cannot be reused.
 - [x] Tunnel readiness alone is not considered sufficient for traffic release.
 - [x] Bridge outcome learning is bounded and advisory; it does not change the active bridge or route.
 - [x] Network/transport changes invalidate prior verification and reset session-specific bridge learning.
