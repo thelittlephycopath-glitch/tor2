@@ -41,12 +41,12 @@ class OptInNetworkLearningStore(
         optedIn: Boolean,
         nowEpochMillis: Long
     ): Boolean {
-        require(nowEpochMillis >= 0L) { "Current time cannot be negative" }
-        require(observedAtEpochMillis >= 0L) { "Observation time cannot be negative" }
         if (!optedIn) {
             clear()
             return false
         }
+        require(nowEpochMillis >= 0L) { "Current time cannot be negative" }
+        require(observedAtEpochMillis >= 0L) { "Observation time cannot be negative" }
         require(isValidDigest(digest)) { "Only lowercase 64-character SHA-256/HMAC digests may be stored" }
         if (observedAtEpochMillis > nowEpochMillis ||
             nowEpochMillis - observedAtEpochMillis > retentionMillis
