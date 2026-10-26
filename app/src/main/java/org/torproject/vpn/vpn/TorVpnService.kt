@@ -10,8 +10,8 @@ import android.os.DeadObjectException
 import android.os.Handler
 import android.os.IBinder
 import android.os.Message
-import android.os.SystemClock
 import android.os.Messenger
+import android.os.SystemClock
 import android.system.OsConstants
 import android.util.Log
 import androidx.core.content.IntentCompat
@@ -81,6 +81,8 @@ class TorVpnService : VpnService() {
     private lateinit var connectivityHandler: ConnectivityHandler
     private val autonomyCoordinator = AutonomyCoordinator()
     private var autonomyTunnelAttemptStartedAtMillis: Long? = null
+    @Volatile
+    private var autonomyOnionMasqStartAttempted = false
     private var autonomyEnvironmentMonitor: AndroidEnvironmentMonitor? = null
     private var autonomyResourceMonitor: AndroidResourceMonitor? = null
 
@@ -449,6 +451,7 @@ class TorVpnService : VpnService() {
     private fun establishVpn(taskID: Int) {
         try {
             autonomyTunnelAttemptStartedAtMillis = SystemClock.elapsedRealtime()
+            autonomyOnionMasqStartAttempted = false
             observeAutonomyEvent(AutonomyEventType.TUNNEL_START_REQUESTED)
             Log.v(TAG, "service ($taskID): starting vpn... ")
             if (OnionMasq.isRunning()) {
@@ -501,6 +504,7 @@ class TorVpnService : VpnService() {
                 try {
                     val nativeFd = tunInterface.detachFd()
                     descriptorDetached.set(true)
+                    autonomyOnionMasqStartAttempted = true
                     OnionMasq.start(nativeFd, getBridgeLines())
                 } catch (e: CancellationException) {
                     throw e
@@ -548,6 +552,8 @@ class TorVpnService : VpnService() {
     private fun recordAutonomyBridgeOutcome(succeeded: Boolean) {
         val startedAt = autonomyTunnelAttemptStartedAtMillis ?: return
         autonomyTunnelAttemptStartedAtMillis = null
+        if (!autonomyOnionMasqStartAttempted) return
+        autonomyOnionMasqStartAttempted = false
         val transport = when (preferenceHelper.bridgeType) {
             BridgeType.Obfs4 -> Transport.OBFS4
             BridgeType.Snowflake -> Transport.SNOWFLAKE
