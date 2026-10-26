@@ -176,7 +176,8 @@ class AutonomyCoordinator(
     ): AutonomyDecision {
         if (
             environmentalSignals.networkAvailable != networkAvailable ||
-            environmentalSignals.captivePortalDetected != captivePortalDetected
+            environmentalSignals.captivePortalDetected != captivePortalDetected ||
+            environmentalSignals.mobileData != mobileData
         ) {
             // Network or captive-portal state changes invalidate the previous verification.
             tunnelReady = false
