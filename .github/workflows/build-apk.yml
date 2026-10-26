@@ -175,14 +175,6 @@ jobs:
               rm -f "$key"
             '
 
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: tor2-debug-signed-apks
-          path: dist/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Run unit tests, ktlint, Android lint, and staging build
         shell: bash
         run: |
@@ -236,6 +228,14 @@ jobs:
               exit 1
             fi
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tor2-debug-signed-apks
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
       # The pinned builder runs as root inside Docker. Restore ownership so
       # actions/cache can archive the mounted dependency directories during post-job cleanup.
