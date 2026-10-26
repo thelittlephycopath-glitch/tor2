@@ -244,6 +244,19 @@ class AutonomyCoordinator(
     }
 
     /**
+     * Supplies charging telemetry separately from battery percentage. Unknown charging state is
+     * represented explicitly so policy callers cannot mistake missing data for "not charging".
+     */
+    @Synchronized
+    fun updateChargingState(isCharging: Boolean, readingAvailable: Boolean = true): AutonomyDecision {
+        environmentalSignals = environmentalSignals.copy(
+            charging = isCharging,
+            chargingReadingAvailable = readingAvailable
+        )
+        return calculateDecision()
+    }
+
+    /**
      * Records a measured transport outcome without storing network identifiers or destination data.
      * This updates advisory learning only; it never changes the active Tor route.
      */
