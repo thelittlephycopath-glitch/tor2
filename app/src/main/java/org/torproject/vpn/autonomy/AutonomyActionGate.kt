@@ -50,7 +50,8 @@ class AutonomyActionGate {
                         !decision.trafficReleaseEligible ||
                             leakVerificationResult?.passed != true ->
                             suppressed[action] = ActionSuppressionReason.SAFETY_VERIFICATION_REQUIRED
-                        else -> approved += action
+                        else ->
+                            suppressed[action] = ActionSuppressionReason.ACTION_NOT_IMPLEMENTED
                     }
                 }
 
@@ -62,6 +63,8 @@ class AutonomyActionGate {
                             suppressed[action] = ActionSuppressionReason.OBSERVE_ONLY_MODE
                         !isFeatureEnabled(config, action) ->
                             suppressed[action] = ActionSuppressionReason.FEATURE_NOT_ENABLED
+                        !isImplemented(action) ->
+                            suppressed[action] = ActionSuppressionReason.ACTION_NOT_IMPLEMENTED
                         else -> approved += action
                     }
                 }
@@ -72,6 +75,22 @@ class AutonomyActionGate {
             approvedActions = approved.toList(),
             suppressedActions = suppressed.toMap()
         )
+    }
+
+    /**
+     * No side-effecting autonomy dispatcher is implemented on this branch yet. Keep all such actions
+     * suppressed even when their opt-in flags are enabled.
+     */
+    private fun isImplemented(action: AutonomyAction): Boolean = when (action) {
+        AutonomyAction.RUN_LEAK_CHECKS,
+        AutonomyAction.REQUEST_TUNNEL_RECONNECT,
+        AutonomyAction.REQUEST_BRIDGE_FAILOVER,
+        AutonomyAction.REQUEST_CIRCUIT_REFRESH,
+        AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC -> false
+        AutonomyAction.KEEP_TRAFFIC_BLOCKED,
+        AutonomyAction.SUPPRESS_COVER_TRAFFIC,
+        AutonomyAction.NOTIFY_USER,
+        AutonomyAction.ALLOW_CAPTIVE_PORTAL_ONLY -> false
     }
 
     private fun isFeatureEnabled(config: AutonomyConfig, action: AutonomyAction): Boolean =
