@@ -132,8 +132,12 @@ class AutonomyCoordinator(
                 }
             }
             AutonomyEventType.LEAK_CHECK_FAILED -> {
-                leakChecksPassed = false
-                leakCheckFailed = true
+                // A failed verification is authoritative only when emitted by the leak checker.
+                // Other adapters may record observations but cannot forge a check result.
+                if (source == AutonomyEventSource.LEAK_CHECKER) {
+                    leakChecksPassed = false
+                    leakCheckFailed = true
+                }
             }
             AutonomyEventType.TUNNEL_STOPPED,
             AutonomyEventType.SERVICE_STOPPED -> {
@@ -170,8 +174,11 @@ class AutonomyCoordinator(
         captivePortalDetected: Boolean,
         mobileData: Boolean
     ): AutonomyDecision {
-        if (environmentalSignals.networkAvailable != networkAvailable) {
-            // A default-network change invalidates readiness regardless of callback ordering.
+        if (
+            environmentalSignals.networkAvailable != networkAvailable ||
+            environmentalSignals.captivePortalDetected != captivePortalDetected
+        ) {
+            // Network or captive-portal state changes invalidate the previous verification.
             tunnelReady = false
             leakChecksPassed = false
             leakCheckFailed = false
