@@ -121,6 +121,8 @@ data class NetworkSignals(
     val captivePortalDetected: Boolean = false,
     val batteryPercent: Int = 100,
     val batteryReadingAvailable: Boolean = false,
+    val charging: Boolean = false,
+    val chargingReadingAvailable: Boolean = false,
     val mobileData: Boolean = false,
     val remainingDataBudgetMb: Int? = null,
     val networkAvailable: Boolean = false,
