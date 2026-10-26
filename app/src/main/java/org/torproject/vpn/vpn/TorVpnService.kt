@@ -10,6 +10,7 @@ import android.os.DeadObjectException
 import android.os.Handler
 import android.os.IBinder
 import android.os.Message
+import android.os.SystemClock
 import android.os.Messenger
 import android.system.OsConstants
 import android.util.Log
@@ -54,6 +55,7 @@ import org.torproject.vpn.autonomy.AndroidResourceMonitor
 import org.torproject.vpn.autonomy.AutonomyCoordinator
 import org.torproject.vpn.autonomy.AutonomyEventSource
 import org.torproject.vpn.autonomy.AutonomyEventType
+import org.torproject.vpn.autonomy.Transport
 import org.torproject.vpn.ui.approuting.data.AppManager
 import org.torproject.vpn.utils.Country
 import org.torproject.vpn.utils.PreferenceHelper
@@ -78,6 +80,7 @@ class TorVpnService : VpnService() {
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var connectivityHandler: ConnectivityHandler
     private val autonomyCoordinator = AutonomyCoordinator()
+    private var autonomyTunnelAttemptStartedAtMillis: Long? = null
     private var autonomyEnvironmentMonitor: AndroidEnvironmentMonitor? = null
     private var autonomyResourceMonitor: AndroidResourceMonitor? = null
 
@@ -284,6 +287,7 @@ class TorVpnService : VpnService() {
             when (event) {
                 is BootstrapEvent -> {
                     if (event.isReadyForTraffic && event.bootstrapPercent == 100) {
+                        recordAutonomyBridgeOutcome(succeeded = true)
                         VpnStatusObservable.update(ConnectionState.CONNECTED)
                         observeAutonomyEvent(AutonomyEventType.TUNNEL_READY)
                     } else {
@@ -444,6 +448,7 @@ class TorVpnService : VpnService() {
 
     private fun establishVpn(taskID: Int) {
         try {
+            autonomyTunnelAttemptStartedAtMillis = SystemClock.elapsedRealtime()
             observeAutonomyEvent(AutonomyEventType.TUNNEL_START_REQUESTED)
             Log.v(TAG, "service ($taskID): starting vpn... ")
             if (OnionMasq.isRunning()) {
@@ -531,12 +536,31 @@ class TorVpnService : VpnService() {
     }
 
     private fun handleException(e: Exception, msg: String, taskID: Int) {
+        recordAutonomyBridgeOutcome(succeeded = false)
         observeAutonomyEvent(AutonomyEventType.TUNNEL_FAILED)
         Log.e(TAG, "($taskID): $msg", e)
         when (e) {
             is SecurityException -> stop(ConnectionState.PRIVATE_DNS_ERROR, taskID)
             else -> stop(ConnectionState.CONNECTION_ERROR, taskID)
         }
+    }
+
+    private fun recordAutonomyBridgeOutcome(succeeded: Boolean) {
+        val startedAt = autonomyTunnelAttemptStartedAtMillis ?: return
+        autonomyTunnelAttemptStartedAtMillis = null
+        val transport = when (preferenceHelper.bridgeType) {
+            BridgeType.Obfs4 -> Transport.OBFS4
+            BridgeType.Snowflake -> Transport.SNOWFLAKE
+            // Manual bridge definitions may use different transports, so do not guess.
+            BridgeType.Manual, BridgeType.None -> null
+        } ?: return
+        val now = SystemClock.elapsedRealtime()
+        autonomyCoordinator.recordBridgeOutcome(
+            transport = transport,
+            succeeded = succeeded,
+            latencyMillis = (now - startedAt).coerceAtLeast(0L),
+            elapsedRealtimeMillis = now
+        )
     }
 
     private fun observeAutonomyEvent(type: AutonomyEventType) {
