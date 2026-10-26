@@ -5,6 +5,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import javax.crypto.spec.SecretKeySpec
 
 class NetworkFingerprintHasherTest {
     private val key = ByteArray(32) { index -> (index * 7 + 3).toByte() }
@@ -90,5 +91,16 @@ class NetworkFingerprintHasherTest {
         val before = hasher.fingerprint(input())
         mutableKey.fill(1)
         assertEquals(before, hasher.fingerprint(input()))
+    }
+
+    @Test
+    fun acceptsNonExportableStyleSecretKeyApiAndRejectsWrongAlgorithm() {
+        val secretKey = SecretKeySpec(ByteArray(32) { 9 }, "HmacSHA256")
+        val fromSecretKey = NetworkFingerprintHasher(secretKey)
+        assertEquals(hasher.fingerprint(input()), fromSecretKey.fingerprint(input()))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            NetworkFingerprintHasher(SecretKeySpec(ByteArray(32) { 9 }, "AES"))
+        }
     }
 }

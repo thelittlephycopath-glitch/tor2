@@ -24,7 +24,7 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 
 The report gate is a contract for a separate verifier; the read-only Android probe checks exposed route/DNS/lockdown settings but does **not** run end-to-end DNS or IPv6 leak probes, firewall enforcement tests, or per-app routing verification. The recovery, circuit-refresh, and cover-traffic planners and the action gate are advisory; they do **not** enqueue reconnection, restart the VPN service, choose a different bridge, rotate circuits, send notifications, allow captive-portal bypass, or generate packets. Those integrations remain blocked until they can be wired to real measurements and tested without changing the original UI.
 
-The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. The HMAC utility does not collect identifiers or persist history; Android Keystore key management, opt-in persistence, public/trusted-network evidence, and real DNS/TLS anomaly signals remain unimplemented. None should be inferred from the current signals.
+The current Android environment monitor reads default-network validation, captive-portal state, and cellular transport. The HMAC utility and Android Keystore provider do not collect identifiers or persist history; opt-in persistence, public/trusted-network evidence, and real DNS/TLS anomaly signals remain unimplemented. The Android Keystore provider has not yet been validated by an Android build or device test. None should be inferred from the current signals.
 
 ## Phase checklist from the backend specification
 
@@ -50,7 +50,8 @@ The current Android environment monitor reads default-network validation, captiv
 - [x] Detect OS-reported captive-portal state and validated-network transitions.
 - [x] Forget bridge outcome history on network/transport changes.
 - [x] HMAC-SHA-256 fingerprint derivation uses a per-install secret, domain separation, length-prefixed fields, BSSID/security-type normalization, exact SSID preservation, and no raw identifier output.
-- [ ] Connect fingerprint key management to Android Keystore and persist only digests after explicit opt-in and a bounded retention policy.
+- [x] Add isolated Android Keystore generation/readback for a per-install non-exportable HMAC key.
+- [ ] Wire key management only after explicit opt-in, then persist only keyed digests with bounded retention and a deletion path.
 - [ ] Add real DNS anomaly/TLS interception signals with explicit false-positive handling.
 - [ ] Implement portal completion without bypassing the platform's captive-portal flow.
 - [ ] Validate on real Wi-Fi and cellular networks.

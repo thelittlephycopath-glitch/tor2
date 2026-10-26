@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import javax.crypto.Mac
+import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
 
 enum class PhysicalNetworkTransport { WIFI, CELLULAR, ETHERNET, UNKNOWN }
@@ -48,8 +49,19 @@ data class NetworkFingerprintInput(
  * enable automation. Callers must separately implement explicit opt-in, retention, and secure key
  * management before saving fingerprints.
  */
-class NetworkFingerprintHasher(secretKey: ByteArray) {
-    private val key = createKey(secretKey)
+class NetworkFingerprintHasher(private val key: SecretKey) {
+    constructor(secretKey: ByteArray) : this(createKey(secretKey))
+
+    init {
+        require(key.algorithm.equals(HMAC_SHA_256, ignoreCase = true)) {
+            "Fingerprint key must use HmacSHA256"
+        }
+        key.encoded?.let { encoded ->
+            require(encoded.size >= MIN_KEY_BYTES) {
+                "Exportable fingerprint key must be at least 32 bytes long"
+            }
+        }
+    }
 
     fun fingerprint(input: NetworkFingerprintInput): String {
         val ssid = input.ssid?.takeIf { it.isNotEmpty() }
@@ -80,13 +92,6 @@ class NetworkFingerprintHasher(secretKey: ByteArray) {
         mac.update(bytes)
     }
 
-    private fun createKey(secretKey: ByteArray): SecretKeySpec {
-        require(secretKey.size >= MIN_KEY_BYTES) {
-            "Fingerprint key must be at least 32 bytes long"
-        }
-        return SecretKeySpec(secretKey.copyOf(), HMAC_SHA_256)
-    }
-
     private fun ByteArray.toLowerHex(): String = buildString(size * 2) {
         for (byte in this@toLowerHex) {
             val unsigned = byte.toInt() and 0xff
@@ -98,6 +103,13 @@ class NetworkFingerprintHasher(secretKey: ByteArray) {
     companion object {
         private const val HMAC_SHA_256 = "HmacSHA256"
         private const val MIN_KEY_BYTES = 32
+
+        private fun createKey(secretKey: ByteArray): SecretKeySpec {
+            require(secretKey.size >= MIN_KEY_BYTES) {
+                "Fingerprint key must be at least 32 bytes long"
+            }
+            return SecretKeySpec(secretKey.copyOf(), HMAC_SHA_256)
+        }
         private val DOMAIN_SEPARATOR =
             "tor-vpn-network-fingerprint-v1\u0000".toByteArray(StandardCharsets.UTF_8)
         private val NULL_FIELD_LENGTH = ByteBuffer.allocate(Int.SIZE_BYTES).putInt(-1).array()
