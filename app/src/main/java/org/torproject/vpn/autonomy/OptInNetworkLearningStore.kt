@@ -92,6 +92,7 @@ class OptInNetworkLearningStore(
 
     private fun readValidRecords(nowEpochMillis: Long): List<NetworkLearningRecord> {
         val raw = storage.read() ?: return emptyList()
+        if (raw.length > MAX_SERIALIZED_LENGTH) return emptyList()
         return raw.lineSequence()
             .mapNotNull(::parseRecord)
             .filter { record ->
@@ -134,5 +135,6 @@ class OptInNetworkLearningStore(
         const val DEFAULT_RETENTION_MILLIS = 30L * 24L * 60L * 60L * 1000L
         const val MAX_RETENTION_MILLIS = 180L * 24L * 60L * 60L * 1000L
         private const val DIGEST_HEX_LENGTH = 64
+        private const val MAX_SERIALIZED_LENGTH = HARD_MAX_ENTRIES * 86
     }
 }
