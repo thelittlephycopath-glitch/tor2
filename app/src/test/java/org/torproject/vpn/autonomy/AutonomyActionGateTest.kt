@@ -86,9 +86,19 @@ class AutonomyActionGateTest {
             )
         )
 
-        assertTrue(result.approvedActions.contains(AutonomyAction.REQUEST_TUNNEL_RECONNECT))
-        assertTrue(result.approvedActions.contains(AutonomyAction.REQUEST_CIRCUIT_REFRESH))
-        assertTrue(result.approvedActions.contains(AutonomyAction.RUN_LEAK_CHECKS))
+        assertTrue(result.approvedActions.isEmpty())
+        assertEquals(
+            ActionSuppressionReason.ACTION_NOT_IMPLEMENTED,
+            result.suppressedActions[AutonomyAction.REQUEST_TUNNEL_RECONNECT]
+        )
+        assertEquals(
+            ActionSuppressionReason.ACTION_NOT_IMPLEMENTED,
+            result.suppressedActions[AutonomyAction.REQUEST_CIRCUIT_REFRESH]
+        )
+        assertEquals(
+            ActionSuppressionReason.ACTION_NOT_IMPLEMENTED,
+            result.suppressedActions[AutonomyAction.RUN_LEAK_CHECKS]
+        )
         assertFalse(result.approvedActions.contains(AutonomyAction.REQUEST_BRIDGE_FAILOVER))
         assertEquals(
             ActionSuppressionReason.FEATURE_NOT_ENABLED,
@@ -126,7 +136,11 @@ class AutonomyActionGateTest {
             actionDecision,
             LeakVerificationResult(emptyList())
         )
-        assertTrue(passedEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC))
+        assertFalse(passedEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC))
+        assertEquals(
+            ActionSuppressionReason.ACTION_NOT_IMPLEMENTED,
+            passedEvidence.suppressedActions[AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC]
+        )
     }
 
     @Test
