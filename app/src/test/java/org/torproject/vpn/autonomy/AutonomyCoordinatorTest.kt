@@ -564,4 +564,20 @@ class AutonomyCoordinatorTest {
         assertFalse(awaitingLeakCheck.shouldScheduleReconnect)
         assertTrue(awaitingLeakCheck.keepTrafficBlocked)
     }
+
+    @Test
+    fun rawCheckerEventCannotAuthorizeTrafficWithoutValidatedEvidence() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+
+        val decision = coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_PASSED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+    }
 }
