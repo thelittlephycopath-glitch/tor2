@@ -101,4 +101,8 @@ for apk in build/*.apk; do
     exit 1
   fi
   rm "$apk.unaligned"
+  if ! "$ZIPALIGN" -c -P 16 -v 4 "$apk"; then
+    echo "APK alignment verification failed for $apk" >&2
+    exit 1
+  fi
 done
