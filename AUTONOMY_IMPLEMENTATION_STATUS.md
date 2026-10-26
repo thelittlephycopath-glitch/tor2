@@ -14,7 +14,9 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 - [x] Recovery planning has bounded exponential backoff, single-pending-attempt protection, explicit failure triggers, and a fail-closed outcome.
 - [x] Leak-verification reports require fresh evidence for IPv4 routing, IPv6 containment, DNS protection, system lockdown, and app routing.
 - [x] Raw `LEAK_CHECK_PASSED` events cannot authorize the coordinator without a validated evidence report.
-- [x] The release workflow now uses read-only repository permissions for the build job and grants release-write permission only to a main-branch publish job.
+- [x] One coordinator now exposes trust classification, bounded reconnect planning, circuit-refresh recommendations, and cover-traffic budget decisions as advisory APIs.
+- [x] The release workflow uses read-only repository permissions for its build job and grants release-write permission only to the main-branch publish job.
+- [x] The signed APK artifact upload is ordered after unit tests, lint, and emulator smoke testing, so failed verification does not produce the signed download artifact.
 - [x] The reproducible build script runs release unit tests before producing the release APK.
 
 ## Deliberately not claimed as complete
@@ -71,6 +73,6 @@ The current Android environment monitor reads default-network validation, captiv
 
 GitHub Actions is triggering for pushes but the latest inspected jobs terminate before any workflow step starts: the job has an empty step list, no runner name, and no log output. Static review also found and corrected an invalid Android SDK package identifier (`platforms;android-37.0`); the app's API 37 preview packages are now requested via `--channel=3`, while API 36 and its Build Tools are installed from stable for Onionmasq. These changes still need an actual successful container build. This is an infrastructure/runner-startup blocker, not evidence that the Kotlin source compiles or fails to compile. Isolated local Kotlin smoke harnesses have passed 24 recovery-planning assertions, 7 leak-gate assertions, 14 circuit-refresh assertions, and 15 cover-traffic budget assertions. These are manually compiled standalone harnesses, not the repository's Gradle test suite.
 
-A separate minimal runner-diagnostic workflow was added and re-run once. It also failed with zero steps, no runner name, no logs URL, and no artifacts. This confirms the failure occurs before the workflow's commands, but the exact account/repository cause cannot be identified through the available repository APIs.
+A separate minimal runner-diagnostic workflow was tried with both `ubuntu-latest` and the explicit `ubuntu-24.04` label. Both failed with zero steps, `runner_id: 0`, an empty runner name, no job logs URL, and no artifacts. This rules out the runner-label alias as the simple cause; the failure is still before workflow commands, and the exact account/repository billing or Actions-policy cause cannot be identified through the available repository APIs.
 
 No successful Android APK build, APK signature verification, or emulator smoke test has been verified yet. Do not publish or merge the branch as build-verified until these checks actually pass.
