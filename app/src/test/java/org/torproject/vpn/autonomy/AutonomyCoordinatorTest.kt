@@ -704,4 +704,17 @@ class AutonomyCoordinatorTest {
         assertFalse(hostile.trafficReleaseEligible)
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
+    @Test
+    fun chargingTelemetryPreservesUnknownStateAndCanBeUpdated() {
+        val coordinator = AutonomyCoordinator()
+        assertFalse(coordinator.currentSignals().chargingReadingAvailable)
+
+        coordinator.updateChargingState(isCharging = true)
+        assertTrue(coordinator.currentSignals().charging)
+        assertTrue(coordinator.currentSignals().chargingReadingAvailable)
+
+        coordinator.updateChargingState(isCharging = false, readingAvailable = false)
+        assertFalse(coordinator.currentSignals().charging)
+        assertFalse(coordinator.currentSignals().chargingReadingAvailable)
+    }
 }
