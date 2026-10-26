@@ -10,6 +10,7 @@ class AutonomyCoordinator(
     private val policyEngine: AutonomousPolicyEngine = AutonomousPolicyEngine(),
     val journal: AutonomyEventJournal = AutonomyEventJournal(),
     private val config: AutonomyConfig = AutonomyConfig(),
+    private val bridgeHealthLedger: BridgeHealthLedger = BridgeHealthLedger(),
     private val elapsedRealtimeClock: () -> Long = { System.nanoTime() / 1_000_000L }
 ) {
     private var environmentalSignals = NetworkSignals()
@@ -152,7 +153,9 @@ class AutonomyCoordinator(
             }
             AutonomyEventType.SERVICE_CREATED,
             AutonomyEventType.LOW_BATTERY,
-            AutonomyEventType.LOW_DATA_BUDGET -> Unit
+            AutonomyEventType.LOW_DATA_BUDGET,
+            AutonomyEventType.BRIDGE_ATTEMPT_SUCCEEDED,
+            AutonomyEventType.BRIDGE_ATTEMPT_FAILED -> Unit
         }
         return calculateDecision()
     }
@@ -210,6 +213,42 @@ class AutonomyCoordinator(
         }
         return calculateDecision()
     }
+
+    /**
+     * Records a measured transport outcome without storing network identifiers or destination data.
+     * This updates advisory learning only; it never changes the active Tor route.
+     */
+    @Synchronized
+    fun recordBridgeOutcome(
+        transport: Transport,
+        succeeded: Boolean,
+        latencyMillis: Long,
+        elapsedRealtimeMillis: Long = elapsedRealtimeClock()
+    ): List<BridgeCandidate> {
+        bridgeHealthLedger.record(
+            transport = transport,
+            succeeded = succeeded,
+            latencyMillis = latencyMillis,
+            elapsedRealtimeMillis = elapsedRealtimeMillis
+        )
+        journal.record(
+            AutonomyEvent(
+                type = if (succeeded) {
+                    AutonomyEventType.BRIDGE_ATTEMPT_SUCCEEDED
+                } else {
+                    AutonomyEventType.BRIDGE_ATTEMPT_FAILED
+                },
+                source = AutonomyEventSource.VPN_SERVICE,
+                elapsedRealtimeMillis = elapsedRealtimeMillis
+            )
+        )
+        return policyEngine.rankBridges(bridgeHealthLedger.candidates())
+    }
+
+    /** Returns the best currently learned candidates; selection remains advisory. */
+    @Synchronized
+    fun rankedBridgeCandidates(): List<BridgeCandidate> =
+        policyEngine.rankBridges(bridgeHealthLedger.candidates())
 
     @Synchronized
     fun currentDecision(): AutonomyDecision = lastDecision
