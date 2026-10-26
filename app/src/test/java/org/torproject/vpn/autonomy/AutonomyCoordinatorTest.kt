@@ -422,6 +422,7 @@ class AutonomyCoordinatorTest {
         assertTrue(failed.blockTrafficUntilTunnelVerified)
         assertTrue(coordinator.currentSignals().leakCheckFailed)
     }
+
     @Test
     fun spoofedLeakFailureFromNonCheckerCannotInvalidateVerifiedState() {
         val coordinator = connectedCoordinator()
@@ -464,7 +465,6 @@ class AutonomyCoordinatorTest {
         assertFalse(decision.trafficReleaseEligible)
         assertTrue(decision.blockTrafficUntilTunnelVerified)
     }
-
 
     @Test
     fun mobileTransportChangeInvalidatesPreviouslyVerifiedTunnel() {
@@ -551,7 +551,6 @@ class AutonomyCoordinatorTest {
         assertEquals(1, afterChange.attempt)
         assertEquals(1_000L, afterChange.delayMillis)
     }
-
 
     @Test
     fun recoveryPlannerDoesNotTreatStartupOrPendingLeakCheckAsFailure() {
