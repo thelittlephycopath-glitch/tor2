@@ -14,6 +14,7 @@ import org.junit.Test
 import org.torproject.vpn.R
 import org.torproject.vpn.ui.bridgebot.model.BotState
 import org.torproject.vpn.ui.bridgebot.model.BridgeBotViewModel
+import org.torproject.vpn.ui.bridgebot.model.BridgeRequestTransport
 import org.torproject.vpn.utils.getString
 
 @OptIn(ExperimentalTestApi::class)
@@ -35,6 +36,26 @@ class BridgeBotScreenTest {
             "botMessageText"
         ).assertTextEquals(getString(R.string.bot_msg_welcome)).assertIsDisplayed()
         onNodeWithText(getString(R.string.new_bridges)).assertIsDisplayed()
+    }
+
+
+    @Test
+    fun idleState_clickWebTunnel_emitsWebTunnelTransportSelection() = runComposeUiTest {
+        var receivedEvent: BridgeBotViewModel.Event? = null
+
+        setContent {
+            BridgeBotScreen(
+                state = BridgeBotViewModel.State(botState = BotState.IDLE),
+                onEvent = { event -> receivedEvent = event }
+            )
+        }
+
+        onNodeWithText(getString(R.string.bridge_transport_webtunnel)).performClick()
+
+        assertEquals(
+            BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL),
+            receivedEvent
+        )
     }
 
     @Test
