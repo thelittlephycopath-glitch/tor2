@@ -27,7 +27,7 @@ jobs:
   build:
     name: Build, sign, and verify gtor APKs
     if: ${{ inputs.run_apk_build }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
       - name: Check out source
@@ -300,7 +300,7 @@ jobs:
     needs: build
     # Publishing must be an explicit manual dispatch on main; pushes never publish debug-signed APKs.
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
