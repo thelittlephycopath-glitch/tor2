@@ -274,3 +274,7 @@ No verified APK is available. The current GitHub Actions runner-assignment failu
 
 These improvements do not close the main gaps in this audit: there is still no active end-to-end IPv4/IPv6/DNS/per-app leak verifier, automatic recovery executor, verified circuit-control executor, device-level kill-switch proof, or successful Android compile/test/emulator run.
 
+### CI guard correction — 2026-10-28
+
+Inspection uncovered structural corruption in the CI preflight script. It has been replaced with a single coherent implementation covering immutable action refs, explicit opt-in for APK builds and releases, source-import branch/revision restrictions, preservation of local workflow controls, and build-script syntax. A local valid fixture passed and a mutable action tag was rejected. This is a narrow local check; the full fixture suite and hosted workflow remain unverified. This correction improves the CI safety gate but does not close any runtime VPN enforcement gap.
+
