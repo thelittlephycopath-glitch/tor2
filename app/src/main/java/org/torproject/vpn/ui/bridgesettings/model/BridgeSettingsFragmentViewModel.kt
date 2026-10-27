@@ -121,7 +121,9 @@ class BridgeSettingsFragmentViewModel(application: Application) : AndroidViewMod
         // create a set of bridgeTypes
         val uniqueTypes = bridgeLines.mapNotNull { it.bridgeType() }.toSet()
 
-        if (uniqueTypes.size > 1) {
+        // Malformed or not-yet-recognized bridge lines may have no detected type.
+        // Keep the accessibility summary useful instead of calling first() on an empty set.
+        if (uniqueTypes.size != 1) {
             return@map application.resources.getQuantityString(
                 R.plurals.n_bridges,
                 bridgeLines.size,
