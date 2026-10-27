@@ -203,6 +203,8 @@
     <string name="bridge_transport_obfs4">obfs4</string>
     <string name="bridge_transport_webtunnel">WebTunnel</string>
     <string name="bridge_transport_webtunnel_description">WebTunnel makes Tor traffic resemble ordinary encrypted web traffic.</string>
+    <string name="webtunnel_fetch_fallback">If no WebTunnel lines are returned, use the official Bridges website, choose WebTunnel in Advanced options, and add the copied lines manually.</string>
+    <string name="open_bridges_website">Open Bridges website</string>
     <string name="about">About</string>
     <string name="about_description">Find out more about Tor VPN</string>
     <string name="version">Version</string>
