@@ -32,7 +32,13 @@ class AutonomyCoordinator(
     private var lowBatteryActive = false
     private var verificationGeneration = 0L
 
-    /** Current session token for evidence collected by an independent verifier. */
+    /**
+     * Current session token for an independent verifier.
+     *
+     * Start a new check first, then capture this token immediately before measuring. Never relabel
+     * cached evidence with a newer token; the generation prevents accidental cross-session reuse,
+     * but cannot prove that a caller measured the evidence honestly.
+     */
     @Synchronized
     fun currentVerificationGeneration(): Long = verificationGeneration
 
@@ -381,8 +387,9 @@ class AutonomyCoordinator(
      * Accepts a report only when every required control is fresh and explicitly verified and the
      * current coordinator state is safe. Unknown platform checks are failures, never implicit passes.
      *
-     * The caller is responsible for independently measuring the evidence fields. This method does
-     * not perform external leak probes or change VPN routing.
+     * The caller is responsible for independently measuring the evidence fields and attaching the
+     * generation captured for that check. This method does not perform external leak probes or
+     * change VPN routing. A token mismatch is a verification failure, even when the report is fresh.
      */
     @Synchronized
     fun submitLeakCheckEvidence(
