@@ -139,3 +139,13 @@ The manual source-import workflow is now restricted to dispatches targeting `dan
 - Preserve local CI controls: [`c918090`](https://github.com/thelittlephycopath-glitch/tor2/commit/c918090c39733c663589292780f86bfe7be94112)
 - The import workflow has not been executed; the guard and shell syntax still need an actual workflow run before this path is considered verified.
 
+## CI preflight regression coverage expanded — 2026-10-28
+
+The offline preflight now also enforces the upstream-import safety contract: dispatch restricted to `dangerous-experiment`, a required commit SHA wired into the workflow environment and validated as 40 lowercase hexadecimal characters, and preservation of the local `.github` directory. The fixture suite now includes a valid pinned-import fixture and a negative fixture that must reject an unrestricted/unpinned import.
+
+- Preflight change: [`3256d8a`](https://github.com/thelittlephycopath-glitch/tor2/commit/3256d8a9856e08f29e2096481792161fd8c47cdc)
+- Fixture expansion: [`de4a022`](https://github.com/thelittlephycopath-glitch/tor2/commit/de4a0222756a45c3160e4b0c4ccd912b78be253e)
+- Fixture correction: [`f0304e0`](https://github.com/thelittlephycopath-glitch/tor2/commit/f0304e0dff1a8918fd32e474e3aeefe8230d1a2e)
+
+Static content inspection confirms that the current preflight and fixtures contain the intended checks. The shell suite has not been executed in this environment because a local checkout could not be cloned (network DNS resolution failed); the GitHub-hosted workflow has not yet run these checks either.
+
