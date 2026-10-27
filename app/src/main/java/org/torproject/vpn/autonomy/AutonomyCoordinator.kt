@@ -82,20 +82,10 @@ class AutonomyCoordinator(
             AutonomyEventType.TUNNEL_READY,
             AutonomyEventType.TUNNEL_FAILED,
             AutonomyEventType.CONNECTION_FAILED,
-            AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED,
-            AutonomyEventType.DNS_CONFIGURATION_CONFLICT,
-            AutonomyEventType.DNS_CONFIGURATION_CLEARED,
-            AutonomyEventType.DNS_HIJACK_SUSPECTED,
-            AutonomyEventType.DNS_HIJACK_CLEARED,
-            AutonomyEventType.TLS_INTERCEPTION_SUSPECTED,
-            AutonomyEventType.TLS_INTERCEPTION_CLEARED,
-            AutonomyEventType.CAPTIVE_PORTAL_DETECTED,
-            AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
             AutonomyEventType.TUNNEL_STOPPED,
-            AutonomyEventType.SERVICE_STOPPED,
-            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceVerificationGeneration()
-            // These observations describe the underlying path and invalidate network trust evidence.
+            AutonomyEventType.SERVICE_STOPPED -> advanceVerificationGeneration()
+
+            // Network-path events invalidate both the active verification and trust observation.
             AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
             AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED,
             AutonomyEventType.DNS_CONFIGURATION_CONFLICT,
@@ -106,8 +96,12 @@ class AutonomyCoordinator(
             AutonomyEventType.TLS_INTERCEPTION_CLEARED,
             AutonomyEventType.CAPTIVE_PORTAL_DETECTED,
             AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceNetworkGeneration()
-            // Any start/failure event invalidates older evidence, regardless of producer.
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
+                advanceVerificationGeneration()
+                advanceNetworkGeneration()
+            }
+
+            // Any start/failure event invalidates older leak evidence, regardless of producer.
             // This transition only tightens the gate; it never grants traffic eligibility.
             AutonomyEventType.LEAK_CHECK_STARTED,
             AutonomyEventType.LEAK_CHECK_FAILED -> advanceVerificationGeneration()
