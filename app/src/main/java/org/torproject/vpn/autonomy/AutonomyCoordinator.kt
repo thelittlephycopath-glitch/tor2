@@ -72,12 +72,10 @@ class AutonomyCoordinator(
             AutonomyEventType.TUNNEL_STOPPED,
             AutonomyEventType.SERVICE_STOPPED,
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceVerificationGeneration()
+            // Any start/failure event invalidates older evidence, regardless of producer.
+            // This transition only tightens the gate; it never grants traffic eligibility.
             AutonomyEventType.LEAK_CHECK_STARTED,
-            AutonomyEventType.LEAK_CHECK_FAILED -> {
-                if (source == AutonomyEventSource.LEAK_CHECKER) {
-                    advanceVerificationGeneration()
-                }
-            }
+            AutonomyEventType.LEAK_CHECK_FAILED -> advanceVerificationGeneration()
             else -> Unit
         }
         when (type) {
