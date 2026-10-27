@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -112,11 +112,25 @@ fun BridgeBotScreen(
                             horizontalArrangement = Arrangement.spacedBy(spacingSizeNormal)
                         ) {
                             Button(
-                                modifier = Modifier.weight(1f).height(44.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (state.selectedTransport == BridgeRequestTransport.OBFS4) Color.White else Color(0xFF252525),
-                                    contentColor = if (state.selectedTransport == BridgeRequestTransport.OBFS4) Color.Black else Color.White
+                                    containerColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.OBFS4
+                                    ) {
+                                        Color.White
+                                    } else {
+                                        Color(0xFF252525)
+                                    },
+                                    contentColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.OBFS4
+                                    ) {
+                                        Color.Black
+                                    } else {
+                                        Color.White
+                                    }
                                 ),
                                 onClick = {
                                     onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.OBFS4))
@@ -125,11 +139,25 @@ fun BridgeBotScreen(
                                 Text(stringResource(R.string.bridge_transport_obfs4), maxLines = 1)
                             }
                             Button(
-                                modifier = Modifier.weight(1f).height(44.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (state.selectedTransport == BridgeRequestTransport.WEBTUNNEL) Color.White else Color(0xFF252525),
-                                    contentColor = if (state.selectedTransport == BridgeRequestTransport.WEBTUNNEL) Color.Black else Color.White
+                                    containerColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.WEBTUNNEL
+                                    ) {
+                                        Color.White
+                                    } else {
+                                        Color(0xFF252525)
+                                    },
+                                    contentColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.WEBTUNNEL
+                                    ) {
+                                        Color.Black
+                                    } else {
+                                        Color.White
+                                    }
                                 ),
                                 onClick = {
                                     onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL))
