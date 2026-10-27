@@ -161,3 +161,16 @@ The CI preflight now checks that the build-job gate exists and the fixture suite
 
 This guard is source-inspected, not yet executed by GitHub Actions. The build remains intentionally unrun until the plan's backend/security acceptance work is ready.
 
+## CI preflight integrity repair — 2026-10-28
+
+A source inspection found that `scripts/verify_ci_security.sh` had become structurally corrupted: duplicated fragments were interleaved with the release-default check, leaving malformed shell syntax and preventing the guard from being trusted. Replaced the file with one complete, ordered implementation.
+
+The repaired preflight checks:
+- All external workflow actions use full 40-character lowercase commit SHA references and semantic-version comments.
+- APK build execution requires the explicit `run_apk_build` manual-dispatch input, which defaults to false.
+- Release publication requires the `main` ref, `workflow_dispatch`, and the explicit `publish_release` input, also defaulting to false.
+- Upstream source import is restricted to `dangerous-experiment`, validates a full immutable upstream commit SHA, and preserves local workflow controls.
+- The reproducible build and dependency-fetch scripts parse with `bash -n`.
+
+Local isolated fixture checks passed for a valid pinned-action workflow and rejected a mutable `@v7` action reference. This was a focused local check of the repaired preflight, not a complete run of `scripts/test_ci_security.sh`, Gradle tests, or GitHub Actions. Full CI verification remains open because hosted jobs have been failing before their first step/logs.
+
