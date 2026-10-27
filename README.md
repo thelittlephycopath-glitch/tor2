@@ -10,8 +10,8 @@
 ## Downloading the APK
 
 1. Open the [g-tor APK workflow](https://github.com/thelittlephycopath-glitch/tor2/actions/workflows/build-apk.yml).
-2. Open the latest **successful** “Build Tor VPN Beta APK” run.
-3. Under **Artifacts**, download and extract `tor2-debug-signed-apks`.
+2. Open the latest **successful** “Build g-tor APK” run.
+3. Under **Artifacts**, download and extract `g-tor-debug-signed-apks`.
 4. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
 
 These are community-built APKs signed with a temporary debug key, not official Tor Project releases. Each build uses a new key, so upgrading from an earlier community build may require uninstalling it first. Do not install these over an official Tor-signed version unless you understand the consequences.
