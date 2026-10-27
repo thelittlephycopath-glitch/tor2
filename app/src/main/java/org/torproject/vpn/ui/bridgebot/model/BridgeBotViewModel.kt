@@ -22,9 +22,9 @@ import org.torproject.vpn.utils.PreferenceHelper
 import org.torproject.vpn.utils.PreferenceHelper.Companion.BridgeType
 import org.torproject.vpn.vpn.GetBridgeLines
 
-enum class BridgeRequestTransport(val moatName: String, val labelRes: Int) {
-    OBFS4("obfs4", R.string.bridge_transport_obfs4),
-    WEBTUNNEL("webtunnel", R.string.bridge_transport_webtunnel)
+enum class BridgeRequestTransport(val moatName: String) {
+    OBFS4("obfs4"),
+    WEBTUNNEL("webtunnel")
 }
 
 class BridgeBotViewModel(
