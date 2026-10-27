@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-27  
 Working branch: `dangerous-experiment`  
-Integration rule: keep changes additive; do not change the existing UI/UX; do not merge this branch into `main` until build and verification gates pass.
+Integration rule: preserve core navigation and connection behavior; visual refinements are now authorized by the user and must remain black-and-white. Do not merge this branch into `main` until build and verification gates pass.
 
 ## Verification status
 
