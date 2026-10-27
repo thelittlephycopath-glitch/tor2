@@ -32,6 +32,22 @@ jobs:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 YAML
+  cat > "$fixture/.github/workflows/import-source.yml" <<'YAML'
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_commit:
+        required: true
+jobs:
+  import-source:
+    if: ${{ github.ref == 'refs/heads/dangerous-experiment' }}
+    steps:
+      - name: validate source revision
+        run: |
+          if [[ ! "$UPSTREAM_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then exit 1; fi
+          cp -a .github /tmp/tor-vpn-local-github
+          cp -a /tmp/tor-vpn-local-github .github
+YAML
 }
 
 expect_failure() {
@@ -90,5 +106,17 @@ expect_failure "missing release opt-in guard"
 write_valid_workflows
 printf 'if then\n' > "$fixture/scripts/reproducible_build.sh"
 expect_failure "invalid reproducible build-script syntax"
+
+# Source import must stay branch-restricted and use a validated immutable revision.
+write_valid_workflows
+cat > "$fixture/.github/workflows/import-source.yml" <<'YAML'
+on:
+  workflow_dispatch:
+jobs:
+  import-source:
+    steps:
+      - run: echo "unsafe"
+YAML
+expect_failure "unrestricted or unpinned source import"
 
 echo "All CI security preflight fixtures passed."
