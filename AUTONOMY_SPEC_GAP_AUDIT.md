@@ -286,3 +286,9 @@ A report's monotonic timestamp alone did not bind it to the tunnel/network path 
 
 **Verification boundary:** source and test changes are committed, but Gradle tests have not run. The probe continues to report all enforcement flags as false. Session binding prevents accidental/stale report reuse; it does not prove the underlying evidence was measured honestly or that Android packet-level enforcement works.
 
+### Trust-evidence consistency — 2026-10-28
+
+A further review found that `updateNetworkTrust` classified caller-supplied DNS/TLS/captive-portal indicators but previously copied only the resulting trust enum into coordinator state. A captive portal could therefore be represented as `UNKNOWN` without setting the coordinator's captive-portal gate, and a later benign trust update could obscure the distinction between a trust refresh and an explicit anomaly-clear event.
+
+The coordinator now records fresh DNS/TLS indicators as sticky signals until explicit clear events, records fresh captive-portal evidence as active, and invalidates the current tunnel-verification generation when a portal is newly observed. Regression tests cover portal evidence, sticky DNS-hijack evidence, missing generation tokens, and prior-generation report replay. **The tests have not been run with Gradle; this is source-level hardening awaiting execution.**
+
