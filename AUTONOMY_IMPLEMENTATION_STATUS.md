@@ -220,3 +220,10 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Confirmed its push-triggered run was created on the latest branch commit.
 - [ ] Hosted job failed before its first step (`steps: null`, no log URL), so no remote test result exists yet. Runner/Actions availability remains a blocking infrastructure issue.
 
+## Local-only learning persistence guard — 2026-10-28
+
+- [x] Extended the offline preflight to enforce `allowBackup=false`, explicit backup/device-transfer rule wiring, and exclusion of `autonomy_network_learning_v1.xml`.
+- [x] Added a negative fixture that must fail if the device-transfer exclusion is removed.
+- [x] Ran a local mirrored fixture suite: valid case passed and seven unsafe cases were rejected.
+- [ ] The repository's own hosted workflow has not executed these checks because Actions jobs continue to fail before their first step.
+
