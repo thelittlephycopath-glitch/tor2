@@ -174,3 +174,7 @@ The repaired preflight checks:
 
 Local isolated fixture checks passed for a valid pinned-action workflow and rejected a mutable `@v7` action reference. This was a focused local check of the repaired preflight, not a complete run of `scripts/test_ci_security.sh`, Gradle tests, or GitHub Actions. Full CI verification remains open because hosted jobs have been failing before their first step/logs.
 
+### CI preflight fixture verification — 2026-10-28
+
+The negative-test helper originally invoked the preflight outside the temporary fixture directory, so failures could be caused by missing relative workflow paths rather than the intended unsafe fixture. Corrected the helper to run from the fixture root. The complete fixture suite then passed locally: valid SHA-pinned workflow accepted; mutable action tag, missing version comment, missing release gate, missing APK opt-in gate, invalid build-script syntax, and unrestricted/unpinned source-import fixtures all rejected. A separate static inspection of all five committed workflow files found 16 external action references and no missing SHA pins/version comments; the APK/release and source-import guard strings were also present. This is local validation of the scripts and source contents, not a hosted workflow run.
+
