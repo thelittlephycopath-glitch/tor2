@@ -18,9 +18,13 @@ name: fixture build
 on:
   workflow_dispatch:
     inputs:
+      run_apk_build:
+        default: false
       publish_release:
         default: false
 jobs:
+  build:
+    if: ${{ inputs.run_apk_build }}
   publish:
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release }}
 YAML
@@ -103,6 +107,25 @@ jobs:
     if: false
 YAML
 expect_failure "missing release opt-in guard"
+
+# APK work must remain explicitly disabled by default and gated at the build job.
+write_valid_workflows
+cat > "$fixture/.github/workflows/build-apk.yml" <<'YAML'
+name: fixture build
+on:
+  workflow_dispatch:
+    inputs:
+      run_apk_build:
+        default: false
+      publish_release:
+        default: false
+jobs:
+  build:
+    if: false
+  publish:
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release }}
+YAML
+expect_failure "missing APK build opt-in gate"
 
 # The same preflight must also reject shell syntax regressions.
 write_valid_workflows
