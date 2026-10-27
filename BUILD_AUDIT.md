@@ -88,3 +88,29 @@ This makes a successful future artifact independently checkable after download. 
 - Triggered run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40571377421
 - Result: runner job failed before any steps/logs were exposed; this run does not validate the new metadata gate.
 
+## CI supply-chain hardening — 2026-10-28
+
+The branch's GitHub Actions dependencies are now pinned to full commit SHAs instead of movable major-version tags. The inline version comments are retained so Dependabot can propose reviewed upgrades. Current pins:
+
+- `actions/checkout` `3d3c42e5aac5ba805825da76410c181273ba90b1` (`v7.0.1`)
+- `actions/cache` `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` (`v6.1.0`)
+- `actions/upload-artifact` `cf430e030ddbb5b0abf93d22962f4752f3646cd9` (`v7.0.2`)
+- `actions/download-artifact` `9000827ccba6bdab643e8b6fd33ac0654aef8333` (`v8.0.2`)
+- `actions/setup-java` `b843ebf9b913146b38da2eaa7aeddf76074ae1ad` (`v6.1.0`)
+- `android-actions/setup-android` `be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd` (`v4.0.4`)
+- `reactivecircus/android-emulator-runner` `a421e43855164a8197daf9d8d40fe71c6996bb0d` (`v2.38.0`)
+- `softprops/action-gh-release` `efb35369e0ad2afab669f228072c1b0d510eae64` (`v3.0.3`)
+
+Added `.github/dependabot.yml` to request weekly GitHub Actions dependency updates. Version updates remain reviewable PRs rather than silently moving action refs.
+
+Added `scripts/verify_ci_security.sh` as a lightweight, offline preflight. It checks external action references for 40-character SHA pins and version comments, checks the manual release-publication guard/default-off input, and syntax-checks the reproducible build scripts. The preflight is invoked before expensive toolchain builds in the APK, diagnostic-build, and PR-validation workflows. A local fixture test passed for valid pins and correctly rejected a mutable `@v7` reference. This fixture test is not a substitute for running the script in GitHub Actions against the full checkout.
+
+The action gate test suite now also includes an exhaustive scenario where every automation flag is enabled and every action is recommended: only the two fail-closed actions remain approved; all side-effecting actions remain suppressed as `ACTION_NOT_IMPLEMENTED`. The source test is committed but has not run under Gradle.
+
+### Post-hardening workflow evidence
+
+- Latest branch-triggered build run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40574107343
+- Result: failed before any step logs were exposed (`steps: null`, no job log URL).
+- The workflow run therefore does not verify action execution, preflight execution, compilation, tests, APK signing, or artifact integrity.
+- No APK is confirmed as built. The runner/Actions environment blocker remains open.
+
