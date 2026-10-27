@@ -310,3 +310,7 @@ A dedicated low-cost workflow now validates shell syntax and the CI security fix
 
 The Android manifest sets `allowBackup=false`; both full-backup and Android 12+ data-extraction rules also explicitly exclude the opt-in learning SharedPreferences file. The offline CI preflight now protects these invariants against accidental future changes, with a negative fixture for a missing device-transfer exclusion. The local mirrored fixture suite passed. This is defense-in-depth for local-only storage; it does not establish encryption of the digest records or runtime opt-in wiring.
 
+### Explicit anomaly clearing — 2026-10-28
+
+A further state-machine review found that clearing the coordinator's DNS/TLS/captive-portal flag alone could leave the last `NetworkTrustEvidence` cached. The next trust refresh could reclassify that cached evidence and reapply the warning. Explicit clear events now discard cached trust evidence and reset trust to UNKNOWN while invalidating tunnel/leak verification state. A regression test verifies DNS-hijack clear cannot reuse old hostile evidence and that a fresh tunnel plus leak report is still required before eligibility returns. The test is committed but not yet run.
+
