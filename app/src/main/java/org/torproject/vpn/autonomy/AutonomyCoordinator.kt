@@ -42,6 +42,20 @@ class AutonomyCoordinator(
     @Synchronized
     fun currentVerificationGeneration(): Long = verificationGeneration
 
+    /**
+     * Starts a new verification attempt and returns the token that must be attached to its report.
+     * Call this before collecting evidence; a network/tunnel transition during measurement makes
+     * the token stale, so submitLeakCheckEvidence will reject that report.
+     */
+    @Synchronized
+    fun beginLeakVerification(): Long {
+        observe(
+            AutonomyEventType.LEAK_CHECK_STARTED,
+            source = AutonomyEventSource.LEAK_CHECKER
+        )
+        return verificationGeneration
+    }
+
     private fun advanceVerificationGeneration() {
         verificationGeneration = Math.addExact(verificationGeneration, 1L)
     }
