@@ -446,16 +446,27 @@ class AutonomyCoordinator(
         } else {
             NetworkTrust.UNKNOWN
         }
-        if (classifiedTrust == NetworkTrust.HOSTILE) {
+        val portalDetected = evidenceIsFresh && evidence.captivePortalDetected
+        val newlyDetectedPortal = portalDetected && !environmentalSignals.captivePortalDetected
+        if (classifiedTrust == NetworkTrust.HOSTILE || newlyDetectedPortal) {
             advanceVerificationGeneration()
             // Previously successful tunnel/leak checks do not remain authoritative after a hostile
-            // network indicator. Record the classification without pretending a leak probe ran.
+            // indicator or newly observed captive portal. This is not itself a leak probe.
             rememberRecoveryIfSessionWasActive()
             tunnelReady = false
             leakChecksPassed = false
             validatedLeakReportReady = false
         }
-        environmentalSignals = environmentalSignals.copy(trust = classifiedTrust)
+        environmentalSignals = environmentalSignals.copy(
+            trust = classifiedTrust,
+            // Anomaly flags are sticky until an explicit clear event; a generic trust refresh must
+            // not accidentally erase a previously observed DNS/TLS warning.
+            dnsHijackSuspected = environmentalSignals.dnsHijackSuspected ||
+                (evidenceIsFresh && evidence.dnsHijackSuspected),
+            tlsInterceptionSuspected = environmentalSignals.tlsInterceptionSuspected ||
+                (evidenceIsFresh && evidence.tlsInterceptionSuspected),
+            captivePortalDetected = environmentalSignals.captivePortalDetected || portalDetected
+        )
         return calculateDecision()
     }
 
