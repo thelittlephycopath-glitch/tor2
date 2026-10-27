@@ -48,13 +48,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Keep this workflow available after the upstream source is copied over.
-          cp .github/workflows/import-source.yml /tmp/import-source.yml
+          # Preserve local CI controls; an upstream import must not replace repository workflows.
+          cp -a .github /tmp/tor-vpn-local-github
           cp -a "$TOR_VPN_SRC"/. .
+          rm -rf .github
+          cp -a /tmp/tor-vpn-local-github .github
           mkdir -p scripts
           cp .build-fixes/reproducible_build.sh scripts/reproducible_build.sh
           cp .build-fixes/update-offline-help.sh scripts/update-offline-help.sh
-          cp /tmp/import-source.yml .github/workflows/import-source.yml
           chmod +x scripts/reproducible_build.sh scripts/update-offline-help.sh
           bash -n scripts/reproducible_build.sh scripts/update-offline-help.sh
           git config user.name 'github-actions[bot]'
