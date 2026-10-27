@@ -804,6 +804,31 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun futureDatedTrustEvidenceCannotBecomeTrustedWhenClockCatchesUp() {
+        var now = 100L
+        val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 101L,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis = now
+        )
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+
+        // The original observation remains rejected; time passing is not a new observation.
+        now = 101L
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+    }
+
+    @Test
     fun trustedNetworkEvidenceExpiresToUnknownWithoutARefresh() {
         var now = 100L
         val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
