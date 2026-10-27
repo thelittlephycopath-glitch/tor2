@@ -9,13 +9,13 @@ package org.torproject.vpn.autonomy
  */
 data class LeakVerificationEvidence(
     val checkedAtElapsedRealtimeMillis: Long,
-    /** Generation of the tunnel/network session this evidence belongs to; null is untrusted. */
-    val sessionGeneration: Long? = null,
     val ipv4DefaultRouteProtected: Boolean,
     val ipv6ContainedOrBlocked: Boolean,
     val dnsProtectedByTunnel: Boolean,
     val systemLockdownVerified: Boolean,
-    val appRoutingVerified: Boolean
+    val appRoutingVerified: Boolean,
+    /** Generation of the tunnel/network session this evidence belongs to; null is untrusted. */
+    val sessionGeneration: Long? = null
 ) {
     init {
         require(checkedAtElapsedRealtimeMillis >= 0L) {
