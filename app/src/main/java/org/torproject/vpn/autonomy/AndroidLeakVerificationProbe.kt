@@ -95,11 +95,13 @@ class AndroidLeakVerificationProbe(context: Context) {
      * Keeping every protection flag false prevents this diagnostic probe from authorizing traffic.
      */
     fun collectEvidence(
-        checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime()
+        checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime(),
+        sessionGeneration: Long? = null
     ): LeakVerificationEvidence {
         collectSnapshot(checkedAtElapsedRealtimeMillis)
         return LeakVerificationEvidence(
             checkedAtElapsedRealtimeMillis = checkedAtElapsedRealtimeMillis,
+            sessionGeneration = sessionGeneration,
             ipv4DefaultRouteProtected = false,
             ipv6ContainedOrBlocked = false,
             dnsProtectedByTunnel = false,
