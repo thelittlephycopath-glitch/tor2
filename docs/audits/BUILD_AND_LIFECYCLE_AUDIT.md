@@ -2,7 +2,7 @@
 
 Date: 2026-10-28
 Branch reviewed: `dangerous-experiment`
-Reviewed commit: `05225fb77aace26ebdd2d6a2716efa7d28c9692e`
+Latest reviewed source fix: `f3223ae686cfa9148529f48273717234ba689ec0`
 
 This is an evidence ledger, not a release approval. No build or runtime pass is claimed here.
 
@@ -19,6 +19,8 @@ This is an evidence ledger, not a release approval. No build or runtime pass is 
 - A follow-up source inspection found an invalid named argument in `AutonomyLifecycleOrderingTest`: one call supplied `coordinator` to a helper that accepts only `checkedAt` and `generation`. An earlier recorded fix was not present in the fetched branch file; the exact invalid argument has now been removed and committed as `b79781917134488bfa8cc55e18d1c80e34cedfd4`. This is a source-level correction only; no test run or compilation result is available yet.
 - Added `docs/research/FREE_NETWORK_AND_VPN_FEATURE_RESEARCH.md` to capture official Tor relay-safety/capacity guidance and a feature benchmark for paid VPN capabilities. This is research only; no new IP network is implemented.
 - A second test audit found `NetworkTrustSessionGenerationTest` contradicted the coordinator's fail-closed contract: a test expected tokenless trust evidence to be accepted even though `updateNetworkTrust` requires the current network-generation token. Updated the test to expect `UNKNOWN` for tokenless evidence and to capture the network-generation token in the stale-evidence case (`05225fb77aace26ebdd2d6a2716efa7d28c9692e`). This aligns assertions with the existing security contract; the test has not been executed yet.
+
+- A follow-up bootstrap hardening commit (`f3223ae686cfa9148529f48273717234ba689ec0`) enables strict Bash error handling, resolves the repository root safely for paths containing spaces, quotes Android SDK/NDK paths, uses fail-on-HTTP-error HTTPS downloads, and checks for the actual rustup executable rather than only a directory. This improves failure behavior and shell robustness; it does **not** resolve missing pinned integrity verification for the standalone JDK/rustup downloads, and no shell or build execution has yet been recorded for this commit.
 
 ## Blockers and next evidence required
 
