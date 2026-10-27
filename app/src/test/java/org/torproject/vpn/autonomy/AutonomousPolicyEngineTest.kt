@@ -97,6 +97,21 @@ class AutonomousPolicyEngineTest {
     }
 
     @Test
+    fun failedLeakCheckDoesNotSuppressAnotherCheckAfterTunnelReady() {
+        val decision = engine.evaluate(
+            NetworkSignals(
+                networkAvailable = true,
+                tunnelReady = true,
+                leakChecksPassed = false,
+                leakCheckFailed = true
+            )
+        )
+        assertFalse(decision.trafficReleaseEligible)
+        assertTrue(decision.blockTrafficUntilTunnelVerified)
+        assertTrue(AutonomyAction.RUN_LEAK_CHECKS in decision.recommendedActions)
+    }
+
+    @Test
     fun trafficReleaseRequiresEveryIndependentPredicate() {
         val fullyVerified = NetworkSignals(
             trust = NetworkTrust.TRUSTED,
