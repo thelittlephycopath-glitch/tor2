@@ -60,3 +60,15 @@ Do not describe the APK as built until the remaining blocking checks are evidenc
 ## Release-publication guard correction — 2026-10-28
 
 Static review found that the publish job condition allowed every push to `main` to publish a GitHub Release, even though the workflow-dispatch input defaults to false. That contradicted the stated opt-in safety gate. The condition now requires all three facts: the ref is `main`, the event is `workflow_dispatch`, and `inputs.publish_release` is explicitly true. A push to either branch can build and upload workflow artifacts but cannot publish a release. This is a static configuration correction; the hosted runner blocker still prevents a successful end-to-end workflow verification.
+
+### Runner retry result — 2026-10-28
+
+Retried the failed build workflow (run 40570108287, attempt 2) after confirming the branch workflow and release guard. It again failed before the first step:
+
+- Job ID: `122421839083`
+- `runner_id: 0`
+- `runner_name: ""`
+- `steps: []`
+- Run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40570108287
+
+The failure is reproducible across multiple runs and both Ubuntu and Windows runner labels. This rules out a project-specific compile error as the immediate cause of those failures; it does not prove the account-level root cause. The owner should check repository Actions enablement/policies and account billing/usage restrictions. If those are clear, escalate to GitHub Support with the run URL because there is no job log to diagnose in source code. GitHub's workflow troubleshooting guide documents reviewing workflow logs, billing errors, Actions availability, and runner troubleshooting: https://docs.github.com/en/actions/how-tos/troubleshoot-workflows
