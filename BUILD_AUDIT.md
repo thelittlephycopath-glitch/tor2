@@ -56,3 +56,7 @@ This is evidence of a hosted-runner assignment/service/account-level blocker, no
 - [ ] Device-level VPN, DNS, IPv4/IPv6, lockdown, reconnect, and traffic-leak tests pass.
 
 Do not describe the APK as built until the remaining blocking checks are evidenced by successful runs.
+
+## Release-publication guard correction — 2026-10-28
+
+Static review found that the publish job condition allowed every push to `main` to publish a GitHub Release, even though the workflow-dispatch input defaults to false. That contradicted the stated opt-in safety gate. The condition now requires all three facts: the ref is `main`, the event is `workflow_dispatch`, and `inputs.publish_release` is explicitly true. A push to either branch can build and upload workflow artifacts but cannot publish a release. This is a static configuration correction; the hosted runner blocker still prevents a successful end-to-end workflow verification.
