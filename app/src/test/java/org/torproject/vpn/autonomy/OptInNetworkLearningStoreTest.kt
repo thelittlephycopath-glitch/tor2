@@ -115,6 +115,18 @@ class OptInNetworkLearningStoreTest {
     }
 
     @Test
+    fun rejectedExpiredOrFutureSampleStillPrunesPersistedRecords() {
+        storage.value = listOf("$digestA|0", "$digestB|99").joinToString("\n")
+
+        assertFalse(store.recordFingerprint(digestC, 0L, true, 101L))
+        assertEquals("$digestB|99", storage.value)
+
+        storage.value = listOf("$digestA|0", "$digestB|99").joinToString("\n")
+        assertFalse(store.recordFingerprint(digestC, 102L, true, 101L))
+        assertEquals("$digestB|99", storage.value)
+    }
+
+    @Test
     fun duplicateDigestUpdatesTimestampAndKeepsSingleEntry() {
         store.recordFingerprint(digestA, 80L, true, 100L)
         store.recordFingerprint(digestA, 95L, true, 100L)
