@@ -55,6 +55,7 @@ import org.torproject.vpn.autonomy.AndroidResourceMonitor
 import org.torproject.vpn.autonomy.AutonomyCoordinator
 import org.torproject.vpn.autonomy.AutonomyEventSource
 import org.torproject.vpn.autonomy.AutonomyEventType
+import org.torproject.vpn.autonomy.ManualBridgeTransportClassifier
 import org.torproject.vpn.autonomy.Transport
 import org.torproject.vpn.ui.approuting.data.AppManager
 import org.torproject.vpn.utils.Country
@@ -559,8 +560,10 @@ class TorVpnService : VpnService() {
         val transport = when (preferenceHelper.bridgeType) {
             BridgeType.Obfs4 -> Transport.OBFS4
             BridgeType.Snowflake -> Transport.SNOWFLAKE
-            // Manual bridge definitions may use different transports, so do not guess.
-            BridgeType.Manual, BridgeType.None -> null
+            // Learn manual bridge outcomes only when every configured line names the same known
+            // transport. Unknown or mixed configurations remain unclassified.
+            BridgeType.Manual -> ManualBridgeTransportClassifier.classify(preferenceHelper.bridgeLines)
+            BridgeType.None -> null
         } ?: return
         val now = SystemClock.elapsedRealtime()
         autonomyCoordinator.recordBridgeOutcome(
