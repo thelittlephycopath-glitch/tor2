@@ -1088,4 +1088,25 @@ class AutonomyCoordinatorTest {
         assertTrue(result.failures.contains(LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR))
         assertFalse(coordinator.currentDecision().trafficReleaseEligible)
     }
+
+    @Test
+    fun leakEvidenceWithoutSessionGenerationFailsClosed() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        val result = coordinator.submitLeakCheckEvidence(
+            evidence = LeakVerificationEvidence(
+                checkedAtElapsedRealtimeMillis = 2L,
+                ipv4DefaultRouteProtected = true,
+                ipv6ContainedOrBlocked = true,
+                dnsProtectedByTunnel = true,
+                systemLockdownVerified = true,
+                appRoutingVerified = true
+            ),
+            nowElapsedRealtimeMillis = 2L
+        )
+
+        assertFalse(result.passed)
+        assertTrue(result.failures.contains(LeakVerificationFailure.SESSION_GENERATION_MISMATCH))
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
 }
