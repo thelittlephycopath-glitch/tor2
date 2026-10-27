@@ -7,8 +7,31 @@ test -f "$SOURCE_PREFLIGHT"
 
 fixture="$(mktemp -d)"
 trap 'rm -rf "$fixture"' EXIT
-mkdir -p "$fixture/scripts" "$fixture/.github/workflows"
+mkdir -p "$fixture/scripts" "$fixture/.github/workflows" "$fixture/app/src/main/res/xml"
 cp "$SOURCE_PREFLIGHT" "$fixture/scripts/verify_ci_security.sh"
+cat > "$fixture/app/src/main/AndroidManifest.xml" <<'XML'
+<manifest>
+  <application
+    android:allowBackup="false"
+    android:fullBackupContent="@xml/backup_rules"
+    android:dataExtractionRules="@xml/data_extraction_rules" />
+</manifest>
+XML
+cat > "$fixture/app/src/main/res/xml/backup_rules.xml" <<'XML'
+<full-backup-content>
+  <exclude domain="sharedpref" path="autonomy_network_learning_v1.xml" />
+</full-backup-content>
+XML
+cat > "$fixture/app/src/main/res/xml/data_extraction_rules.xml" <<'XML'
+<data-extraction-rules>
+  <cloud-backup>
+    <exclude domain="sharedpref" path="autonomy_network_learning_v1.xml" />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="sharedpref" path="autonomy_network_learning_v1.xml" />
+  </device-transfer>
+</data-extraction-rules>
+XML
 printf '#!/usr/bin/env bash\nset -euo pipefail\necho build\n' > "$fixture/scripts/reproducible_build.sh"
 printf '#!/usr/bin/env bash\nset -euo pipefail\necho dependencies\n' > "$fixture/scripts/reproducible_fetch_deps.sh"
 
@@ -143,5 +166,15 @@ jobs:
       - run: echo "unsafe"
 YAML
 expect_failure "unrestricted or unpinned source import"
+
+# Opt-in network-learning records must remain excluded from backup and device transfer.
+write_valid_workflows
+cat > "$fixture/app/src/main/res/xml/data_extraction_rules.xml" <<'XML'
+<data-extraction-rules>
+  <cloud-backup />
+  <device-transfer />
+</data-extraction-rules>
+XML
+expect_failure "network-learning backup exclusion"
 
 echo "All CI security preflight fixtures passed."
