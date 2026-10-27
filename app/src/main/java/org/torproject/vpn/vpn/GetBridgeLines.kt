@@ -40,9 +40,20 @@ class GetBridgeLines(
                 }
 
                 val results = mutableListOf<String>()
+                val requestedTransports = request.transports.orEmpty()
                 val settingsList = settingsResponse.settings
-                val bridgeDBList = settingsList?.filter { it.bridges.source == "bridgedb" }
-                val bridgesToUse = if (!bridgeDBList.isNullOrEmpty()) bridgeDBList else settingsList
+                // Never satisfy a WebTunnel request with a different transport if the API
+                // returns a mixed settings response. An empty transport filter preserves
+                // the previous behavior for callers that explicitly request all transports.
+                val matchingSettings = settingsList?.filter { settings ->
+                    requestedTransports.isEmpty() ||
+                        requestedTransports.any { requested ->
+                            requested.equals(settings.bridges.type, ignoreCase = true)
+                        }
+                }
+                val bridgeDBList = matchingSettings?.filter { it.bridges.source == "bridgedb" }
+                val bridgesToUse =
+                    if (!bridgeDBList.isNullOrEmpty()) bridgeDBList else matchingSettings
 
                 bridgesToUse?.forEach { bridges ->
                     bridges.bridges.bridge_strings?.let { results.addAll(it) }
