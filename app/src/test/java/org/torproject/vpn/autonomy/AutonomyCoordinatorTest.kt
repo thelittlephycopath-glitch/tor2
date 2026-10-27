@@ -754,6 +754,34 @@ class AutonomyCoordinatorTest {
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
     @Test
+    fun connectivityEventsClearCachedNetworkTrustEvidence() {
+        val coordinator = connectedCoordinator()
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = TEST_CLOCK_MILLIS,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis = TEST_CLOCK_MILLIS
+        )
+        assertEquals(NetworkTrust.TRUSTED, coordinator.currentSignals().trust)
+
+        coordinator.observe(
+            AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = TEST_CLOCK_MILLIS
+        )
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+
+        coordinator.observe(
+            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = TEST_CLOCK_MILLIS
+        )
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+    }
+
+    @Test
     fun networkChangeDoesNotCarryTrustedClassificationToTheNewPath() {
         val coordinator = connectedCoordinator()
         coordinator.updateNetworkTrust(
