@@ -17,7 +17,8 @@ class AutonomyCoordinatorTest {
             ipv6ContainedOrBlocked = true,
             dnsProtectedByTunnel = true,
             systemLockdownVerified = true,
-            appRoutingVerified = true
+            appRoutingVerified = true,
+            sessionGeneration = coordinator.currentVerificationGeneration()
         ),
         nowElapsedRealtimeMillis = timestamp
     )
@@ -904,7 +905,8 @@ class AutonomyCoordinatorTest {
                 ipv6ContainedOrBlocked = true,
                 dnsProtectedByTunnel = true,
                 systemLockdownVerified = true,
-                appRoutingVerified = true
+                appRoutingVerified = true,
+                sessionGeneration = coordinator.currentVerificationGeneration()
             ),
             nowElapsedRealtimeMillis = now
         )
@@ -934,7 +936,8 @@ class AutonomyCoordinatorTest {
                 ipv6ContainedOrBlocked = true,
                 dnsProtectedByTunnel = true,
                 systemLockdownVerified = true,
-                appRoutingVerified = true
+                appRoutingVerified = true,
+                sessionGeneration = coordinator.currentVerificationGeneration()
             ),
             nowElapsedRealtimeMillis = now
         )
@@ -988,4 +991,37 @@ class AutonomyCoordinatorTest {
         assertFalse(coordinator.currentSignals().charging)
         assertFalse(coordinator.currentSignals().chargingReadingAvailable)
     }
+    @Test
+    fun freshLeakEvidenceFromPreviousNetworkGenerationIsRejected() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        val oldGeneration = coordinator.currentVerificationGeneration()
+        val oldEvidence = LeakVerificationEvidence(
+            checkedAtElapsedRealtimeMillis = 2L,
+            ipv4DefaultRouteProtected = true,
+            ipv6ContainedOrBlocked = true,
+            dnsProtectedByTunnel = true,
+            systemLockdownVerified = true,
+            appRoutingVerified = true,
+            sessionGeneration = oldGeneration
+        )
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = true
+        )
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 3)
+
+        val result = coordinator.submitLeakCheckEvidence(
+            evidence = oldEvidence,
+            nowElapsedRealtimeMillis = 4L
+        )
+
+        assertFalse(result.passed)
+        assertTrue(result.failures.contains(LeakVerificationFailure.SESSION_GENERATION_MISMATCH))
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
 }
