@@ -2,7 +2,8 @@ name: Build Tor VPN Beta APK
 
 on:
   push:
-    branches: [main, dangerous-experiment]
+    # Experimental backend commits must not launch APK builds while the user has deferred APK work.
+    branches: [main]
   workflow_dispatch:
     inputs:
       publish_release:
