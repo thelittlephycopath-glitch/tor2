@@ -255,7 +255,8 @@ jobs:
   publish:
     name: Publish verified APKs from main
     needs: build
-    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
+    # Publishing must be an explicit manual dispatch on main; pushes never publish debug-signed APKs.
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
