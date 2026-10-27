@@ -41,12 +41,10 @@ class AutonomyCoordinator(
             AutonomyEventType.TUNNEL_BOOTSTRAPPING -> {
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.TUNNEL_READY -> {
                 tunnelReady = true
                 leakChecksPassed = false
-                leakCheckFailed = false
                 consecutiveFailures = 0
             }
             AutonomyEventType.TUNNEL_FAILED,
@@ -55,14 +53,12 @@ class AutonomyCoordinator(
                 consecutiveFailures = (consecutiveFailures + 1).coerceAtMost(10_000)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_LOST -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(networkAvailable = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
                 // Transport outcomes from the previous network are not reliable evidence here.
                 bridgeHealthLedger.clear()
                 recoveryPlanner.onNetworkChanged()
@@ -74,7 +70,6 @@ class AutonomyCoordinator(
                 // learning. Failure streaks from a previous network must not trigger false failover.
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
                 consecutiveFailures = 0
                 bridgeHealthLedger.clear()
                 recoveryPlanner.onNetworkChanged()
@@ -84,56 +79,48 @@ class AutonomyCoordinator(
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = true)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.DNS_CONFIGURATION_CLEARED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.DNS_HIJACK_SUSPECTED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = true)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.DNS_HIJACK_CLEARED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.TLS_INTERCEPTION_SUSPECTED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = true)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.TLS_INTERCEPTION_CLEARED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.CAPTIVE_PORTAL_DETECTED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(captivePortalDetected = true)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.CAPTIVE_PORTAL_CLEARED -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(captivePortalDetected = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.LEAK_CHECK_STARTED -> {
                 // Starting a new check invalidates any previous pass, but does not erase a recorded
@@ -171,6 +158,7 @@ class AutonomyCoordinator(
                     leakChecksPassed = false
                     leakCheckFailed = true
                     recoveryRequested = true
+                    tunnelReady = false
                 }
             }
             AutonomyEventType.TUNNEL_STOPPED,
@@ -178,14 +166,12 @@ class AutonomyCoordinator(
                 recoveryRequested = false
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(networkAvailable = false)
                 tunnelReady = false
                 leakChecksPassed = false
-                leakCheckFailed = false
             }
             AutonomyEventType.RESOURCE_MONITOR_UNAVAILABLE -> {
                 environmentalSignals = environmentalSignals.copy(
@@ -224,7 +210,6 @@ class AutonomyCoordinator(
             // Network or transport changes invalidate verification and session-scoped learning.
             tunnelReady = false
             leakChecksPassed = false
-            leakCheckFailed = false
             consecutiveFailures = 0
             bridgeHealthLedger.clear()
             recoveryPlanner.onNetworkChanged()
@@ -415,8 +400,8 @@ class AutonomyCoordinator(
         networkAvailable = environmentalSignals.networkAvailable,
         tunnelReady = tunnelReady,
         leakChecksPassed = leakChecksPassed,
-        recoveryRequired = (recoveryRequested && !tunnelReady) ||
-            consecutiveFailures > 0 || leakCheckFailed
+        recoveryRequired = !tunnelReady &&
+            (recoveryRequested || consecutiveFailures > 0 || leakCheckFailed)
     )
 
     /** Confirms that a previously planned attempt actually began, preventing duplicate work. */
