@@ -200,6 +200,35 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun networkRestorationRequestsRecoveryOnlyForAnInvalidatedSession() {
+        // A normal first-time network observation must not create a reconnect loop.
+        val fresh = connectedCoordinator()
+        assertFalse(fresh.planRecovery().shouldScheduleReconnect)
+
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        assertTrue(submitPassingLeakCheck(coordinator).passed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = false,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        assertFalse(coordinator.planRecovery().shouldScheduleReconnect)
+
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        val recovery = coordinator.planRecovery()
+        assertTrue(recovery.shouldScheduleReconnect)
+        assertTrue(recovery.keepTrafficBlocked)
+        assertEquals(1, recovery.attempt)
+    }
+
+    @Test
     fun networkUpdateDoesNotClearSuspectedDnsHijack() {
         val coordinator = AutonomyCoordinator()
         coordinator.observe(
@@ -704,6 +733,31 @@ class AutonomyCoordinatorTest {
         assertFalse(hostile.trafficReleaseEligible)
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
+    @Test
+    fun hostileTrustEvidenceCannotBeOverriddenByACompleteLeakReport() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+
+        val hostile = coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 2L,
+                internetValidated = true,
+                dnsHijackSuspected = true
+            ),
+            nowElapsedRealtimeMillis = 2L
+        )
+        assertTrue(hostile.blockTrafficUntilTunnelVerified)
+
+        // A new tunnel-ready event is not itself proof that the hostile condition cleared.
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 3)
+        val result = submitPassingLeakCheck(coordinator, timestamp = 4L)
+
+        assertFalse(result.passed)
+        assertTrue(result.failures.contains(LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR))
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
     @Test
     fun chargingTelemetryPreservesUnknownStateAndCanBeUpdated() {
         val coordinator = AutonomyCoordinator()
