@@ -27,6 +27,7 @@ class AutonomyCoordinator(
     private var consecutiveFailures = 0
     // Remains set after session invalidation until a fresh leak report verifies recovery.
     private var recoveryRequested = false
+    private var latestNetworkTrustEvidence: NetworkTrustEvidence? = null
     private var lowBatteryActive = false
     private var lastDecision = policyEngine.evaluate(environmentalSignals)
 
@@ -361,6 +362,7 @@ class AutonomyCoordinator(
         evidence: NetworkTrustEvidence,
         nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
     ): AutonomyDecision {
+        latestNetworkTrustEvidence = evidence
         val classifiedTrust = trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
         if (classifiedTrust == NetworkTrust.HOSTILE) {
             // Previously successful tunnel/leak checks do not remain authoritative after a hostile
@@ -421,6 +423,7 @@ class AutonomyCoordinator(
 
     @Synchronized
     fun currentSignals(): NetworkSignals {
+        refreshNetworkTrustClassification(elapsedRealtimeClock())
         expireStaleLeakVerification(elapsedRealtimeClock())
         return environmentalSignals.copy(
             repeatedConnectionFailures = consecutiveFailures,
@@ -428,6 +431,14 @@ class AutonomyCoordinator(
             leakChecksPassed = leakChecksPassed,
             leakCheckFailed = leakCheckFailed
         )
+    }
+
+    private fun refreshNetworkTrustClassification(nowElapsedRealtimeMillis: Long) {
+        val evidence = latestNetworkTrustEvidence ?: return
+        val classification = trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
+        if (environmentalSignals.trust != classification) {
+            environmentalSignals = environmentalSignals.copy(trust = classification)
+        }
     }
 
     private fun expireStaleLeakVerification(nowElapsedRealtimeMillis: Long) {
@@ -450,7 +461,9 @@ class AutonomyCoordinator(
     }
 
     private fun calculateDecision(): AutonomyDecision {
-        expireStaleLeakVerification(elapsedRealtimeClock())
+        val nowElapsedRealtimeMillis = elapsedRealtimeClock()
+        refreshNetworkTrustClassification(nowElapsedRealtimeMillis)
+        expireStaleLeakVerification(nowElapsedRealtimeMillis)
         val observed = currentSignals()
         val decision = policyEngine.evaluate(observed)
         val automationConfigured = config.enabled &&
