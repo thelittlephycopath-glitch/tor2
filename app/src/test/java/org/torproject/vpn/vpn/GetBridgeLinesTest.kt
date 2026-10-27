@@ -14,6 +14,7 @@ import org.torproject.vpn.circumvention.Bridge
 import org.torproject.vpn.circumvention.Bridges
 import org.torproject.vpn.circumvention.CircumventionApiManager
 import org.torproject.vpn.circumvention.Error
+import org.torproject.vpn.circumvention.SettingsRequest
 import org.torproject.vpn.circumvention.SettingsResponse
 
 class GetBridgeLinesTest {
@@ -76,6 +77,51 @@ class GetBridgeLinesTest {
 
         val result = getBridgeLines()
         assertEquals(listOf("obfs4 9.9.9.9:80"), result)
+    }
+
+
+    @Test
+    fun invoke_filtersMixedResponseToRequestedWebTunnelTransport() = runTest {
+        val requestSlot = slot<SettingsRequest>()
+        val onResultSlot = slot<(SettingsResponse?) -> Unit>()
+        every {
+            apiManager.getDefaults(capture(requestSlot), capture(onResultSlot), any())
+        } answers {
+            onResultSlot.captured.invoke(
+                SettingsResponse(
+                    settings = listOf(
+                        Bridges(
+                            bridges = Bridge(
+                                type = "obfs4",
+                                source = "bridgedb",
+                                bridge_strings = listOf("obfs4 192.0.2.2:443")
+                            )
+                        ),
+                        Bridges(
+                            bridges = Bridge(
+                                type = "webtunnel",
+                                source = "bridgedb",
+                                bridge_strings = listOf(
+                                    "webtunnel 192.0.2.1:443 0123456789012345678901234567890123456789 url=https://example.invalid/path"
+                                )
+                            )
+                        )
+                    ),
+                    errors = null
+                )
+            )
+        }
+
+        val request = SettingsRequest(transports = listOf("webtunnel"))
+        val result = getBridgeLines(request)
+
+        assertEquals(request, requestSlot.captured)
+        assertEquals(
+            listOf(
+                "webtunnel 192.0.2.1:443 0123456789012345678901234567890123456789 url=https://example.invalid/path"
+            ),
+            result
+        )
     }
 
     @Test
