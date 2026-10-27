@@ -5,6 +5,11 @@ on:
   # Run manually when explicitly resuming build verification.
   workflow_dispatch:
     inputs:
+      run_apk_build:
+        description: Explicitly resume APK build verification (leave false while backend work continues)
+        required: true
+        type: boolean
+        default: false
       publish_release:
         description: Publish signed APKs as a private GitHub Release
         required: true
@@ -21,6 +26,7 @@ concurrency:
 jobs:
   build:
     name: Build, sign, and verify APKs
+    if: ${{ inputs.run_apk_build }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
