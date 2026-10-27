@@ -36,6 +36,7 @@ No verified APK is available. The current GitHub Actions runner-assignment failu
 - The autonomy event journal is bounded and in-memory.
 - The autonomy coordinator joins observations and policy decisions.
 - The service-stop recovery reset is now wired into the coordinator.
+- The Android environment monitor now checks registration state inside network callbacks and marks itself inactive before unregistering, reducing the shutdown race where queued callbacks could mutate state after shutdown begins. This change is source-reviewed only; regression tests and Android execution remain pending.
 - The autonomy layer does not yet own or execute every responsibility listed in section 1.1. In particular, active leak verification, automatic bridge choice/failover, automatic circuit rotation, threat response, tracker deception, and canary response are not end-to-end features.
 - Boot/foreground lifecycle mechanisms are present in the base application, but their reliability under reboot, force-stop, Doze, screen lock, and network churn has not been device-verified in this audit.
 
