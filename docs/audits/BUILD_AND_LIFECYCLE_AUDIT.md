@@ -16,6 +16,9 @@ This is an evidence ledger, not a release approval. No build or runtime pass is 
 - `AndroidEnvironmentMonitor` now serializes callback side effects with `unregister()` using `callbackDispatchLock` and rechecks registration/network identity before dispatch. Callback transitions and initial environment publication are now serialized with shutdown. This is a source-level fix; compilation and Android callback-scheduling tests remain outstanding.
 - `AutonomyLifecycleOrderingTest` adds three stale-evidence ordering tests. The repository status endpoint returned no CI status entries for the reviewed commit, and the commit-workflow-runs query returned no runs. Therefore these tests are not verified as compiled or passing.
 
+- A follow-up source inspection found an invalid named argument in `AutonomyLifecycleOrderingTest`: one call supplied `coordinator` to a helper that accepts only `checkedAt` and `generation`. Removed that argument in commit `5431bca047583cafbc1f5bc0feeac074a86055f7`. This is a source-level correction only; no test run or compilation result is available yet.
+- Added `docs/research/FREE_NETWORK_AND_VPN_FEATURE_RESEARCH.md` to capture official Tor relay-safety/capacity guidance and a feature benchmark for paid VPN capabilities. This is research only; no new IP network is implemented.
+
 ## Blockers and next evidence required
 
 1. **Lifecycle race — OPEN / HIGH PRIORITY.** Serialize callback dispatch with shutdown or use an equivalent generation/active-token design, then add deterministic regression tests for callback-vs-unregister, stale capabilities after network replacement, and monitor re-registration.
