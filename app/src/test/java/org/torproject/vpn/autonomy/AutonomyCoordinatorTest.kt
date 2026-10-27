@@ -832,6 +832,39 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun coordinatorUsesTheConfiguredLeakVerificationAgeLimit() {
+        var now = 100L
+        val coordinator = AutonomyCoordinator(
+            elapsedRealtimeClock = { now },
+            leakVerificationGate = LeakVerificationGate(maxReportAgeMillis = 100L)
+        )
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = now)
+
+        val report = coordinator.submitLeakCheckEvidence(
+            evidence = LeakVerificationEvidence(
+                checkedAtElapsedRealtimeMillis = now,
+                ipv4DefaultRouteProtected = true,
+                ipv6ContainedOrBlocked = true,
+                dnsProtectedByTunnel = true,
+                systemLockdownVerified = true,
+                appRoutingVerified = true
+            ),
+            nowElapsedRealtimeMillis = now
+        )
+        assertTrue(report.passed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        now += 101L
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+    }
+
+    @Test
     fun staleLeakVerificationExpiresAndRequiresANewCheck() {
         var now = 100L
         val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
