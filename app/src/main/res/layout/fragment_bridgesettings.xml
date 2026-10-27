@@ -61,11 +61,15 @@
                 <TextView
                     android:id="@+id/tv_bridge_info"
                     style="@style/connection_bridge_info"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/activity_horizontal_margin"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="12dp"
                     android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/round_bridge_info_bg"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp"
                     android:text="@string/use_a_bridge_info" />
 
                 <androidx.appcompat.widget.AppCompatTextView
