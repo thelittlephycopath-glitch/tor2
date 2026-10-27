@@ -9,11 +9,11 @@ permissions:
 jobs:
   diagnose:
     name: Build and capture compiler diagnostics
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v4
       - name: Test and verify CI security preflight
         run: |
           bash -n scripts/test_ci_security.sh
@@ -56,7 +56,7 @@ jobs:
 
       - name: Upload build diagnostics
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v4
         with:
           name: tor2-build-diagnostics
           path: |
