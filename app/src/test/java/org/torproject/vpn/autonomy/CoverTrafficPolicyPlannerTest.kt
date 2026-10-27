@@ -16,11 +16,21 @@ class CoverTrafficPolicyPlannerTest {
         transport: CoverTrafficTransport = CoverTrafficTransport.WIFI,
         battery: Int? = 80,
         charging: Boolean = false,
+        chargingKnown: Boolean = false,
         wifiOnly: Boolean = true,
         used: Long = 0L,
         budget: Long = 300L
     ) = CoverTrafficPolicyInputs(
-        enabled, ownedTarget, threat, transport, battery, charging, wifiOnly, used, budget
+        enabled = enabled,
+        targetIsUserControlled = ownedTarget,
+        threatLevel = threat,
+        transport = transport,
+        batteryPercent = battery,
+        charging = charging,
+        wifiOnly = wifiOnly,
+        coverTrafficUsedTodayMb = used,
+        dailyCoverTrafficBudgetMb = budget,
+        chargingReadingAvailable = chargingKnown
     )
 
     @Test
@@ -65,7 +75,31 @@ class CoverTrafficPolicyPlannerTest {
         assertEquals(CoverTrafficDecisionReason.BATTERY_UNKNOWN,
             planner.assess(input(battery = null)).reason)
         assertEquals(CoverTrafficRate.STANDARD,
-            planner.assess(input(battery = 10, charging = true)).rate)
+            planner.assess(input(battery = 10, charging = true, chargingKnown = true)).rate)
+    }
+
+    @Test
+    fun unknownChargingStateCannotElevateTheBudget() {
+        val wifi = planner.assess(input(battery = 25, charging = true, chargingKnown = false))
+        assertEquals(CoverTrafficRate.LOW, wifi.rate)
+        assertEquals(CoverTrafficDecisionReason.LOW_WIFI_BUDGET, wifi.reason)
+
+        val criticallyLow = planner.assess(input(battery = 10, charging = true, chargingKnown = false))
+        assertEquals(CoverTrafficRate.OFF, criticallyLow.rate)
+        assertEquals(CoverTrafficDecisionReason.LOW_BATTERY, criticallyLow.reason)
+
+        val cellular = planner.assess(
+            input(
+                threat = CoverTrafficThreatLevel.CRITICAL,
+                transport = CoverTrafficTransport.CELLULAR,
+                wifiOnly = false,
+                battery = 45,
+                charging = true,
+                chargingKnown = false
+            )
+        )
+        assertEquals(CoverTrafficRate.OFF, cellular.rate)
+        assertEquals(CoverTrafficDecisionReason.LOW_BATTERY, cellular.reason)
     }
 
     @Test
