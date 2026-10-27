@@ -486,11 +486,10 @@ class AutonomyCoordinator(
         val evidenceAge = nowElapsedRealtimeMillis - evidence.observedAtElapsedRealtimeMillis
         val evidenceIsFresh = evidence.observedAtElapsedRealtimeMillis <= nowElapsedRealtimeMillis &&
             evidenceAge <= trustClassifier.maxEvidenceAgeMillis &&
-            (evidence.sessionGeneration == null ||
-                evidence.sessionGeneration == networkGeneration)
-        // Stale/future observations and explicitly session-bound evidence from an older path are
-        // rejected, not cached to become valid automatically later. Null tokens remain compatible
-        // with legacy callers and must be removed when the live monitor is migrated.
+            evidence.sessionGeneration == networkGeneration
+        // Stale/future observations and evidence without the current network-generation token are
+        // rejected, not cached to become valid automatically later. A caller must capture the
+        // current generation before observing the network and attach it to that exact observation.
         latestNetworkTrustEvidence = evidence.takeIf { evidenceIsFresh }
         val classifiedTrust = if (evidenceIsFresh) {
             trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
