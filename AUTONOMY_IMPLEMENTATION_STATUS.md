@@ -145,3 +145,12 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [ ] No full Android build, Gradle test, lint, emulator run, or device leak test has been completed. The known GitHub Actions runner-startup blocker remains.
 - [ ] The visual changes remain source-only until the app can be compiled and checked on narrow screens and with accessibility services.
 
+
+
+## Additional implementation pass — 2026-10-28
+
+- [x] Strengthened the service-stop recovery regression test so it starts one retry, queues the next retry, resets the planner, and verifies a fresh lifecycle starts again at attempt 1. The test is committed but still needs Gradle execution.
+- [x] Optimized manual bridge configuration assembly to join bridge lines once rather than repeatedly reallocating a growing string; retained the newline-terminated format expected by the existing service path.
+- [x] Converted the onion connection illustration's former purple shades to charcoal and light grey. The palette remains monochrome and the connection logic is unchanged.
+- [ ] Review the entire bridge-settings screen for contrast, touch target size, text wrapping, TalkBack descriptions, and narrow-device layout after an Android build is available.
+- [ ] Do not implement actual multi-hop bridge chaining by concatenating bridge lines. Multiple bridge entries are not proof of serial tunnel layering; first confirm whether the bundled Onionmasq/Tor APIs support an explicit transport chain and how they select/use multiple bridge lines.
