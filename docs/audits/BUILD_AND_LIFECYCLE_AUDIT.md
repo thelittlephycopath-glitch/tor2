@@ -22,6 +22,8 @@ This is an evidence ledger, not a release approval. No build or runtime pass is 
 
 - A follow-up bootstrap hardening commit (`f3223ae686cfa9148529f48273717234ba689ec0`) enables strict Bash error handling, resolves the repository root safely for paths containing spaces, quotes Android SDK/NDK paths, uses fail-on-HTTP-error HTTPS downloads, and checks for the actual rustup executable rather than only a directory. This improves failure behavior and shell robustness; it does **not** resolve missing pinned integrity verification for the standalone JDK/rustup downloads, and no shell or build execution has yet been recorded for this commit.
 
+- A second bootstrap follow-up (`2f43f6ba22daf0cef590f99d0489844714856143`) now rejects unsupported host OS/architectures and verifies that the selected Java 21 executable exists before proceeding. This closes a misleading-success path in which the script could print “Java 21 OK!” without a usable executable. It remains source-reviewed only; execution is still unverified.
+
 ## Blockers and next evidence required
 
 1. **Lifecycle race — OPEN / HIGH PRIORITY.** Serialize callback dispatch with shutdown or use an equivalent generation/active-token design, then add deterministic regression tests for callback-vs-unregister, stale capabilities after network replacement, and monitor re-registration.
