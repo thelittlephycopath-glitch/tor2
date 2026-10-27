@@ -183,3 +183,10 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [ ] Run the offline preflight on the complete branch checkout in GitHub Actions and pass the entire workflow.
 - [ ] Implement and validate a real leak verifier and reviewed execution boundary before enabling recovery, bridge failover, circuit refresh, notifications, captive-portal allowances, or traffic restoration.
 
+## CI preflight repair — 2026-10-28
+
+- [x] Replaced a malformed, duplicated `scripts/verify_ci_security.sh` with a complete ordered guard for immutable action pins, manual/default-off APK builds, manual/default-off release publication, source-import isolation, and shell syntax.
+- [x] Locally checked the valid fixture path and confirmed a mutable `actions/checkout@v7` reference is rejected.
+- [ ] Run the complete `scripts/test_ci_security.sh` fixture suite and the preflight against the full repository checkout in hosted CI.
+- [ ] Run Gradle unit tests and the Android/Rust build after runner allocation becomes available.
+
