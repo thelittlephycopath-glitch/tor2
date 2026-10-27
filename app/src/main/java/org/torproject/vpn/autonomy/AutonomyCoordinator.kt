@@ -403,11 +403,11 @@ class AutonomyCoordinator(
     fun planRecovery(): RecoveryPlan {
         expireStaleLeakVerification(elapsedRealtimeClock())
         return recoveryPlanner.planReconnect(
-        networkAvailable = environmentalSignals.networkAvailable,
-        tunnelReady = tunnelReady,
-        leakChecksPassed = leakChecksPassed,
-        recoveryRequired = !tunnelReady &&
-            (recoveryRequested || consecutiveFailures > 0 || leakCheckFailed)
+            networkAvailable = environmentalSignals.networkAvailable,
+            tunnelReady = tunnelReady,
+            leakChecksPassed = leakChecksPassed,
+            recoveryRequired = !tunnelReady &&
+                (recoveryRequested || consecutiveFailures > 0 || leakCheckFailed)
         )
     }
 
@@ -423,10 +423,10 @@ class AutonomyCoordinator(
     fun currentSignals(): NetworkSignals {
         expireStaleLeakVerification(elapsedRealtimeClock())
         return environmentalSignals.copy(
-        repeatedConnectionFailures = consecutiveFailures,
-        tunnelReady = tunnelReady,
-        leakChecksPassed = leakChecksPassed,
-        leakCheckFailed = leakCheckFailed
+            repeatedConnectionFailures = consecutiveFailures,
+            tunnelReady = tunnelReady,
+            leakChecksPassed = leakChecksPassed,
+            leakCheckFailed = leakCheckFailed
         )
     }
 
