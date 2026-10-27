@@ -227,3 +227,9 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Ran a local mirrored fixture suite: valid case passed and seven unsafe cases were rejected.
 - [ ] The repository's own hosted workflow has not executed these checks because Actions jobs continue to fail before their first step.
 
+## Explicit anomaly-clear semantics — 2026-10-28
+
+- [x] Explicit DNS-hijack, TLS-interception, and captive-portal clear events now discard cached trust evidence and reset trust classification to UNKNOWN, preventing the next policy evaluation from reapplying an old hostile/captive-portal result.
+- [x] Added a regression test proving DNS-hijack clear drops cached hostile evidence but still requires a new tunnel-ready event and a fresh leak report before traffic eligibility returns.
+- [ ] Run coordinator tests under Gradle; the regression test is committed but not executed.
+
