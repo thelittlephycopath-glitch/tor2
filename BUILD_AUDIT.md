@@ -131,3 +131,11 @@ A fresh repository-tree read of `dangerous-experiment` checked all five workflow
 - Release publication still requires `refs/heads/main`, `workflow_dispatch`, and explicit `inputs.publish_release`; the input default remains `false`.
 - This was a source-content inspection through the GitHub API, not execution of the repository's shell preflight or a CI job. No build/test pass is implied.
 
+## Upstream import safety — 2026-10-28
+
+The manual source-import workflow is now restricted to dispatches targeting `dangerous-experiment`; it requires a full lowercase 40-character upstream Git SHA rather than downloading the moving upstream `main` branch. It also backs up and restores the entire local `.github` directory around source copying, preserving workflow policy and Dependabot configuration.
+
+- Initial guard and SHA-pinned archive: [`0c34a1a`](https://github.com/thelittlephycopath-glitch/tor2/commit/0c34a1a209f44cf9657b55c2da4673166a54926c)
+- Preserve local CI controls: [`c918090`](https://github.com/thelittlephycopath-glitch/tor2/commit/c918090c39733c663589292780f86bfe7be94112)
+- The import workflow has not been executed; the guard and shell syntax still need an actual workflow run before this path is considered verified.
+
