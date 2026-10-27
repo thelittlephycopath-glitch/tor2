@@ -211,3 +211,11 @@ The standalone security-preflight workflow was triggered again after the latest 
 
 This is a source-level race-condition fix. There is no dedicated Android callback test and it has not been exercised on-device or under Android instrumentation; Gradle/hosted verification remains blocked by the runner allocation failure.
 
+
+## Latest verification and callback guard — 2026-10-28
+
+- Latest branch head after the network callback guard and CI-preflight rollback: `9641d88fa3a4ac57c2449cff8611fa3639a5b5fe`.
+- Latest workflow run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40580356268
+- The job failed before exposing any steps (`steps: null`, `logs_url: null`). The run does not establish a shell preflight, Kotlin test, Android build, or emulator result.
+- The source-level callback guard is committed at `1a268b63c0f5002697cda9a25905af208d552e69`; the subsequent audit record is `e26fa0aca87113c810bf633112ebc8e3f910ba29`.
+- A temporary attempt to add a static monitor guard to the CI preflight was reverted because the existing fixture suite does not provide the Android monitor source tree. The shipped preflight remains independent of Android source files; the monitor change itself remains in the branch.
