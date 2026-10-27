@@ -50,6 +50,8 @@ if ! grep -A 7 -F 'publish_release:' .github/workflows/build-apk.yml | grep -Eq 
   exit 1
 fi
 
-bash -n scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh
+for script in scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh; do
+  bash -n "$script"
+done
 
 echo "CI security preflight passed: checked $checked immutable external action references, release opt-in guard, and reproducible build-script syntax."
