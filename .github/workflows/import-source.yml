@@ -2,6 +2,11 @@ name: Import Tor VPN Beta source
 
 on:
   workflow_dispatch:
+    inputs:
+      upstream_commit:
+        description: Full 40-character upstream Git commit SHA to import
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,18 +17,26 @@ concurrency:
 
 jobs:
   import-source:
+    # Source imports must stay isolated from main until the full plan is verified.
+    if: ${{ github.ref == 'refs/heads/dangerous-experiment' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tor2 workspace
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download and unpack upstream source
+        env:
+          UPSTREAM_COMMIT: ${{ inputs.upstream_commit }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ ! "$UPSTREAM_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "upstream_commit must be a full lowercase 40-character Git SHA." >&2
+            exit 1
+          fi
           mkdir -p /tmp/tor-vpn-source
           curl --fail --location --retry 3 --retry-all-errors \
-            'https://gitlab.torproject.org/tpo/applications/vpn/-/archive/main/vpn-main.zip' \
+            "https://gitlab.torproject.org/tpo/applications/vpn/-/archive/$UPSTREAM_COMMIT/vpn-$UPSTREAM_COMMIT.zip" \
             -o /tmp/tor-vpn-source.zip
           unzip -q /tmp/tor-vpn-source.zip -d /tmp/tor-vpn-source
           SRC="$(find /tmp/tor-vpn-source -mindepth 1 -maxdepth 1 -type d -name 'vpn-*' -print -quit)"
