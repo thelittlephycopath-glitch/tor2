@@ -17,9 +17,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.torproject.onionmasq.logging.LogObservable
 import org.torproject.vpn.R
+import org.torproject.vpn.circumvention.SettingsRequest
 import org.torproject.vpn.utils.PreferenceHelper
 import org.torproject.vpn.utils.PreferenceHelper.Companion.BridgeType
 import org.torproject.vpn.vpn.GetBridgeLines
+
+enum class BridgeRequestTransport(val moatName: String, val labelRes: Int) {
+    OBFS4("obfs4", R.string.bridge_transport_obfs4),
+    WEBTUNNEL("webtunnel", R.string.bridge_transport_webtunnel)
+}
 
 class BridgeBotViewModel(
     private val preferenceHelper: PreferenceHelper,
@@ -37,6 +43,10 @@ class BridgeBotViewModel(
     init {
         events.filterIsInstance<Event.RequestBridges>()
             .onEach { requestBridges() }
+            .launchIn(viewModelScope)
+
+        events.filterIsInstance<Event.SetTransport>()
+            .onEach { selectTransport(it.transport) }
             .launchIn(viewModelScope)
 
         events.filterIsInstance<Event.CancelRequest>()
@@ -59,10 +69,13 @@ class BridgeBotViewModel(
             )
         }
 
+        val requestedTransport = _state.value.selectedTransport
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             try {
-                val fetchedBridges = getBridgeLines()
+                val fetchedBridges = getBridgeLines(
+                    SettingsRequest(transports = listOf(requestedTransport.moatName))
+                )
                 if (fetchedBridges.isEmpty()) {
                     _state.update {
                         it.copy(
@@ -94,6 +107,22 @@ class BridgeBotViewModel(
         }
     }
 
+    private fun selectTransport(transport: BridgeRequestTransport) {
+        if (_state.value.botState == BotState.FETCHING ||
+            _state.value.botState == BotState.SUCCESS
+        ) {
+            return
+        }
+        _state.update {
+            it.copy(
+                selectedTransport = transport,
+                botState = BotState.IDLE,
+                bridges = emptyList(),
+                errorMessage = null
+            )
+        }
+    }
+
     private fun cancelRequest() {
         fetchJob?.cancel()
         fetchJob = null
@@ -117,11 +146,13 @@ class BridgeBotViewModel(
     data class State(
         val botState: BotState = BotState.IDLE,
         val bridges: List<String> = emptyList(),
-        @StringRes val errorMessage: Int? = null
+        @StringRes val errorMessage: Int? = null,
+        val selectedTransport: BridgeRequestTransport = BridgeRequestTransport.OBFS4
     )
 
     sealed interface Event {
         data object RequestBridges : Event
+        data class SetTransport(val transport: BridgeRequestTransport) : Event
         data object CancelRequest : Event
         data object SaveBridges : Event
     }
