@@ -75,6 +75,9 @@ class LeakVerificationGateTest {
         assertThrows(IllegalArgumentException::class.java) {
             LeakVerificationEvidence(-1L, true, true, true, true, true)
         }
+        assertThrows(IllegalArgumentException::class.java) {
+            validEvidence(now).copy(sessionGeneration = -1L)
+        }
     }
 
     private fun validEvidence(timestamp: Long) = LeakVerificationEvidence(
