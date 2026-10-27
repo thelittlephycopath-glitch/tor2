@@ -245,3 +245,12 @@ Remaining supply-chain work: validate official SHA-256 checksums for downloaded 
 3. Wire independent leak verification to the real tunnel path before describing traffic as verified.
 4. Continue dependency provenance/checksum and manifest/privacy audits.
 5. Build and smoke-test APK only after the preceding gates pass.
+
+
+## Follow-up — gtor icon and naming alignment (2026-10-28)
+
+- Replaced the adaptive launcher foreground with a simplified hood-and-white-mask emblem with restrained violet accents; no app-screen UI was changed.
+- Updated the adaptive launcher foreground reference and monochrome themed icon to align with the emblem.
+- App display label, README title/download references, and APK workflow display/artifact/release naming now use **gtor** (no hyphen).
+- Commits: logo `3f9d7647ae43920e6ecbaf48ff9bf798c9decdf6`; launcher wiring `a20ccbce5e99a2b4ce5456a7d9625ccab944f8a5`; themed icon `8bdc280a8fc82218bb232c9e015327f8eaacc340`; README `ce194b27ef8ac167098802eadb4b37151709e286`; workflow naming `f11a88df0fb8e7783612b4f3050a8315ce0c9787`.
+- Verification limitation: no Android build or visual launcher rendering has been completed. The current CI preflight job returns no steps/log URL, and the stale test `trustEvidenceWithoutSessionTokenRemainsCompatibleForNow` conflicts with the coordinator's current requirement for a matching generation token. Do not merge or claim build readiness until this mismatch is resolved and tests actually run.
