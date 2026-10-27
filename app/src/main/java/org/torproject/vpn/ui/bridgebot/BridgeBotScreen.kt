@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -26,6 +29,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -34,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import org.torproject.vpn.R
 import org.torproject.vpn.ui.bridgebot.model.BotState
 import org.torproject.vpn.ui.bridgebot.model.BridgeBotViewModel
+import org.torproject.vpn.ui.bridgebot.model.BridgeRequestTransport
 import org.torproject.vpn.ui.composable.TopAppBar
 import org.torproject.vpn.ui.preview.ThemePreviewProvider
 import org.torproject.vpn.ui.theme.bridgeBotIconSize
@@ -59,6 +65,7 @@ fun BridgeBotScreen(
     onNavigateUp: () -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -76,6 +83,13 @@ fun BridgeBotScreen(
                 .padding(paddingValues)
         ) {
             val screenHeight = maxHeight
+            val contentHeightFraction = if (
+                state.botState == BotState.IDLE || state.botState == BotState.ERROR
+            ) {
+                0.62f
+            } else {
+                0.8f
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -91,10 +105,108 @@ fun BridgeBotScreen(
                     )
                 }
 
+                if (state.botState == BotState.IDLE || state.botState == BotState.ERROR) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacingSizeBig, vertical = spacingSizeNormal),
+                        verticalArrangement = Arrangement.spacedBy(spacingSizeNormal)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.bridge_transport_select_label),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(spacingSizeNormal)
+                        ) {
+                            Button(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.OBFS4
+                                    ) {
+                                        Color.White
+                                    } else {
+                                        Color(0xFF252525)
+                                    },
+                                    contentColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.OBFS4
+                                    ) {
+                                        Color.Black
+                                    } else {
+                                        Color.White
+                                    }
+                                ),
+                                onClick = {
+                                    onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.OBFS4))
+                                }
+                            ) {
+                                Text(stringResource(R.string.bridge_transport_obfs4), maxLines = 1)
+                            }
+                            Button(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.WEBTUNNEL
+                                    ) {
+                                        Color.White
+                                    } else {
+                                        Color(0xFF252525)
+                                    },
+                                    contentColor = if (
+                                        state.selectedTransport == BridgeRequestTransport.WEBTUNNEL
+                                    ) {
+                                        Color.Black
+                                    } else {
+                                        Color.White
+                                    }
+                                ),
+                                onClick = {
+                                    onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL))
+                                }
+                            ) {
+                                Text(stringResource(R.string.bridge_transport_webtunnel), maxLines = 1)
+                            }
+                        }
+                        if (state.selectedTransport == BridgeRequestTransport.WEBTUNNEL) {
+                            Text(
+                                text = stringResource(R.string.bridge_transport_webtunnel_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (state.botState == BotState.ERROR) {
+                                Text(
+                                    text = stringResource(R.string.webtunnel_fetch_fallback),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                TextButton(
+                                    onClick = {
+                                        uriHandler.openUri("https://bridges.torproject.org")
+                                    }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.open_bridges_website),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = screenHeight * 0.8f),
+                        .heightIn(min = screenHeight * contentHeightFraction),
                     verticalArrangement = Arrangement.spacedBy(
                         spacingSizeNormal,
                         Alignment.CenterVertically
@@ -246,7 +358,7 @@ private fun BridgeResultCard(
             Image(
                 painter = painterResource(R.drawable.ic_bridge),
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(Color(0xFF85BBF8))
+                colorFilter = ColorFilter.tint(Color.White)
             )
 
             Text(

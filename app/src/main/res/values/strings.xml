@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tor VPN Beta (tor2)</string>
+    <string name="app_name">gtor</string>
 
     <string name="action_save">Save</string>
     <string name="action_configure">Configure</string>
@@ -199,6 +199,12 @@
     <string name="change">Change</string>
     <string name="the_internet">The internet</string>
     <string name="obfs4_bridge">obfs4 bridge</string>
+    <string name="bridge_transport_select_label">Choose a bridge transport</string>
+    <string name="bridge_transport_obfs4">obfs4</string>
+    <string name="bridge_transport_webtunnel">WebTunnel</string>
+    <string name="bridge_transport_webtunnel_description">WebTunnel makes Tor traffic resemble ordinary encrypted web traffic.</string>
+    <string name="webtunnel_fetch_fallback">If no WebTunnel lines are returned, use the official Bridges website, choose WebTunnel in Advanced options, and add the copied lines manually.</string>
+    <string name="open_bridges_website">Open Bridges website</string>
     <string name="about">About</string>
     <string name="about_description">Find out more about Tor VPN</string>
     <string name="version">Version</string>

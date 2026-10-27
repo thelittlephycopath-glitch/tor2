@@ -67,7 +67,9 @@ class AutonomousPolicyEngine(
             reasons +=
                 "Tunnel readiness and independent leak checks must both pass before traffic release"
         }
-        if (signals.tunnelReady && !signals.leakChecksPassed && !signals.leakCheckFailed) {
+        // A previous failed check stays recorded until a fresh verified pass, but it must not
+        // suppress the next check after the tunnel is rebuilt.
+        if (signals.tunnelReady && !signals.leakChecksPassed) {
             actions += AutonomyAction.RUN_LEAK_CHECKS
         }
         if (signals.leakCheckFailed || signals.dnsConfigurationConflict) {

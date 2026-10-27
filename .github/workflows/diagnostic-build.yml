@@ -14,6 +14,11 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+      - name: Test and verify CI security preflight
+        run: |
+          bash -n scripts/test_ci_security.sh
+          bash scripts/test_ci_security.sh
+          bash scripts/verify_ci_security.sh
 
       - name: Free unused preinstalled runner disk space
         shell: bash

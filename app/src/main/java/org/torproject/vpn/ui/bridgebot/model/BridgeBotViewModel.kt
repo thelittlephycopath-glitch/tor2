@@ -10,16 +10,21 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.torproject.onionmasq.logging.LogObservable
 import org.torproject.vpn.R
+import org.torproject.vpn.circumvention.SettingsRequest
 import org.torproject.vpn.utils.PreferenceHelper
 import org.torproject.vpn.utils.PreferenceHelper.Companion.BridgeType
 import org.torproject.vpn.vpn.GetBridgeLines
+
+enum class BridgeRequestTransport(val moatName: String) {
+    OBFS4("obfs4"),
+    WEBTUNNEL("webtunnel")
+}
 
 class BridgeBotViewModel(
     private val preferenceHelper: PreferenceHelper,
@@ -35,17 +40,16 @@ class BridgeBotViewModel(
     private var fetchJob: Job? = null
 
     init {
-        events.filterIsInstance<Event.RequestBridges>()
-            .onEach { requestBridges() }
-            .launchIn(viewModelScope)
-
-        events.filterIsInstance<Event.CancelRequest>()
-            .onEach { cancelRequest() }
-            .launchIn(viewModelScope)
-
-        events.filterIsInstance<Event.SaveBridges>()
-            .onEach { saveBridges() }
-            .launchIn(viewModelScope)
+        // Keep transport selection and the next request ordered. Separate filtered collectors
+        // could otherwise race if a selection and request event arrive back-to-back.
+        events.onEach { event ->
+            when (event) {
+                Event.RequestBridges -> requestBridges()
+                is Event.SetTransport -> selectTransport(event.transport)
+                Event.CancelRequest -> cancelRequest()
+                Event.SaveBridges -> saveBridges()
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onEvent(event: Event) = events.tryEmit(event)
@@ -59,10 +63,13 @@ class BridgeBotViewModel(
             )
         }
 
+        val requestedTransport = _state.value.selectedTransport
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             try {
-                val fetchedBridges = getBridgeLines()
+                val fetchedBridges = getBridgeLines(
+                    SettingsRequest(transports = listOf(requestedTransport.moatName))
+                )
                 if (fetchedBridges.isEmpty()) {
                     _state.update {
                         it.copy(
@@ -94,6 +101,22 @@ class BridgeBotViewModel(
         }
     }
 
+    private fun selectTransport(transport: BridgeRequestTransport) {
+        if (_state.value.botState == BotState.FETCHING ||
+            _state.value.botState == BotState.SUCCESS
+        ) {
+            return
+        }
+        _state.update {
+            it.copy(
+                selectedTransport = transport,
+                botState = BotState.IDLE,
+                bridges = emptyList(),
+                errorMessage = null
+            )
+        }
+    }
+
     private fun cancelRequest() {
         fetchJob?.cancel()
         fetchJob = null
@@ -117,11 +140,13 @@ class BridgeBotViewModel(
     data class State(
         val botState: BotState = BotState.IDLE,
         val bridges: List<String> = emptyList(),
-        @StringRes val errorMessage: Int? = null
+        @StringRes val errorMessage: Int? = null,
+        val selectedTransport: BridgeRequestTransport = BridgeRequestTransport.OBFS4
     )
 
     sealed interface Event {
         data object RequestBridges : Event
+        data class SetTransport(val transport: BridgeRequestTransport) : Event
         data object CancelRequest : Event
         data object SaveBridges : Event
     }

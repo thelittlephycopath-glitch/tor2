@@ -19,7 +19,12 @@ jobs:
     timeout-minutes: 360
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Test and verify CI security preflight
+        run: |
+          bash -n scripts/test_ci_security.sh
+          bash scripts/test_ci_security.sh
+          bash scripts/verify_ci_security.sh
 
       - name: Free unused preinstalled runner disk space
         timeout-minutes: 5
@@ -67,7 +72,7 @@ jobs:
 
       - name: Upload staging APKs for inspection
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tor2-staging-apks
           path: app/build/outputs/apk/staging/**/*.apk

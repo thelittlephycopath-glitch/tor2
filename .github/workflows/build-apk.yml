@@ -1,18 +1,23 @@
-name: Build Tor VPN Beta APK
+name: Build gtor APK
 
 on:
-  push:
-    branches: [main, dangerous-experiment]
+  # APK work is intentionally deferred until the backend/security plan is complete.
+  # Run manually when explicitly resuming build verification.
   workflow_dispatch:
     inputs:
+      run_apk_build:
+        description: Explicitly resume APK build verification (leave false while backend work continues)
+        required: true
+        type: boolean
+        default: false
       publish_release:
         description: Publish signed APKs as a private GitHub Release
         required: true
         type: boolean
-        default: true
+        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: tor2-android-build-${{ github.ref }}
@@ -20,12 +25,18 @@ concurrency:
 
 jobs:
   build:
-    name: Build, sign, and verify APKs
+    name: Build, sign, and verify gtor APKs
+    if: ${{ inputs.run_apk_build }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+      - name: Test and verify CI security preflight
+        run: |
+          bash -n scripts/test_ci_security.sh
+          bash scripts/test_ci_security.sh
+          bash scripts/verify_ci_security.sh
 
       - name: Free unused preinstalled runner disk space
         timeout-minutes: 5
@@ -110,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tor2-build-diagnostics
+          name: gtor-build-diagnostics
           path: |
             ${{ runner.temp }}/tor2-build.log
             ${{ runner.temp }}/tor2-build-status.txt
@@ -134,7 +145,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tor2-apk-build-outputs
+          name: gtor-apk-build-outputs
           path: |
             build/*-release-unsigned.apk
             app/build/outputs/apk/release/*.apk
@@ -158,7 +169,7 @@ jobs:
                 echo "No release APKs were produced." >&2
                 exit 1
               fi
-              key=/tmp/tor2-debug.keystore
+              key=/tmp/gtor-debug.keystore
               keytool -genkeypair -noprompt \
                 -keystore "$key" -storepass android -alias androiddebugkey \
                 -keypass android -dname "CN=Android Debug,O=Android,C=US" \
@@ -175,14 +186,6 @@ jobs:
               rm -f "$key"
             '
 
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: tor2-debug-signed-apks
-          path: dist/*.apk
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Run unit tests, ktlint, Android lint, and staging build
         shell: bash
         run: |
@@ -196,16 +199,16 @@ jobs:
             bash -lc 'ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testDebugUnitTest :app:ktlintCheck :app:lintDebug :app:assembleStaging --no-configuration-cache'
 
       - name: Set up Java for Android emulator tooling
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Set up Android SDK tooling
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
 
       - name: Boot Android emulator and smoke-test the signed APK
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
           target: default
@@ -225,17 +228,58 @@ jobs:
             adb shell monkey -p org.torproject.vpn.tor2beta.dev 1
             for attempt in $(seq 1 20); do
               if adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
-                echo "Tor VPN Beta process started in Android emulator."
+                echo "gtor process started in Android emulator."
                 break
               fi
               sleep 2
             done
             if ! adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
-              echo "Tor VPN Beta process did not remain alive after launch." >&2
+              echo "gtor process did not remain alive after launch." >&2
               adb logcat -d -t 500 >&2
               exit 1
             fi
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true
+
+      - name: Verify APK metadata and write checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc '
+              set -euo pipefail
+              shopt -s nullglob
+              apks=(dist/*.apk)
+              if (( ${#apks[@]} == 0 )); then
+                echo "No signed APKs exist for metadata verification." >&2
+                exit 1
+              fi
+              : > dist/BUILD-METADATA.txt
+              for apk in "${apks[@]}"; do
+                "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" verify --verbose "$apk"
+                package="$( "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/aapt" dump badging "$apk" | sed -n "s/^package: name=\\x27\\([^\\x27]*\\)\\x27.*/\\1/p" | head -n 1 )"
+                if [[ "$package" != "org.torproject.vpn.tor2beta.dev" ]]; then
+                  echo "Unexpected package ID for $apk: $package" >&2
+                  exit 1
+                fi
+                printf "APK: %s\\nPackage: %s\\nSize-bytes: %s\\n\\n" "$apk" "$package" "$(stat -c %s "$apk")" | tee -a dist/BUILD-METADATA.txt
+              done
+              (cd dist && sha256sum *.apk > SHA256SUMS)
+              cat dist/SHA256SUMS
+            '
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtor-debug-signed-apks
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/BUILD-METADATA.txt
+          if-no-files-found: error
+          retention-days: 14
 
       # The pinned builder runs as root inside Docker. Restore ownership so
       # actions/cache can archive the mounted dependency directories during post-job cleanup.
@@ -250,16 +294,36 @@ jobs:
             fi
           done
 
-      - name: Publish APK download page
-        if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publish_release) }}
-        uses: softprops/action-gh-release@v2
+
+  publish:
+    name: Publish verified APKs from main
+    needs: build
+    # Publishing must be an explicit manual dispatch on main; pushes never publish debug-signed APKs.
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          tag_name: tor2-build-${{ github.run_number }}
-          name: Tor VPN Beta - tor2 build ${{ github.run_number }}
+          name: gtor-debug-signed-apks
+          path: dist
+
+      - name: Publish APK download page
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: gtor-build-${{ github.run_number }}
+          name: gtor build ${{ github.run_number }}
           body: |
             Community-built debug-signed APKs compiled from this private repository.
 
             These are not official Tor Project releases and are not signed with Tor's release key.
             This VPN software is experimental; do not rely on this build for sensitive activity.
-          files: dist/*.apk
+          files: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/BUILD-METADATA.txt
           fail_on_unmatched_files: true

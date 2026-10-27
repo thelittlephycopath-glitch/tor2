@@ -14,6 +14,7 @@ import org.junit.Test
 import org.torproject.vpn.R
 import org.torproject.vpn.ui.bridgebot.model.BotState
 import org.torproject.vpn.ui.bridgebot.model.BridgeBotViewModel
+import org.torproject.vpn.ui.bridgebot.model.BridgeRequestTransport
 import org.torproject.vpn.utils.getString
 
 @OptIn(ExperimentalTestApi::class)
@@ -35,6 +36,26 @@ class BridgeBotScreenTest {
             "botMessageText"
         ).assertTextEquals(getString(R.string.bot_msg_welcome)).assertIsDisplayed()
         onNodeWithText(getString(R.string.new_bridges)).assertIsDisplayed()
+    }
+
+
+    @Test
+    fun idleState_clickWebTunnel_emitsWebTunnelTransportSelection() = runComposeUiTest {
+        var receivedEvent: BridgeBotViewModel.Event? = null
+
+        setContent {
+            BridgeBotScreen(
+                state = BridgeBotViewModel.State(botState = BotState.IDLE),
+                onEvent = { event -> receivedEvent = event }
+            )
+        }
+
+        onNodeWithText(getString(R.string.bridge_transport_webtunnel)).performClick()
+
+        assertEquals(
+            BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL),
+            receivedEvent
+        )
     }
 
     @Test
@@ -173,6 +194,26 @@ class BridgeBotScreenTest {
             "botMessageText"
         ).assertTextEquals(getString(R.string.error_fetching_bridges)).assertIsDisplayed()
         onNodeWithText(getString(R.string.action_try_again)).assertIsDisplayed()
+    }
+
+
+    @Test
+    fun webTunnelErrorStateShowsOfficialBridgeDBFallback() = runComposeUiTest {
+        val state = BridgeBotViewModel.State(
+            botState = BotState.ERROR,
+            errorMessage = R.string.error_fetching_bridges,
+            selectedTransport = BridgeRequestTransport.WEBTUNNEL
+        )
+
+        setContent {
+            BridgeBotScreen(
+                state = state,
+                onEvent = {}
+            )
+        }
+
+        onNodeWithText(getString(R.string.webtunnel_fetch_fallback)).assertIsDisplayed()
+        onNodeWithText(getString(R.string.open_bridges_website)).assertIsDisplayed()
     }
 
     @Test

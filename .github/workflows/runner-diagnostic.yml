@@ -1,0 +1,28 @@
+name: Diagnose GitHub Actions runner availability
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runner-diagnostic:
+    name: Cross-platform hosted-runner check
+    # Windows is used only to distinguish a Linux runner-pool issue from a broader
+    # repository/account Actions restriction. This job never builds or changes the app.
+    runs-on: windows-latest
+    timeout-minutes: 2
+    steps:
+      - name: Confirm the runner was assigned
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "RUNNER_DIAGNOSTIC_STARTED=true"
+          echo "RUNNER_OS=$RUNNER_OS"
+          echo "RUNNER_ARCH=$RUNNER_ARCH"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          pwd
+          git --version
+          echo "Shell check passed."

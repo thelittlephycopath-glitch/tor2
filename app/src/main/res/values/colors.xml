@@ -85,17 +85,17 @@
     <color name="inverse_primary">#333333</color>
 
     <!-- For interactive card states -->
-    <color name="card_overlay_pressed">#1FFFFFFF</color> <!-- 12% black -->
-    <color name="card_overlay_hovered">#0AFFFFFF</color> <!-- 4% black -->
-    <color name="card_overlay_focused">#1FFFFFFF</color> <!-- 12% black, same as pressed for simplicity, can be different -->
+    <color name="card_overlay_pressed">#1FFFFFFF</color> <!-- Subtle white interaction overlay. -->
+    <color name="card_overlay_hovered">#0AFFFFFF</color> <!-- Low-opacity white hover overlay. -->
+    <color name="card_overlay_focused">#1FFFFFFF</color> <!-- White focus overlay. -->
 
-    <!-- Checked states: Base is @color/primary (#C272FF) -->
-    <color name="super_toggle_checked_pressed_color">#FFFFFF</color> <!-- @color/primary + 12% overlay of @color/primary -->
-    <color name="super_toggle_checked_focused_color">#FFFFFF</color> <!-- @color/primary + 12% overlay of @color/primary -->
-    <color name="super_toggle_checked_hovered_color">#F2F2F2</color>  <!-- @color/primary + 8% overlay of @color/primary -->
+    <!-- Checked states use the monochrome primary palette. -->
+    <color name="super_toggle_checked_pressed_color">#FFFFFF</color> <!-- Light monochrome pressed state. -->
+    <color name="super_toggle_checked_focused_color">#FFFFFF</color> <!-- Light monochrome pressed state. -->
+    <color name="super_toggle_checked_hovered_color">#F2F2F2</color>  <!-- Light monochrome hover state. -->
 
-    <!-- Unchecked states: Base is @color/surface_container (#281C70) -->
-    <color name="super_toggle_unchecked_pressed_color">#404040</color> <!-- @color/surface_container + 12% overlay of @color/on_surface -->
-    <color name="super_toggle_unchecked_focused_color">#404040</color> <!-- @color/surface_container + 12% overlay of @color/on_surface -->
-    <color name="super_toggle_unchecked_hovered_color">#333333</color>  <!-- @color/surface_container + 8% overlay of @color/on_surface -->
+    <!-- Unchecked states use dark monochrome surfaces. -->
+    <color name="super_toggle_unchecked_pressed_color">#404040</color> <!-- Dark monochrome pressed state. -->
+    <color name="super_toggle_unchecked_focused_color">#404040</color> <!-- Dark monochrome pressed state. -->
+    <color name="super_toggle_unchecked_hovered_color">#333333</color>  <!-- Dark monochrome hover state. -->
 </resources>

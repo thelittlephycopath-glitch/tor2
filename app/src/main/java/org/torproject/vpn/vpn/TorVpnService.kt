@@ -55,6 +55,7 @@ import org.torproject.vpn.autonomy.AndroidResourceMonitor
 import org.torproject.vpn.autonomy.AutonomyCoordinator
 import org.torproject.vpn.autonomy.AutonomyEventSource
 import org.torproject.vpn.autonomy.AutonomyEventType
+import org.torproject.vpn.autonomy.ManualBridgeTransportClassifier
 import org.torproject.vpn.autonomy.Transport
 import org.torproject.vpn.ui.approuting.data.AppManager
 import org.torproject.vpn.utils.Country
@@ -79,7 +80,9 @@ class TorVpnService : VpnService() {
     private lateinit var appManager: AppManager
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var connectivityHandler: ConnectivityHandler
-    private val autonomyCoordinator = AutonomyCoordinator()
+    private val autonomyCoordinator = AutonomyCoordinator(
+        elapsedRealtimeClock = { SystemClock.elapsedRealtime() }
+    )
     private var autonomyTunnelAttemptStartedAtMillis: Long? = null
     @Volatile
     private var autonomyOnionMasqStartAttempted = false
@@ -557,8 +560,10 @@ class TorVpnService : VpnService() {
         val transport = when (preferenceHelper.bridgeType) {
             BridgeType.Obfs4 -> Transport.OBFS4
             BridgeType.Snowflake -> Transport.SNOWFLAKE
-            // Manual bridge definitions may use different transports, so do not guess.
-            BridgeType.Manual, BridgeType.None -> null
+            // Learn manual bridge outcomes only when every configured line names the same known
+            // transport. Unknown or mixed configurations remain unclassified.
+            BridgeType.Manual -> ManualBridgeTransportClassifier.classify(preferenceHelper.bridgeLines)
+            BridgeType.None -> null
         } ?: return
         val now = SystemClock.elapsedRealtime()
         autonomyCoordinator.recordBridgeOutcome(
@@ -592,12 +597,9 @@ class TorVpnService : VpnService() {
         if (bridgeList.isEmpty()) {
             return null
         }
-        var bridgeLines = ""
-        for (line in bridgeList) {
-            bridgeLines += "$line\n"
-        }
-
-        return bridgeLines
+        // Join once rather than repeatedly reallocating the growing string.
+        // Preserve the existing newline-terminated format consumed by OnionMasq.
+        return bridgeList.joinToString(separator = "\n", postfix = "\n")
     }
 
     /**

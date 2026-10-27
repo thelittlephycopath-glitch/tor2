@@ -19,6 +19,8 @@ class AndroidEnvironmentMonitor(
     private val connectivityManager = context.applicationContext
         .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     private val lock = Any()
+    // Serializes callback side effects with unregister so queued callbacks cannot publish after shutdown.
+    private val callbackDispatchLock = Any()
 
     @Volatile
     private var registered = false
@@ -30,86 +32,116 @@ class AndroidEnvironmentMonitor(
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            var shouldInvalidate = false
-            var shouldClearPortal = false
-            synchronized(lock) {
-                if (activeNetwork != network) {
-                    shouldInvalidate = networkAvailable
-                    shouldClearPortal = captivePortalDetected
-                    activeNetwork = network
-                    networkAvailable = false
-                    captivePortalDetected = false
-                    mobileData = false
+            synchronized(callbackDispatchLock) {
+                var shouldInvalidate = false
+                var shouldClearPortal = false
+                synchronized(lock) {
+                    if (!registered) return
+                    if (activeNetwork != network) {
+                        // Trust evidence is path-specific even when connectivity booleans match.
+                        shouldInvalidate = true
+                        shouldClearPortal = captivePortalDetected
+                        activeNetwork = network
+                        networkAvailable = false
+                        captivePortalDetected = false
+                        mobileData = false
+                    }
                 }
+                if (shouldInvalidate) {
+                    coordinator.observe(
+                        AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                }
+                if (shouldClearPortal) {
+                    coordinator.observe(
+                        AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                }
+                publishEnvironment()
             }
-            if (shouldInvalidate) {
-                coordinator.observe(
-                    AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
-            }
-            if (shouldClearPortal) {
-                coordinator.observe(
-                    AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
-            }
-            publishEnvironment()
         }
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-            var connectivityEvent: AutonomyEventType? = null
-            var portalEvent: AutonomyEventType? = null
-            synchronized(lock) {
-                if (activeNetwork != null && activeNetwork != network) return
-                activeNetwork = network
-                val portalNow = capabilities.hasCapability(
-                    NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL
-                )
-                val validatedNow = capabilities.hasCapability(
-                    NetworkCapabilities.NET_CAPABILITY_INTERNET
-                ) &&
-                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
-                    !portalNow
-                val wasAvailable = networkAvailable
-                val wasPortal = captivePortalDetected
-                networkAvailable = validatedNow
-                captivePortalDetected = portalNow
-                mobileData = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+            synchronized(callbackDispatchLock) {
+                var connectivityEvent: AutonomyEventType? = null
+                var portalEvent: AutonomyEventType? = null
+                synchronized(lock) {
+                    if (!registered) return
+                    // Ignore delayed capabilities for a replaced or lost network.
+                    if (activeNetwork != network) return
+                    val portalNow = capabilities.hasCapability(
+                        NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL
+                    )
+                    val validatedNow = capabilities.hasCapability(
+                        NetworkCapabilities.NET_CAPABILITY_INTERNET
+                    ) &&
+                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
+                        !portalNow
+                    val wasAvailable = networkAvailable
+                    val wasPortal = captivePortalDetected
+                    networkAvailable = validatedNow
+                    captivePortalDetected = portalNow
+                    mobileData = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
 
-                if (!wasAvailable && validatedNow) {
-                    connectivityEvent = AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED
-                } else if (wasAvailable && !validatedNow) {
-                    connectivityEvent = AutonomyEventType.NETWORK_CONNECTIVITY_LOST
+                    if (!wasAvailable && validatedNow) {
+                        connectivityEvent = AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED
+                    } else if (wasAvailable && !validatedNow) {
+                        connectivityEvent = AutonomyEventType.NETWORK_CONNECTIVITY_LOST
+                    }
+                    if (!wasPortal && portalNow) {
+                        portalEvent = AutonomyEventType.CAPTIVE_PORTAL_DETECTED
+                    } else if (wasPortal && !portalNow) {
+                        portalEvent = AutonomyEventType.CAPTIVE_PORTAL_CLEARED
+                    }
                 }
-                if (!wasPortal && portalNow) {
-                    portalEvent = AutonomyEventType.CAPTIVE_PORTAL_DETECTED
-                } else if (wasPortal && !portalNow) {
-                    portalEvent = AutonomyEventType.CAPTIVE_PORTAL_CLEARED
+                connectivityEvent?.let {
+                    coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
                 }
+                portalEvent?.let {
+                    coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
+                }
+                publishEnvironment()
             }
-            connectivityEvent?.let {
-                coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
-            }
-            portalEvent?.let {
-                coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
-            }
-            publishEnvironment()
         }
 
         override fun onLost(network: Network) {
-            val wasActive = synchronized(lock) {
-                if (activeNetwork != network) {
-                    false
-                } else {
+            synchronized(callbackDispatchLock) {
+                val wasActive = synchronized(lock) {
+                    if (!registered || activeNetwork != network) {
+                        false
+                    } else {
+                        activeNetwork = null
+                        networkAvailable = false
+                        captivePortalDetected = false
+                        mobileData = false
+                        true
+                    }
+                }
+                if (wasActive) {
+                    coordinator.observe(
+                        AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                    coordinator.observe(
+                        AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                    publishEnvironment()
+                }
+            }
+        }
+
+        override fun onUnavailable() {
+            synchronized(callbackDispatchLock) {
+                synchronized(lock) {
+                    if (!registered) return
                     activeNetwork = null
                     networkAvailable = false
                     captivePortalDetected = false
                     mobileData = false
-                    true
                 }
-            }
-            if (wasActive) {
                 coordinator.observe(
                     AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
                     source = AutonomyEventSource.NETWORK_MONITOR
@@ -120,24 +152,6 @@ class AndroidEnvironmentMonitor(
                 )
                 publishEnvironment()
             }
-        }
-
-        override fun onUnavailable() {
-            synchronized(lock) {
-                activeNetwork = null
-                networkAvailable = false
-                captivePortalDetected = false
-                mobileData = false
-            }
-            coordinator.observe(
-                AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-                source = AutonomyEventSource.NETWORK_MONITOR
-            )
-            coordinator.observe(
-                AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-                source = AutonomyEventSource.NETWORK_MONITOR
-            )
-            publishEnvironment()
         }
     }
 
@@ -155,7 +169,9 @@ class AndroidEnvironmentMonitor(
         try {
             manager.registerDefaultNetworkCallback(networkCallback)
             registered = true
-            publishEnvironment()
+            synchronized(callbackDispatchLock) {
+                publishEnvironment()
+            }
         } catch (_: RuntimeException) {
             registered = false
             runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
@@ -170,15 +186,19 @@ class AndroidEnvironmentMonitor(
     @Synchronized
     fun unregister() {
         if (!registered) return
-        runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
-        registered = false
-        synchronized(lock) {
-            activeNetwork = null
-            networkAvailable = false
-            captivePortalDetected = false
-            mobileData = false
+        // Wait for any callback already dispatching, then invalidate registration before
+        // unregistering. Queued callbacks re-check registration under callbackDispatchLock.
+        synchronized(callbackDispatchLock) {
+            synchronized(lock) {
+                registered = false
+                activeNetwork = null
+                networkAvailable = false
+                captivePortalDetected = false
+                mobileData = false
+            }
+            runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
+            publishEnvironment()
         }
-        publishEnvironment()
     }
 
     private fun publishEnvironment() {

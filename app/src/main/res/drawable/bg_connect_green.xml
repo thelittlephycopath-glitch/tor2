@@ -30,15 +30,15 @@
                         android:type="linear">
 
                         <item
-                            android:color="#7DE8C8"
+                            android:color="#E6E6E6"
                             android:offset="0" />
 
                         <item
-                            android:color="#3CDDAC"
+                            android:color="#A6A6A6"
                             android:offset="1" />
 
                         <item
-                            android:color="#52E0B6"
+                            android:color="#D0D0D0"
                             android:offset="1" />
 
                     </gradient>

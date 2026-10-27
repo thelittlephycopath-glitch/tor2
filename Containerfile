@@ -1,10 +1,10 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
-# The app needs API 37 for its current AndroidX lifecycle dependencies.
-# Onionmasq itself remains pinned to API 36 through its separate environment variable.
+# The app currently compiles against Android 17/API 37 from the preview SDK channel.
+# Onionmasq remains pinned to the stable API 36 toolchain through separate variables.
 ENV ANDROID_HOME=/opt/android-sdk \
     ANDROID_COMPILE_SDK=37 \
-    ANDROID_BUILD_TOOLS=36.0.0 \
+    ANDROID_BUILD_TOOLS=37.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
     ONIONMASQ_ANDROID_COMPILE_SDK=36 \
@@ -54,6 +54,10 @@ RUN wget --no-verbose --output-document="$ANDROID_HOME/cmdline-tools.zip" "https
     rm -f "$ANDROID_HOME/cmdline-tools.zip"
 
 RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null && \
-    sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-${ANDROID_COMPILE_SDK}.0" \
+    sdkmanager --sdk_root="$ANDROID_HOME" --channel=3 \
+      "platforms;android-${ANDROID_COMPILE_SDK}" \
+      "build-tools;${ANDROID_BUILD_TOOLS}" && \
+    sdkmanager --sdk_root="$ANDROID_HOME" --channel=0 \
+      "platforms;android-${ONIONMASQ_ANDROID_COMPILE_SDK}" \
       "platform-tools" \
-      "build-tools;${ANDROID_BUILD_TOOLS}"
+      "build-tools;${ONIONMASQ_ANDROID_BUILD_TOOLS}"

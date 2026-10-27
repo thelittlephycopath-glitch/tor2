@@ -7,7 +7,7 @@ Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 ## Confirmed issues fixed in this workspace
 
 1. **Malformed Containerfile package-install chain.** The mkdir line lacked an `&&`, so apt-get clean could be interpreted as extra mkdir arguments. The chain is now explicit and apt metadata is cleaned.
-2. **Stable SDK package mismatch.** CI logs confirmed that `sdkmanager` on the stable channel cannot find `platforms;android-37`. The app and container are now pinned to stable Android API 36, matching the configured target SDK, and duplicate SDK package requests were removed. The next CI run must verify that this gets past toolchain provisioning and that the source compiles against API 36.
+2. **SDK package IDs, preview channel, and separate app/Onionmasq toolchains.** The app compiles against Android 17/API 37, distributed through the preview SDK channel, while Onionmasq remains pinned to stable API 36. Both `Containerfile` and `scripts/reproducible_fetch_deps.sh` now request `platforms;android-37` and Build Tools 37.0.0 from `sdkmanager --channel=3`, and API 36 plus Build Tools 36.0.0 from `--channel=0`. The platform ID uses no `.0` suffix. The standalone reproducible script also reinstalls required packages on every run instead of skipping a partially created SDK directory, and passes an explicit SDK root for the NDK install. See the [Android 17 SDK setup](https://developer.android.com/about/versions/17/setup-sdk) and [`sdkmanager` package/channel syntax](https://developer.android.com/tools/sdkmanager).
 3. **Unstable Android SDK location.** `ANDROID_HOME` now uses `/opt/android-sdk` rather than relying on build-time PWD expansion.
 4. **Incorrect NDK toolchain PATH.** The old LLVM/PATH values referenced a relative version directory instead of the installed NDK path.
 5. **APK output directory not guaranteed.** The reproducible build script copied APKs into `build/` after clean without ensuring the directory existed; it now creates it.
@@ -18,8 +18,8 @@ Upstream: https://gitlab.torproject.org/tpo/applications/vpn
 ## Verification status
 
 - Static review of the container recipe and reproducible build scripts completed.
-- Two CI runs failed at the same confirmed point: SDK provisioning could not locate `platforms;android-37` on the stable SDK channel. The full build had not reached app compilation.
-- The container and app compile SDK have now been changed to API 36. The triggered workflow must verify SDK provisioning, Rust/Onionmasq compilation, Gradle compilation, signing, and artifact upload in sequence.
+- Earlier CI evidence showed SDK provisioning failures before app compilation. Static review found invalid API-37 package syntax in both the container and standalone reproducible setup; both now request `platforms;android-37` from the preview channel and API 36 from stable, with matching Build Tools versions. The standalone script retries package installation even if its SDK directory already exists.
+- The app compile SDK remains API 37, its target SDK remains API 36, and Onionmasq remains pinned to API 36. A post-fix build is still required to verify SDK provisioning, Rust/Onionmasq compilation, Gradle compilation, signing, and artifact upload in sequence.
 - No verified APK exists until a workflow run completes successfully and its artifact/signature are checked.
 - APKs are signed with an ephemeral debug key, not Tor Project's official release key. They will not update over an official Tor-signed installation.
 
@@ -30,3 +30,227 @@ A static pass cannot certify every Kotlin, Rust, native networking, DNS, or runt
 ## Security notes
 
 Tor VPN Beta is experimental and may leak information. These changes focus on build correctness and delivery and do not intentionally alter upstream networking behavior. Do not use these community builds for sensitive activity.
+
+## Current execution blocker — 2026-10-27
+
+The APK workflow is now enabled on `dangerous-experiment` as well as `main`, while release publication remains separately gated. The first verification run for the current branch is:
+
+- Commit: `556a4f6ee30f211f5e7e42ddffaf878aa76b4fcc`
+- Workflow run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40568144676
+- Result: failed before any job step executed.
+- GitHub's job record reports `runner_id: 0`, an empty `runner_name`, and `steps: []`; the job completed in roughly three seconds. The cross-platform diagnostic has shown the same pattern on `windows-latest`.
+
+This is evidence of a hosted-runner assignment/service/account-level blocker, not evidence of a Kotlin, Rust, Gradle, SDK, or APK-signing failure. The build has not reached compilation, and no APK artifact was produced. Repeated source edits cannot fix runner allocation. Check repository **Settings → Actions → General** and the account's Actions/billing/usage eligibility, then rerun the workflow. Do not treat a rerun as a code fix; once a runner executes steps, use the preserved build log to diagnose actual compiler or dependency failures.
+
+## Current verified status
+
+- [x] Build workflow push trigger includes `dangerous-experiment`.
+- [x] Release publication remains explicitly opt-in and is not enabled by the default input.
+- [ ] Hosted runner successfully assigned.
+- [ ] Container/toolchain build reaches completion.
+- [ ] Onionmasq Rust/Android build completes.
+- [ ] Tor VPN Gradle release build completes.
+- [ ] APK signing, alignment, and signature verification complete.
+- [ ] Unit tests, ktlint, Android lint, staging build, and emulator smoke test pass.
+- [ ] APK artifact uploaded and independently checked for package metadata, signature, and SHA-256.
+- [ ] Device-level VPN, DNS, IPv4/IPv6, lockdown, reconnect, and traffic-leak tests pass.
+
+Do not describe the APK as built until the remaining blocking checks are evidenced by successful runs.
+
+## Release-publication guard correction — 2026-10-28
+
+Static review found that the publish job condition allowed every push to `main` to publish a GitHub Release, even though the workflow-dispatch input defaults to false. That contradicted the stated opt-in safety gate. The condition now requires all three facts: the ref is `main`, the event is `workflow_dispatch`, and `inputs.publish_release` is explicitly true. A push to either branch can build and upload workflow artifacts but cannot publish a release. This is a static configuration correction; the hosted runner blocker still prevents a successful end-to-end workflow verification.
+
+### Runner retry result — 2026-10-28
+
+Retried the failed build workflow (run 40570108287, attempt 2) after confirming the branch workflow and release guard. It again failed before the first step:
+
+- Job ID: `122421839083`
+- `runner_id: 0`
+- `runner_name: ""`
+- `steps: []`
+- Run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40570108287
+
+The failure is reproducible across multiple runs and both Ubuntu and Windows runner labels. This rules out a project-specific compile error as the immediate cause of those failures; it does not prove the account-level root cause. The owner should check repository Actions enablement/policies and account billing/usage restrictions. If those are clear, escalate to GitHub Support with the run URL because there is no job log to diagnose in source code. GitHub's workflow troubleshooting guide documents reviewing workflow logs, billing errors, Actions availability, and runner troubleshooting: https://docs.github.com/en/actions/how-tos/troubleshoot-workflows
+
+## Artifact integrity gate — 2026-10-28
+
+The APK workflow now performs a post-signing integrity pass before artifact upload:
+
+- Re-runs APK signature verification for every signed APK.
+- Reads the APK package ID from the APK manifest and fails if it is not `org.torproject.vpn.tor2beta.dev`.
+- Records each APK's filename, package ID, and byte size in `dist/BUILD-METADATA.txt`.
+- Generates `dist/SHA256SUMS` for the signed APK files and uploads both verification files alongside the APKs.
+
+This makes a successful future artifact independently checkable after download. It does not substitute for a successful workflow run or runtime VPN security tests.
+
+- Workflow change: [`f073559`](https://github.com/thelittlephycopath-glitch/tor2/commit/f0735594c87c062d9d603c50c376b2f76292f866)
+- Triggered run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40571377421
+- Result: runner job failed before any steps/logs were exposed; this run does not validate the new metadata gate.
+
+## CI supply-chain hardening — 2026-10-28
+
+The branch's GitHub Actions dependencies are now pinned to full commit SHAs instead of movable major-version tags. The inline version comments are retained so Dependabot can propose reviewed upgrades. Current pins:
+
+- `actions/checkout` `3d3c42e5aac5ba805825da76410c181273ba90b1` (`v7.0.1`)
+- `actions/cache` `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` (`v6.1.0`)
+- `actions/upload-artifact` `cf430e030ddbb5b0abf93d22962f4752f3646cd9` (`v7.0.2`)
+- `actions/download-artifact` `9000827ccba6bdab643e8b6fd33ac0654aef8333` (`v8.0.2`)
+- `actions/setup-java` `b843ebf9b913146b38da2eaa7aeddf76074ae1ad` (`v6.1.0`)
+- `android-actions/setup-android` `be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd` (`v4.0.4`)
+- `reactivecircus/android-emulator-runner` `a421e43855164a8197daf9d8d40fe71c6996bb0d` (`v2.38.0`)
+- `softprops/action-gh-release` `efb35369e0ad2afab669f228072c1b0d510eae64` (`v3.0.3`)
+
+Added `.github/dependabot.yml` to request weekly GitHub Actions dependency updates. Version updates remain reviewable PRs rather than silently moving action refs.
+
+Added `scripts/verify_ci_security.sh` as a lightweight, offline preflight. It checks external action references for 40-character SHA pins and version comments, checks the manual release-publication guard/default-off input, and syntax-checks the reproducible build scripts. The preflight is invoked before expensive toolchain builds in the APK, diagnostic-build, and PR-validation workflows. A local fixture test passed for valid pins and correctly rejected a mutable `@v7` reference. This fixture test is not a substitute for running the script in GitHub Actions against the full checkout.
+
+The action gate test suite now also includes an exhaustive scenario where every automation flag is enabled and every action is recommended: only the two fail-closed actions remain approved; all side-effecting actions remain suppressed as `ACTION_NOT_IMPLEMENTED`. The source test is committed but has not run under Gradle.
+
+### Post-hardening workflow evidence
+
+- Latest branch-triggered build run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40574107343
+- Result: failed before any step logs were exposed (`steps: null`, no job log URL).
+- The workflow run therefore does not verify action execution, preflight execution, compilation, tests, APK signing, or artifact integrity.
+- No APK is confirmed as built. The runner/Actions environment blocker remains open.
+
+## APK build deferral aligned with plan execution — 2026-10-28
+
+The APK workflow now uses manual dispatch only. Automatic push triggers were removed from `dangerous-experiment` so backend and privacy work can proceed without repeatedly launching a known-failing hosted-runner job while APK work is intentionally deferred. The existing explicit manual release-publication gate remains default-off and restricted to manual dispatch on `main`.
+
+- Workflow change: [`f8b7a4b`](https://github.com/thelittlephycopath-glitch/tor2/commit/f8b7a4b112426fc93d82492dde209944a8662bae)
+- This does not repair the runner assignment problem or validate source compilation. The APK workflow can be manually resumed after the backend plan's acceptance gates are ready.
+
+## Post-change static workflow verification — 2026-10-28
+
+A fresh repository-tree read of `dangerous-experiment` checked all five workflow YAML files after deferring APK work:
+
+- 16 external `uses:` references checked; all 16 are pinned to 40-character commit SHAs and include version comments.
+- No unpinned external action reference was found.
+- APK build workflow has no `push` trigger and is manual-dispatch only.
+- Release publication still requires `refs/heads/main`, `workflow_dispatch`, and explicit `inputs.publish_release`; the input default remains `false`.
+- This was a source-content inspection through the GitHub API, not execution of the repository's shell preflight or a CI job. No build/test pass is implied.
+
+## Upstream import safety — 2026-10-28
+
+The manual source-import workflow is now restricted to dispatches targeting `dangerous-experiment`; it requires a full lowercase 40-character upstream Git SHA rather than downloading the moving upstream `main` branch. It also backs up and restores the entire local `.github` directory around source copying, preserving workflow policy and Dependabot configuration.
+
+- Initial guard and SHA-pinned archive: [`0c34a1a`](https://github.com/thelittlephycopath-glitch/tor2/commit/0c34a1a209f44cf9657b55c2da4673166a54926c)
+- Preserve local CI controls: [`c918090`](https://github.com/thelittlephycopath-glitch/tor2/commit/c918090c39733c663589292780f86bfe7be94112)
+- The import workflow has not been executed; the guard and shell syntax still need an actual workflow run before this path is considered verified.
+
+## CI preflight regression coverage expanded — 2026-10-28
+
+The offline preflight now also enforces the upstream-import safety contract: dispatch restricted to `dangerous-experiment`, a required commit SHA wired into the workflow environment and validated as 40 lowercase hexadecimal characters, and preservation of the local `.github` directory. The fixture suite now includes a valid pinned-import fixture and a negative fixture that must reject an unrestricted/unpinned import.
+
+- Preflight change: [`3256d8a`](https://github.com/thelittlephycopath-glitch/tor2/commit/3256d8a9856e08f29e2096481792161fd8c47cdc)
+- Fixture expansion: [`de4a022`](https://github.com/thelittlephycopath-glitch/tor2/commit/de4a0222756a45c3160e4b0c4ccd912b78be253e)
+- Fixture correction: [`f0304e0`](https://github.com/thelittlephycopath-glitch/tor2/commit/f0304e0dff1a8918fd32e474e3aeefe8230d1a2e)
+
+Static content inspection confirms that the current preflight and fixtures contain the intended checks. The shell suite has not been executed in this environment because a local checkout could not be cloned (network DNS resolution failed); the GitHub-hosted workflow has not yet run these checks either.
+
+## APK work remains explicitly paused — 2026-10-28
+
+The build workflow now has two separate manual controls: `run_apk_build` defaults to `false` and gates the build job itself; `publish_release` remains independently default-off and can publish only from a manual dispatch on `main`. A manual workflow dispatch with no affirmative build input should therefore not consume build-runner capacity.
+
+The CI preflight now checks that the build-job gate exists and the fixture suite includes a negative case for a missing gate.
+
+- Workflow guard: [`70d3d12`](https://github.com/thelittlephycopath-glitch/tor2/commit/70d3d125d4ee35f0d86dd03dc71ada86196f33b4)
+- Preflight guard: [`e1cf92f`](https://github.com/thelittlephycopath-glitch/tor2/commit/e1cf92f0f781ed9a14435a4df0813a4e0d9e7330)
+- Regression fixture: [`f72d4ad`](https://github.com/thelittlephycopath-glitch/tor2/commit/f72d4ad783010d686a7540b2da5fd3bcf985f376)
+
+This guard is source-inspected, not yet executed by GitHub Actions. The build remains intentionally unrun until the plan's backend/security acceptance work is ready.
+
+## CI preflight integrity repair — 2026-10-28
+
+A source inspection found that `scripts/verify_ci_security.sh` had become structurally corrupted: duplicated fragments were interleaved with the release-default check, leaving malformed shell syntax and preventing the guard from being trusted. Replaced the file with one complete, ordered implementation.
+
+The repaired preflight checks:
+- All external workflow actions use full 40-character lowercase commit SHA references and semantic-version comments.
+- APK build execution requires the explicit `run_apk_build` manual-dispatch input, which defaults to false.
+- Release publication requires the `main` ref, `workflow_dispatch`, and the explicit `publish_release` input, also defaulting to false.
+- Upstream source import is restricted to `dangerous-experiment`, validates a full immutable upstream commit SHA, and preserves local workflow controls.
+- The reproducible build and dependency-fetch scripts parse with `bash -n`.
+
+Local isolated fixture checks passed for a valid pinned-action workflow and rejected a mutable `@v7` action reference. This was a focused local check of the repaired preflight, not a complete run of `scripts/test_ci_security.sh`, Gradle tests, or GitHub Actions. Full CI verification remains open because hosted jobs have been failing before their first step/logs.
+
+### CI preflight fixture verification — 2026-10-28
+
+The negative-test helper originally invoked the preflight outside the temporary fixture directory, so failures could be caused by missing relative workflow paths rather than the intended unsafe fixture. Corrected the helper to run from the fixture root. A local mirrored copy of the fixture harness and preflight then passed: the valid SHA-pinned workflow was accepted; mutable action tags, missing version comments, missing release gate, missing APK opt-in gate, invalid build-script syntax, and unrestricted/unpinned source-import fixtures were rejected. Because a complete repository checkout could not be cloned into the local runtime, this run used a mirrored copy of the script logic rather than the exact checked-out repository files. Static inspection of all five committed workflow files found 16 external action references and no missing SHA pins/version comments; the APK/release and source-import guard strings were also present. This is local fixture/static validation, not a hosted workflow run.
+
+## Leak-evidence session binding — 2026-10-28
+
+The coordinator now uses a monotonically increasing verification generation. Tunnel lifecycle transitions, network-path changes, DNS/TLS anomaly transitions, captive-portal transitions, network-monitor failure, and authoritative leak-check start/failure invalidate earlier evidence generations. `submitLeakCheckEvidence` rejects missing or mismatched generation tokens even if the report timestamp remains within the freshness window. A regression test covers reuse of a fresh report after a network change.
+
+The read-only Android diagnostic probe accepts a session-generation token but still returns false for all protection claims; it does not perform active packet/DNS/IPv6 verification. The Kotlin regression test and full Gradle suite remain unexecuted because hosted Actions jobs have not reached the first step.
+
+## Network-trust evidence consistency — 2026-10-28
+
+Fresh trust evidence now propagates DNS-hijack and TLS-interception indicators into sticky coordinator signals and marks captive-portal evidence explicitly. A newly observed captive portal invalidates the current tunnel verification generation even though the trust classifier returns `UNKNOWN` for portal networks. Generic trust refreshes cannot clear these signals; explicit clear events or authoritative network-monitor state are required. Added regression tests, but the Kotlin/Gradle suite has not yet executed.
+
+## Standalone security preflight workflow — 2026-10-28
+
+Added `.github/workflows/security-preflight.yml`, a lightweight workflow that runs on pushes to `dangerous-experiment`, pull requests to `main`, and manual dispatch. It runs only shell syntax checks and the positive/negative CI security fixtures; it does not build the Android APK or initialize the Android/Rust toolchain.
+
+- Workflow: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40579231067
+- Commit: [`ce8ec9f`](https://github.com/thelittlephycopath-glitch/tor2/commit/ce8ec9fb4f08f9e994600f49393d760d08578235)
+- Result: failed before the first step, with `steps: null` and no job log URL. The lightweight workflow therefore did not execute its preflight checks in GitHub Actions.
+- Interpretation: the failure remains consistent with the previously observed runner/Actions allocation problem; it is not evidence of a shell/test failure. The local mirrored fixture suite passed, and the checked workflow files passed static pin/guard inspection, but hosted validation is still blocked.
+
+## Local-only learning storage guard — 2026-10-28
+
+The standalone CI preflight now also checks that Android backup is disabled, both backup/device-transfer rule files are wired in the manifest, and the opt-in network-learning SharedPreferences file is excluded from cloud backup and device transfer. The fixture suite includes a negative case that removes the extraction-rule exclusion and confirms the preflight rejects it. A local mirrored fixture run passed the valid case and all seven unsafe cases. The exact repository workflow still has not completed on a hosted runner.
+
+### Latest runner retry — 2026-10-28
+
+The standalone security-preflight workflow was triggered again after the latest safety-test change: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40579647166. It again failed before the job exposed any steps (`steps: null`, no `logs_url`). This repeated infrastructure symptom prevents us from determining whether the repository's exact preflight/test suite passes in hosted CI. No Gradle or Android build was attempted by this lightweight workflow.
+
+## Stale network callback hardening — 2026-10-28
+
+`AndroidEnvironmentMonitor.onCapabilitiesChanged` now accepts capability updates only when the callback's `Network` equals the active network previously established by `onAvailable`. Previously, a delayed callback arriving after `onLost`/`onUnavailable` could be accepted when `activeNetwork == null`, potentially repopulating connectivity/trust state from a stale network. The new guard ignores that callback rather than treating it as a new active path.
+
+This is a source-level race-condition fix. There is no dedicated Android callback test and it has not been exercised on-device or under Android instrumentation; Gradle/hosted verification remains blocked by the runner allocation failure.
+
+
+## Latest verification and callback guard — 2026-10-28
+
+- Latest branch head after the network callback guard and CI-preflight rollback: `9641d88fa3a4ac57c2449cff8611fa3639a5b5fe`.
+- Latest workflow run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40580356268
+- The job failed before exposing any steps (`steps: null`, `logs_url: null`). The run does not establish a shell preflight, Kotlin test, Android build, or emulator result.
+- The source-level callback guard is committed at `1a268b63c0f5002697cda9a25905af208d552e69`; the subsequent audit record is `e26fa0aca87113c810bf633112ebc8e3f910ba29`.
+- A temporary attempt to add a static monitor guard to the CI preflight was reverted because the existing fixture suite does not provide the Android monitor source tree. The shipped preflight remains independent of Android source files; the monitor change itself remains in the branch.
+
+## Reproducible helper pin — 2026-10-28
+
+The dependency bootstrap no longer clones the mutable default branch of `obfusk/reproducible-apk-tools`. It fetches and checks out immutable commit `9401d827a2404827ec3de6cb90a879d9fbd3f60d` and verifies the resulting HEAD before proceeding. Change: `a0e3f5c8723e8385032502f1748886379bda807b`.
+
+Remaining supply-chain work: validate official SHA-256 checksums for downloaded JDK and Android SDK command-line tools, pin the rustup installer/bootstrap source, and add a test that proves the helper checkout stays at the selected commit. This edit has not been exercised in a real dependency-bootstrap run.
+
+
+## Execution log — g-tor rename and lifecycle hardening (2026-10-28)
+
+- Project display name changed to **g-tor** in `app/src/main/res/values/strings.xml`.
+- README title and APK workflow documentation updated to use g-tor branding.
+- APK workflow display name, artifact names, temporary debug-keystore filename, emulator smoke-test messages, and release tag/title were updated to g-tor. Package/application ID was deliberately left unchanged to avoid breaking install identity and existing app data.
+- Added registration-state guards inside Android network callbacks and changed `unregister()` to mark the monitor inactive and clear state before requesting callback unregistration. This narrows the shutdown race from queued callbacks.
+- These changes are source-level only. Kotlin/Gradle tests and Android runtime validation have **not** run; the callback fix is not yet considered verified.
+- Repository slug is still `thelittlephycopath-glitch/tor2`. The repository-level rename request was blocked by the platform's safety checks, so no repository rename is claimed.
+- Latest observed security-preflight run before these follow-up commits: `40587795442`, failed with `steps: null` and `logs_url: null`. This provides no script-level failure output and does not establish whether the workflow checks themselves pass.
+- Current status: no verified APK; no merge to `main`.
+
+### Immediate next actions
+
+1. Obtain a runner that actually executes workflow steps or identify the account/repository-level runner allocation blocker.
+2. Add regression coverage for monitor shutdown and callback ordering; run the complete Android test suite.
+3. Wire independent leak verification to the real tunnel path before describing traffic as verified.
+4. Continue dependency provenance/checksum and manifest/privacy audits.
+5. Build and smoke-test APK only after the preceding gates pass.
+
+
+## Follow-up — gtor icon and naming alignment (2026-10-28)
+
+- Replaced the adaptive launcher foreground with a simplified hood-and-white-mask emblem with restrained violet accents; no app-screen UI was changed.
+- Updated the adaptive launcher foreground reference and monochrome themed icon to align with the emblem.
+- App display label, README title/download references, and APK workflow display/artifact/release naming now use **gtor** (no hyphen).
+- Commits: logo `3f9d7647ae43920e6ecbaf48ff9bf798c9decdf6`; launcher wiring `a20ccbce5e99a2b4ce5456a7d9625ccab944f8a5`; themed icon `8bdc280a8fc82218bb232c9e015327f8eaacc340`; README `ce194b27ef8ac167098802eadb4b37151709e286`; workflow naming `f11a88df0fb8e7783612b4f3050a8315ce0c9787`.
+- Verification limitation: no Android build or visual launcher rendering has been completed. The current CI preflight job returns no steps/log URL, and the stale test `trustEvidenceWithoutSessionTokenRemainsCompatibleForNow` conflicts with the coordinator's current requirement for a matching generation token. Do not merge or claim build readiness until this mismatch is resolved and tests actually run.
