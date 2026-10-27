@@ -377,8 +377,16 @@ class AutonomyCoordinator(
         evidence: NetworkTrustEvidence,
         nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
     ): AutonomyDecision {
-        latestNetworkTrustEvidence = evidence
-        val classifiedTrust = trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
+        val evidenceAge = nowElapsedRealtimeMillis - evidence.observedAtElapsedRealtimeMillis
+        val evidenceIsFresh = evidence.observedAtElapsedRealtimeMillis <= nowElapsedRealtimeMillis &&
+            evidenceAge <= trustClassifier.maxEvidenceAgeMillis
+        // A stale/future observation is rejected, not cached to become valid automatically later.
+        latestNetworkTrustEvidence = evidence.takeIf { evidenceIsFresh }
+        val classifiedTrust = if (evidenceIsFresh) {
+            trustClassifier.classify(evidence, nowElapsedRealtimeMillis)
+        } else {
+            NetworkTrust.UNKNOWN
+        }
         if (classifiedTrust == NetworkTrust.HOSTILE) {
             // Previously successful tunnel/leak checks do not remain authoritative after a hostile
             // network indicator. Record the classification without pretending a leak probe ran.
