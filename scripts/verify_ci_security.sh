@@ -60,6 +60,13 @@ if ! grep -A 7 -F 'publish_release:' "$build_workflow" |
   exit 1
 fi
 
+# Network callbacks must not resurrect a lost/replaced network from delayed capabilities.
+network_monitor=app/src/main/java/org/torproject/vpn/autonomy/AndroidEnvironmentMonitor.kt
+if ! grep -Fq 'if (activeNetwork != network) return' "$network_monitor"; then
+  echo "Network monitor must ignore capabilities for a non-active network." >&2
+  exit 1
+fi
+
 # Upstream source replacement must remain branch-restricted and preserve local workflow controls.
 import_workflow=.github/workflows/import-source.yml
 if ! grep -Fq "github.ref == 'refs/heads/dangerous-experiment'" "$import_workflow"; then
