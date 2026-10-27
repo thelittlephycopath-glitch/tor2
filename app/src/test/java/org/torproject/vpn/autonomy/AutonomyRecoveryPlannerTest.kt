@@ -142,8 +142,13 @@ class AutonomyRecoveryPlannerTest {
     @Test
     fun serviceStopClearsPendingAttemptAndRetryBudget() {
         val planner = planner()
-        val pending = plan(planner)
-        assertTrue(pending.shouldScheduleReconnect)
+        val first = plan(planner)
+        assertTrue(first.shouldScheduleReconnect)
+        assertTrue(planner.markAttemptStarted(first.attempt!!))
+
+        val second = plan(planner)
+        assertTrue(second.shouldScheduleReconnect)
+        assertEquals(2, second.attempt)
 
         planner.resetAfterServiceStopped()
 
