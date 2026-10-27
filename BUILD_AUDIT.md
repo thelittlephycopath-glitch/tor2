@@ -225,3 +225,23 @@ This is a source-level race-condition fix. There is no dedicated Android callbac
 The dependency bootstrap no longer clones the mutable default branch of `obfusk/reproducible-apk-tools`. It fetches and checks out immutable commit `9401d827a2404827ec3de6cb90a879d9fbd3f60d` and verifies the resulting HEAD before proceeding. Change: `a0e3f5c8723e8385032502f1748886379bda807b`.
 
 Remaining supply-chain work: validate official SHA-256 checksums for downloaded JDK and Android SDK command-line tools, pin the rustup installer/bootstrap source, and add a test that proves the helper checkout stays at the selected commit. This edit has not been exercised in a real dependency-bootstrap run.
+
+
+## Execution log — g-tor rename and lifecycle hardening (2026-10-28)
+
+- Project display name changed to **g-tor** in `app/src/main/res/values/strings.xml`.
+- README title and APK workflow documentation updated to use g-tor branding.
+- APK workflow display name, artifact names, temporary debug-keystore filename, emulator smoke-test messages, and release tag/title were updated to g-tor. Package/application ID was deliberately left unchanged to avoid breaking install identity and existing app data.
+- Added registration-state guards inside Android network callbacks and changed `unregister()` to mark the monitor inactive and clear state before requesting callback unregistration. This narrows the shutdown race from queued callbacks.
+- These changes are source-level only. Kotlin/Gradle tests and Android runtime validation have **not** run; the callback fix is not yet considered verified.
+- Repository slug is still `thelittlephycopath-glitch/tor2`. The repository-level rename request was blocked by the platform's safety checks, so no repository rename is claimed.
+- Latest observed security-preflight run before these follow-up commits: `40587795442`, failed with `steps: null` and `logs_url: null`. This provides no script-level failure output and does not establish whether the workflow checks themselves pass.
+- Current status: no verified APK; no merge to `main`.
+
+### Immediate next actions
+
+1. Obtain a runner that actually executes workflow steps or identify the account/repository-level runner allocation blocker.
+2. Add regression coverage for monitor shutdown and callback ordering; run the complete Android test suite.
+3. Wire independent leak verification to the real tunnel path before describing traffic as verified.
+4. Continue dependency provenance/checksum and manifest/privacy audits.
+5. Build and smoke-test APK only after the preceding gates pass.
