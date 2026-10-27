@@ -306,3 +306,7 @@ Source inspection found a deliberate mismatch between the advisory autonomy mode
 
 A dedicated low-cost workflow now validates shell syntax and the CI security fixtures on pushes to `dangerous-experiment`, pull requests to `main`, or manual dispatch. It deliberately does not build the APK. The first run (`40579231067`) failed before any step started, with no job log URL; therefore it supplies no evidence that the workflow script passed or failed. Runner/Actions availability remains unresolved.
 
+### Local learning backup boundary — 2026-10-28
+
+The Android manifest sets `allowBackup=false`; both full-backup and Android 12+ data-extraction rules also explicitly exclude the opt-in learning SharedPreferences file. The offline CI preflight now protects these invariants against accidental future changes, with a negative fixture for a missing device-transfer exclusion. The local mirrored fixture suite passed. This is defense-in-depth for local-only storage; it does not establish encryption of the digest records or runtime opt-in wiring.
+
