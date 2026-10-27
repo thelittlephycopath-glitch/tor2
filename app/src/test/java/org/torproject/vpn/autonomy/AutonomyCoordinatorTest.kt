@@ -742,6 +742,34 @@ class AutonomyCoordinatorTest {
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
     @Test
+    fun trustedNetworkEvidenceExpiresToUnknownWithoutARefresh() {
+        var now = 100L
+        val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+
+        val initial = coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = now,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis = now
+        )
+        assertEquals(NetworkTrust.TRUSTED, coordinator.currentSignals().trust)
+        assertEquals(ProtectionProfile.BALANCED, initial.profile)
+
+        now += NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 1L
+        val expired = coordinator.currentDecision()
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+        assertEquals(ProtectionProfile.HIGH, expired.profile)
+        assertFalse(expired.trafficReleaseEligible)
+    }
+
+    @Test
     fun staleLeakVerificationExpiresAndRequiresANewCheck() {
         var now = 100L
         val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
