@@ -197,3 +197,13 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Statically inspected all five repository workflow files: 16 external action references were present, and every one had a full SHA plus version comment.
 - [ ] Hosted CI, Gradle unit tests, Android lint, emulator tests, and the complete reproducible build remain unverified.
 
+## Session-bound leak verification — 2026-10-28
+
+- [x] Added a session-generation token to caller-supplied leak evidence.
+- [x] The coordinator advances the generation on tunnel lifecycle, network-path, DNS/TLS anomaly, captive-portal, monitor-failure, and authoritative leak-check transitions.
+- [x] Leak evidence is rejected with `SESSION_GENERATION_MISMATCH` when its token is missing or belongs to a prior generation.
+- [x] Added a regression test for a still-fresh report from a previous network generation and updated coordinator test fixtures to carry the current token.
+- [x] The read-only Android diagnostic probe can carry a session token, but its protection flags remain false because route/DNS snapshots do not prove packet enforcement.
+- [ ] Run Kotlin unit tests and ktlint. The new regression test is committed but has not been executed with Gradle.
+- [ ] Implement an independent verifier that measures actual enforcement; the token only prevents cross-session report reuse and does not make caller-supplied facts trustworthy.
+
