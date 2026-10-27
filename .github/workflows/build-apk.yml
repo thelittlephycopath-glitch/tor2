@@ -230,11 +230,44 @@ jobs:
             fi
             adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true
 
+      - name: Verify APK metadata and write checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc '
+              set -euo pipefail
+              shopt -s nullglob
+              apks=(dist/*.apk)
+              if (( ${#apks[@]} == 0 )); then
+                echo "No signed APKs exist for metadata verification." >&2
+                exit 1
+              fi
+              : > dist/BUILD-METADATA.txt
+              for apk in "${apks[@]}"; do
+                "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" verify --verbose "$apk"
+                package="$( "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/aapt" dump badging "$apk" | sed -n "s/^package: name=\\x27\\([^\\x27]*\\)\\x27.*/\\1/p" | head -n 1 )"
+                if [[ "$package" != "org.torproject.vpn.tor2beta.dev" ]]; then
+                  echo "Unexpected package ID for $apk: $package" >&2
+                  exit 1
+                fi
+                printf "APK: %s\\nPackage: %s\\nSize-bytes: %s\\n\\n" "$apk" "$package" "$(stat -c %s "$apk")" | tee -a dist/BUILD-METADATA.txt
+              done
+              (cd dist && sha256sum *.apk > SHA256SUMS)
+              cat dist/SHA256SUMS
+            '
+
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: tor2-debug-signed-apks
-          path: dist/*.apk
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/BUILD-METADATA.txt
           if-no-files-found: error
           retention-days: 14
 
