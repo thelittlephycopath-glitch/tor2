@@ -184,3 +184,7 @@ The coordinator now uses a monotonically increasing verification generation. Tun
 
 The read-only Android diagnostic probe accepts a session-generation token but still returns false for all protection claims; it does not perform active packet/DNS/IPv6 verification. The Kotlin regression test and full Gradle suite remain unexecuted because hosted Actions jobs have not reached the first step.
 
+## Network-trust evidence consistency — 2026-10-28
+
+Fresh trust evidence now propagates DNS-hijack and TLS-interception indicators into sticky coordinator signals and marks captive-portal evidence explicitly. A newly observed captive portal invalidates the current tunnel verification generation even though the trust classifier returns `UNKNOWN` for portal networks. Generic trust refreshes cannot clear these signals; explicit clear events or authoritative network-monitor state are required. Added regression tests, but the Kotlin/Gradle suite has not yet executed.
+
