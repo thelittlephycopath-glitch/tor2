@@ -208,8 +208,9 @@ class AutonomyCoordinator(
     }
 
     /**
-     * Updates the fields owned by the Android network callback without overwriting trust, anomaly,
-     * resource-budget, or service-owned DNS-conflict signals from other components.
+     * Updates the fields owned by the Android network callback without overwriting anomaly,
+     * resource-budget, or service-owned DNS-conflict signals. A network/transport change clears
+     * cached trust evidence so it cannot be reused for a different path.
      */
     @Synchronized
     fun updateNetworkEnvironment(
