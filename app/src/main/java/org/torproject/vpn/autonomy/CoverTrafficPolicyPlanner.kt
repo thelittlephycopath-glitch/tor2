@@ -28,7 +28,8 @@ data class CoverTrafficPolicyInputs(
     val charging: Boolean,
     val wifiOnly: Boolean,
     val coverTrafficUsedTodayMb: Long,
-    val dailyCoverTrafficBudgetMb: Long
+    val dailyCoverTrafficBudgetMb: Long,
+    val chargingReadingAvailable: Boolean = false
 ) {
     init {
         require(batteryPercent == null || batteryPercent in 0..100) {
@@ -98,7 +99,8 @@ class CoverTrafficPolicyPlanner(
         if (remaining == 0L) return off(CoverTrafficDecisionReason.BUDGET_EXHAUSTED)
         val battery = inputs.batteryPercent
             ?: return off(CoverTrafficDecisionReason.BATTERY_UNKNOWN)
-        if (!inputs.charging && battery < lowBatteryThresholdPercent) {
+        val chargingBoostAvailable = inputs.chargingReadingAvailable && inputs.charging
+        if (!chargingBoostAvailable && battery < lowBatteryThresholdPercent) {
             return off(CoverTrafficDecisionReason.LOW_BATTERY)
         }
         if (inputs.threatLevel == CoverTrafficThreatLevel.LOW ||
@@ -108,7 +110,7 @@ class CoverTrafficPolicyPlanner(
         }
 
         if (inputs.transport == CoverTrafficTransport.WIFI) {
-            val standard = inputs.charging || battery >= standardBatteryThresholdPercent
+            val standard = chargingBoostAvailable || battery >= standardBatteryThresholdPercent
             val cap = if (standard) standardWifiSessionCapMb else lowWifiSessionCapMb
             return CoverTrafficPolicyDecision(
                 rate = if (standard) CoverTrafficRate.STANDARD else CoverTrafficRate.LOW,
@@ -127,7 +129,7 @@ class CoverTrafficPolicyPlanner(
         if (inputs.threatLevel != CoverTrafficThreatLevel.CRITICAL) {
             return off(CoverTrafficDecisionReason.CELLULAR_REQUIRES_CRITICAL_RISK)
         }
-        if (!inputs.charging && battery < criticalCellularBatteryThresholdPercent) {
+        if (!chargingBoostAvailable && battery < criticalCellularBatteryThresholdPercent) {
             return off(CoverTrafficDecisionReason.LOW_BATTERY)
         }
         return CoverTrafficPolicyDecision(
