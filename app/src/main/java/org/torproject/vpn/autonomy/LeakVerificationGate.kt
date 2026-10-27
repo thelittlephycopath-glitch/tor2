@@ -4,8 +4,9 @@ package org.torproject.vpn.autonomy
  * The verification report contains facts established by a separate verifier; this gate does not
  * perform network probes or infer safety from tunnel bootstrap alone.
  *
- * A report is accepted only if every required control is explicitly verified and its monotonic
- * timestamp is fresh. Unknown or unmeasured controls must be reported as false by the caller.
+ * This gate checks required controls and monotonic timestamp freshness. The coordinator also
+ * requires the report's session generation to match the current tunnel/network generation.
+ * Unknown or unmeasured controls must be reported as false by the caller.
  */
 data class LeakVerificationEvidence(
     val checkedAtElapsedRealtimeMillis: Long,
