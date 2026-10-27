@@ -1109,4 +1109,35 @@ class AutonomyCoordinatorTest {
         assertTrue(result.failures.contains(LeakVerificationFailure.SESSION_GENERATION_MISMATCH))
         assertFalse(coordinator.currentDecision().trafficReleaseEligible)
     }
+
+    @Test
+    fun explicitDnsHijackClearInvalidatesCachedHostileEvidenceAndRequiresFreshCheck() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 2L,
+                internetValidated = true,
+                dnsHijackSuspected = true
+            ),
+            nowElapsedRealtimeMillis = 2L
+        )
+        assertEquals(NetworkTrust.HOSTILE, coordinator.currentSignals().trust)
+
+        coordinator.observe(
+            AutonomyEventType.DNS_HIJACK_CLEARED,
+            source = AutonomyEventSource.NETWORK_MONITOR,
+            elapsedRealtimeMillis = 3L
+        )
+
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
+        assertFalse(coordinator.currentSignals().dnsHijackSuspected)
+        assertFalse(coordinator.currentSignals().tunnelReady)
+
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 4L)
+        val result = submitPassingLeakCheck(coordinator, timestamp = 5L)
+
+        assertTrue(result.passed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+    }
 }
