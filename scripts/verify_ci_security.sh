@@ -101,4 +101,4 @@ for script in scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh; 
 done
 
 echo "CI security preflight passed: checked $checked immutable action references,"
-echo "plus opt-in build/release gates, source-import isolation, and build-script syntax."
+echo "plus build/release gates, source-import isolation, backup exclusions, and shell syntax."
