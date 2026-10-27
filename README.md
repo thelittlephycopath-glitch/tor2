@@ -1,4 +1,4 @@
-# TorVPN
+# g-tor
 {:.no_toc}
 
 *WARNING* This is experimental software, do not rely on it for anything other than testing and development. It may leak information and should not be relied on for anything sensitive!
@@ -9,7 +9,7 @@
 
 ## Downloading the APK
 
-1. Open the [Tor VPN Beta APK workflow](https://github.com/thelittlephycopath-glitch/tor2/actions/workflows/build-apk.yml).
+1. Open the [g-tor APK workflow](https://github.com/thelittlephycopath-glitch/tor2/actions/workflows/build-apk.yml).
 2. Open the latest **successful** “Build Tor VPN Beta APK” run.
 3. Under **Artifacts**, download and extract `tor2-debug-signed-apks`.
 4. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
