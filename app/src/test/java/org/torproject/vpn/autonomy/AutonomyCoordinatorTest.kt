@@ -710,15 +710,21 @@ class AutonomyCoordinatorTest {
 
     @Test
     fun coordinatorDoesNotTrustStaleNetworkEvidence() {
-        val coordinator = connectedCoordinator()
+        val staleNow =
+            NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 2L
+        val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { staleNow })
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
         coordinator.updateNetworkTrust(
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 1L,
                 internetValidated = true,
                 explicitlyTrustedByUser = true
             ),
-            nowElapsedRealtimeMillis =
-                NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 2L
+            nowElapsedRealtimeMillis = staleNow
         )
 
         assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
