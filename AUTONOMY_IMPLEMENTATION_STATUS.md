@@ -207,3 +207,10 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [ ] Run Kotlin unit tests and ktlint. The new regression test is committed but has not been executed with Gradle.
 - [ ] Implement an independent verifier that measures actual enforcement; the token only prevents cross-session report reuse and does not make caller-supplied facts trustworthy.
 
+## Network-trust anomaly handling — 2026-10-28
+
+- [x] Fresh captive-portal evidence now invalidates the current verification generation and tunnel-ready state, even when the classifier appropriately labels the portal network as UNKNOWN rather than HOSTILE.
+- [x] Fresh DNS-hijack and TLS-interception indicators are retained as explicit safety signals until their corresponding clear events; a generic benign trust refresh cannot erase them.
+- [x] Added coordinator regression tests for captive-portal evidence persistence, DNS-hijack signal persistence, missing session-generation tokens, and replay of fresh evidence from a prior network generation.
+- [ ] Run all coordinator tests and ktlint under Gradle. These tests are committed but remain unexecuted in the hosted build environment.
+
