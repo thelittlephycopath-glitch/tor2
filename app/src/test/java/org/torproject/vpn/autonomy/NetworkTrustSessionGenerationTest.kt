@@ -12,7 +12,7 @@ class NetworkTrustSessionGenerationTest {
             captivePortalDetected = false,
             mobileData = false
         )
-        val previousGeneration = coordinator.currentVerificationGeneration()
+        val previousGeneration = coordinator.currentNetworkGeneration()
         val previousEvidence = NetworkTrustEvidence(
             observedAtElapsedRealtimeMillis = 10L,
             internetValidated = true,
@@ -34,7 +34,7 @@ class NetworkTrustSessionGenerationTest {
     }
 
     @Test
-    fun trustEvidenceWithoutSessionTokenRemainsCompatibleForNow() {
+    fun trustEvidenceWithoutNetworkGenerationTokenIsRejected() {
         val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { 10L })
         coordinator.updateNetworkEnvironment(
             networkAvailable = true,
@@ -50,6 +50,6 @@ class NetworkTrustSessionGenerationTest {
             nowElapsedRealtimeMillis = 10L
         )
 
-        assertEquals(NetworkTrust.TRUSTED, coordinator.currentSignals().trust)
+        assertEquals(NetworkTrust.UNKNOWN, coordinator.currentSignals().trust)
     }
 }
