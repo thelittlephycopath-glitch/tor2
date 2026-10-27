@@ -23,13 +23,19 @@ class AutonomyCoordinatorTest {
     )
 
     private fun connectedCoordinator(): AutonomyCoordinator {
-        return AutonomyCoordinator().also {
+        // Most tests below use small synthetic timestamps. A fixed injected monotonic clock keeps
+        // their leak-verification evidence fresh unless a test deliberately advances that clock.
+        return AutonomyCoordinator(elapsedRealtimeClock = { TEST_CLOCK_MILLIS }).also {
             it.updateNetworkEnvironment(
                 networkAvailable = true,
                 captivePortalDetected = false,
                 mobileData = false
             )
         }
+    }
+
+    private companion object {
+        const val TEST_CLOCK_MILLIS = 100L
     }
 
     @Test
