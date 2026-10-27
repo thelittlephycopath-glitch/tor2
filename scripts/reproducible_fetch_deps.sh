@@ -104,16 +104,19 @@ fi
 
 . "$CARGO_HOME/env"
 
-MSRV=$(cat scripts/msrv.txt)
-RUST_VER=$(rustup default  | cut -b 1-6)
-if [ "$RUST_VER" != $MSRV ] ; then
-  echo "  Rust $MSRV: not found. Installing..."
-  echo ""
-  rustup default  $MSRV
-  rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+MSRV="$(cat scripts/msrv.txt)"
+RUST_VER="$(rustup default | cut -b 1-6)"
+if [ "$RUST_VER" != "$MSRV" ]; then
+  echo "  Selecting pinned Rust toolchain $MSRV..."
+  rustup default "$MSRV"
 fi
 
-echo "  Rust $MSRV OK!"
+# Target installation must be idempotent and independent of the active toolchain.
+# A partially provisioned SDK/toolchain can already have the pinned Rust version but
+# still be missing one or more Android targets after an interrupted setup.
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+echo "  Rust $MSRV and Android targets OK!"
 
 SDK_ROOT="$PWD/bin/Android/Sdk"
 SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
