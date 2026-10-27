@@ -140,6 +140,7 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Serialized Bridge Bot events through one collector so a transport selection is processed before a following bridge request, avoiding a race between separate filtered event collectors.
 - [x] Changed the bridge-result icon tint to white and added the WebTunnel selector styling in monochrome, consistent with the requested black/white direction.
 - [x] Added unit tests for WebTunnel-specific API request/filtering and the WebTunnel save flow. These tests have **not** been run by Gradle.
+- [x] Added a Compose UI test for the WebTunnel selector and an official Bridges website fallback when the WebTunnel API request returns an error. The UI test is unexecuted because Android instrumentation has not run.
 - [ ] WebTunnel is not yet an automatic failover option. The live bridge-distribution API, parser/configuration, bootstrap, real device connection, and no-direct-fallback behavior still require verification.
 - [ ] No full Android build, Gradle test, lint, emulator run, or device leak test has been completed. The known GitHub Actions runner-startup blocker remains.
 - [ ] The visual changes remain source-only until the app can be compiled and checked on narrow screens and with accessibility services.
