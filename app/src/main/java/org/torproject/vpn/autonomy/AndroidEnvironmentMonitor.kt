@@ -34,7 +34,9 @@ class AndroidEnvironmentMonitor(
             var shouldClearPortal = false
             synchronized(lock) {
                 if (activeNetwork != network) {
-                    shouldInvalidate = networkAvailable
+                    // Invalidate even when the old path was not yet validated: trust evidence is
+                    // path-specific, and the connectivity booleans can be identical across networks.
+                    shouldInvalidate = true
                     shouldClearPortal = captivePortalDetected
                     activeNetwork = network
                     networkAvailable = false
