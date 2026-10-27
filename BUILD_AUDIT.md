@@ -188,3 +188,12 @@ The read-only Android diagnostic probe accepts a session-generation token but st
 
 Fresh trust evidence now propagates DNS-hijack and TLS-interception indicators into sticky coordinator signals and marks captive-portal evidence explicitly. A newly observed captive portal invalidates the current tunnel verification generation even though the trust classifier returns `UNKNOWN` for portal networks. Generic trust refreshes cannot clear these signals; explicit clear events or authoritative network-monitor state are required. Added regression tests, but the Kotlin/Gradle suite has not yet executed.
 
+## Standalone security preflight workflow — 2026-10-28
+
+Added `.github/workflows/security-preflight.yml`, a lightweight workflow that runs on pushes to `dangerous-experiment`, pull requests to `main`, and manual dispatch. It runs only shell syntax checks and the positive/negative CI security fixtures; it does not build the Android APK or initialize the Android/Rust toolchain.
+
+- Workflow: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40579231067
+- Commit: [`ce8ec9f`](https://github.com/thelittlephycopath-glitch/tor2/commit/ce8ec9fb4f08f9e994600f49393d760d08578235)
+- Result: failed before the first step, with `steps: null` and no job log URL. The lightweight workflow therefore did not execute its preflight checks in GitHub Actions.
+- Interpretation: the failure remains consistent with the previously observed runner/Actions allocation problem; it is not evidence of a shell/test failure. The local mirrored fixture suite passed, and the checked workflow files passed static pin/guard inspection, but hosted validation is still blocked.
+
