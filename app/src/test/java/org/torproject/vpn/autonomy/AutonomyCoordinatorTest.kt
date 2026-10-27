@@ -438,6 +438,33 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
+    fun recoveryWaitsForAnInFlightTunnelStartupToFinish() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_FAILED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 2
+        )
+
+        val first = coordinator.planRecovery()
+        assertTrue(first.shouldScheduleReconnect)
+        assertTrue(coordinator.markRecoveryAttemptStarted(first.attempt!!))
+
+        coordinator.observe(AutonomyEventType.TUNNEL_START_REQUESTED, elapsedRealtimeMillis = 3)
+        coordinator.observe(AutonomyEventType.TUNNEL_BOOTSTRAPPING, elapsedRealtimeMillis = 4)
+        val whileStarting = coordinator.planRecovery()
+        assertFalse(whileStarting.shouldScheduleReconnect)
+        assertTrue(whileStarting.keepTrafficBlocked)
+        assertTrue(whileStarting.reason.contains("startup is in progress"))
+
+        coordinator.observe(AutonomyEventType.TUNNEL_FAILED, elapsedRealtimeMillis = 5)
+        val afterFailure = coordinator.planRecovery()
+        assertTrue(afterFailure.shouldScheduleReconnect)
+        assertEquals(2, afterFailure.attempt)
+    }
+
+    @Test
     fun failedLeakCheckRequiresReconnectAndFreshVerificationBeforeClearingFailure() {
         val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
