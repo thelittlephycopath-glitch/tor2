@@ -243,7 +243,9 @@ class AutonomyCoordinator(
             // Trust belongs to the observed network and must never carry over to a new path.
             latestNetworkTrustEvidence = null
             environmentalSignals = environmentalSignals.copy(trust = NetworkTrust.UNKNOWN)
-            // Network or transport changes invalidate verification and session-scoped learning.
+            // Network or transport changes invalidate in-flight startup, verification, and
+            // session-scoped learning. A later recovery attempt must begin from fresh state.
+            tunnelStartupInProgress = false
             tunnelReady = false
             leakChecksPassed = false
             consecutiveFailures = 0
