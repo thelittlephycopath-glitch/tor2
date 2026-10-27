@@ -1,0 +1,38 @@
+name: Validate CI security controls
+
+on:
+  push:
+    branches: [dangerous-experiment]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tor2-security-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    name: Offline workflow and source-import guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check shell syntax
+        run: |
+          set -euo pipefail
+          bash -n scripts/test_ci_security.sh
+          bash -n scripts/verify_ci_security.sh
+          bash -n scripts/reproducible_build.sh
+          bash -n scripts/reproducible_fetch_deps.sh
+
+      - name: Run positive and negative security fixtures
+        run: bash scripts/test_ci_security.sh
+
+      - name: Verify repository workflow controls
+        run: bash scripts/verify_ci_security.sh
