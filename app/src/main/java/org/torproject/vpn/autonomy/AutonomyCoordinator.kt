@@ -193,6 +193,7 @@ class AutonomyCoordinator(
                 recoveryRequested = false
                 tunnelReady = false
                 leakChecksPassed = false
+                recoveryPlanner.resetAfterServiceStopped()
             }
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
                 tunnelStartupInProgress = false
