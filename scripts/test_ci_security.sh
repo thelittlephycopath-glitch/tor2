@@ -43,6 +43,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/dangerous-experiment' }}
     steps:
       - name: validate source revision
+        env:
+          UPSTREAM_COMMIT: ${{ inputs.upstream_commit }}
         run: |
           if [[ ! "$UPSTREAM_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then exit 1; fi
           cp -a .github /tmp/tor-vpn-local-github
