@@ -160,3 +160,5 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Bridge settings accessibility summary no longer assumes every pasted bridge line has a recognized transport type; unknown/malformed types now fall back to a generic count instead of risking an empty-set `first()` crash. Gradle and Android UI tests are still pending.
 - [x] Manual bridge-line formatting now joins lines once while preserving the newline-terminated format expected by the existing OnionMasq call.
 - [x] Updated the connection artwork palette to black/gray/white and refined the bridge-information card. This is a visual-only change; device rendering, contrast, and small-screen layout still need validation.
+
+- [x] Invalid persisted bridge-type enum values now fall back to the existing `None` option instead of throwing during preference access. This is defensive compatibility handling; it does not select or activate a bridge.
