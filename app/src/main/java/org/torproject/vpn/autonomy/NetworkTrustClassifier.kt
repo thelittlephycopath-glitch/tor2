@@ -33,7 +33,7 @@ data class NetworkTrustEvidence(
  * change routes, or authorize traffic release.
  */
 class NetworkTrustClassifier(
-    private val maxEvidenceAgeMillis: Long = DEFAULT_MAX_EVIDENCE_AGE_MILLIS
+    val maxEvidenceAgeMillis: Long = DEFAULT_MAX_EVIDENCE_AGE_MILLIS
 ) {
     init {
         require(maxEvidenceAgeMillis > 0L) { "Maximum evidence age must be positive" }
