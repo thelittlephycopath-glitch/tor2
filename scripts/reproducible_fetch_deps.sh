@@ -1,16 +1,16 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-# Ensure executing in ...../vpn/
-cd $(dirname "$0")
-cd ..
+# Resolve the repository root from this script, including paths containing spaces.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
 echo "Fetching Environment..."
 
 # Detect OS and architecture
-OS=$(uname -s)
-ARCH=$(uname -m)
+OS="$(uname -s)"
+ARCH="$(uname -m)"
 
 if ! command -v unzip &>/dev/null; then
   echo "Error: unzip is required, please install"
@@ -72,7 +72,7 @@ else
     echo "  Java 21 not found, attempting to download..."
     mkdir -p bin
     cd bin
-    curl "$JDK_URL" -o "$JDK_ARCHIVE"
+    curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$JDK_URL" -o "$JDK_ARCHIVE"
     tar -xzf "$JDK_ARCHIVE"
     rm "$JDK_ARCHIVE"
     cd ..
@@ -88,16 +88,16 @@ echo "  Java 21 OK!"
 export JAVA_HOME="$TORVPN_JAVA_HOME"
 
 
-export RUSTUP_HOME=$PWD/bin/rustup
-export CARGO_HOME=$PWD/bin/cargo
+export RUSTUP_HOME="$PWD/bin/rustup"
+export CARGO_HOME="$PWD/bin/cargo"
 
-if [ ! -d $RUSTUP_HOME ]; then
+if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
 
   echo "  rustup not installed, fetching..."
   echo ""
 
   mkdir -p bin
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o bin/rustup-init.sh
+  curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 https://sh.rustup.rs -o bin/rustup-init.sh
   chmod a+x bin/rustup-init.sh
   ./bin/rustup-init.sh -y
 fi
@@ -163,15 +163,15 @@ yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
   "platforms;android-37" "build-tools;37.0.0"
 
 
-if [ ! -d $ANDROID_HOME/ndk/27.3.13750724 ]; then
+if [ ! -d "$ANDROID_HOME/ndk/27.3.13750724" ]; then
   echo "  Android NDK not found. Installing..."
   echo ""
-  pushd $ANDROID_HOME/cmdline-tools/latest/bin
+  pushd "$ANDROID_HOME/cmdline-tools/latest/bin"
   "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --channel=0 --install "ndk;27.3.13750724"
   popd
 fi
-export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.3.13750724
-export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.3.13750724
+export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/27.3.13750724"
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
 
 
 
