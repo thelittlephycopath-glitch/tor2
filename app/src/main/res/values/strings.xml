@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">g-tor</string>
+    <string name="app_name">gtor</string>
 
     <string name="action_save">Save</string>
     <string name="action_configure">Configure</string>
