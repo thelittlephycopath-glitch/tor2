@@ -157,4 +157,43 @@ class AutonomyActionGateTest {
         assertTrue(result.approvedActions.contains(AutonomyAction.SUPPRESS_COVER_TRAFFIC))
         assertTrue(result.suppressedActions.isEmpty())
     }
+    @Test
+    fun everySideEffectingActionRemainsSuppressedUntilAnExecutorIsReviewed() {
+        val config = AutonomyConfig(
+            enabled = true,
+            mode = AutonomyMode.EXPERIMENTAL,
+            automaticReconnect = true,
+            automaticBridgeFailover = true,
+            automaticCircuitRefresh = true,
+            coverTraffic = true,
+            decoyData = true,
+            honeyvault = true,
+            persistNetworkLearning = true
+        )
+        val allActions = AutonomyAction.values().toList()
+        val result = gate.plan(
+            config = config,
+            decision = decision(*allActions.toTypedArray(), trafficEligible = true),
+            leakVerificationResult = LeakVerificationResult(emptyList())
+        )
+
+        assertEquals(
+            setOf(
+                AutonomyAction.KEEP_TRAFFIC_BLOCKED,
+                AutonomyAction.SUPPRESS_COVER_TRAFFIC
+            ),
+            result.approvedActions.toSet()
+        )
+        val sideEffectingActions = allActions.toSet() - setOf(
+            AutonomyAction.KEEP_TRAFFIC_BLOCKED,
+            AutonomyAction.SUPPRESS_COVER_TRAFFIC
+        )
+        assertEquals(sideEffectingActions, result.suppressedActions.keys)
+        assertTrue(
+            result.suppressedActions.values.all {
+                it == ActionSuppressionReason.ACTION_NOT_IMPLEMENTED
+            }
+        )
+    }
+
 }
