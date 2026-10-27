@@ -312,5 +312,8 @@ jobs:
 
             These are not official Tor Project releases and are not signed with Tor's release key.
             This VPN software is experimental; do not rely on this build for sensitive activity.
-          files: dist/*.apk
+          files: |
+            dist/*.apk
+            dist/SHA256SUMS
+            dist/BUILD-METADATA.txt
           fail_on_unmatched_files: true
