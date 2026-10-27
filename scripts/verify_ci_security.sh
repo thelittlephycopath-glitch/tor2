@@ -50,8 +50,57 @@ if ! grep -Fq "github.event_name == 'workflow_dispatch' && inputs.publish_releas
   echo "APK release publication is missing its manual-dispatch opt-in guard." >&2
   exit 1
 fi
-if ! grep -A 7 -F 'publish_release:' .github/workflows/build-apk.yml | grep -Eq '^[[:space:]]*default:[[:space:]]*false[[:space:]]*$'; then
+if ! grep -A 7 -F 'publish_release:' .github/workflows/build-apk.yml | grep -Eq '^[[:space:]]*default:[[:space:]]*false[[:space:]]*
+# Keep upstream source replacement isolated to the experiment branch and an immutable source revision.
+if ! grep -Fq "github.ref == 'refs/heads/dangerous-experiment'" .github/workflows/import-source.yml; then
+  echo "Upstream source import must be restricted to dangerous-experiment." >&2
+  exit 1
+fi
+if ! grep -Fq 'UPSTREAM_COMMIT: ${{ inputs.upstream_commit }}' .github/workflows/import-source.yml ||
+   ! grep -Fq '[[ ! "$UPSTREAM_COMMIT" =~ ^[0-9a-f]{40}$ ]]' .github/workflows/import-source.yml; then
+  echo "Upstream source import must require and validate a full commit SHA." >&2
+  exit 1
+fi
+if ! grep -Fq 'cp -a .github /tmp/tor-vpn-local-github' .github/workflows/import-source.yml ||
+   ! grep -Fq 'cp -a /tmp/tor-vpn-local-github .github' .github/workflows/import-source.yml; then
+  echo "Upstream source import must preserve local GitHub workflow controls." >&2
+  exit 1
+fi
+
+for script in scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh; do
+  bash -n "$script"
+done
+
+echo "CI security preflight passed: checked $checked immutable external action references, release opt-in guard, and reproducible build-script syntax."
+; then
   echo "APK release publication must default to disabled." >&2
+  exit 1
+fi
+if ! grep -A 7 -F 'run_apk_build:' .github/workflows/build-apk.yml | grep -Eq '^[[:space:]]*default:[[:space:]]*false[[:space:]]*
+# Keep upstream source replacement isolated to the experiment branch and an immutable source revision.
+if ! grep -Fq "github.ref == 'refs/heads/dangerous-experiment'" .github/workflows/import-source.yml; then
+  echo "Upstream source import must be restricted to dangerous-experiment." >&2
+  exit 1
+fi
+if ! grep -Fq 'UPSTREAM_COMMIT: ${{ inputs.upstream_commit }}' .github/workflows/import-source.yml ||
+   ! grep -Fq '[[ ! "$UPSTREAM_COMMIT" =~ ^[0-9a-f]{40}$ ]]' .github/workflows/import-source.yml; then
+  echo "Upstream source import must require and validate a full commit SHA." >&2
+  exit 1
+fi
+if ! grep -Fq 'cp -a .github /tmp/tor-vpn-local-github' .github/workflows/import-source.yml ||
+   ! grep -Fq 'cp -a /tmp/tor-vpn-local-github .github' .github/workflows/import-source.yml; then
+  echo "Upstream source import must preserve local GitHub workflow controls." >&2
+  exit 1
+fi
+
+for script in scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh; do
+  bash -n "$script"
+done
+
+echo "CI security preflight passed: checked $checked immutable external action references, release opt-in guard, and reproducible build-script syntax."
+ ||
+   ! grep -Fq 'if: ${{ inputs.run_apk_build }}' .github/workflows/build-apk.yml; then
+  echo "APK build execution must require a separate default-off manual opt-in." >&2
   exit 1
 fi
 
