@@ -40,6 +40,11 @@ for workflow in "${workflows[@]}"; do
   done < "$workflow"
 done
 
+if (( checked == 0 )); then
+  echo "No external GitHub Actions references were checked; refusing to pass silently." >&2
+  exit 1
+fi
+
 # Preserve the explicit release publication safeguard.
 if ! grep -Fq "github.event_name == 'workflow_dispatch' && inputs.publish_release" .github/workflows/build-apk.yml; then
   echo "APK release publication is missing its manual-dispatch opt-in guard." >&2
