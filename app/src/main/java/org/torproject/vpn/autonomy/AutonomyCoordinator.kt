@@ -23,6 +23,7 @@ class AutonomyCoordinator(
     private var leakChecksPassed = false
     private var leakCheckFailed = false
     private var validatedLeakReportReady = false
+    private var leakVerificationObservedAtElapsedRealtimeMillis: Long? = null
     private var consecutiveFailures = 0
     // Remains set after session invalidation until a fresh leak report verifies recovery.
     private var recoveryRequested = false
@@ -143,6 +144,8 @@ class AutonomyCoordinator(
                         !environmentalSignals.tlsInterceptionSuspected &&
                         !environmentalSignals.captivePortalDetected
                     leakChecksPassed = passIsSafe
+                    leakVerificationObservedAtElapsedRealtimeMillis =
+                        if (passIsSafe) elapsedRealtimeMillis else null
                     if (passIsSafe) {
                         leakCheckFailed = false
                         recoveryRequested = false
@@ -156,6 +159,7 @@ class AutonomyCoordinator(
                 if (source == AutonomyEventSource.LEAK_CHECKER) {
                     validatedLeakReportReady = false
                     leakChecksPassed = false
+                    leakVerificationObservedAtElapsedRealtimeMillis = null
                     leakCheckFailed = true
                     recoveryRequested = true
                     tunnelReady = false
@@ -410,21 +414,40 @@ class AutonomyCoordinator(
         recoveryPlanner.markAttemptStarted(attempt)
 
     @Synchronized
-    fun currentDecision(): AutonomyDecision = lastDecision
+    fun currentDecision(): AutonomyDecision = calculateDecision()
 
     @Synchronized
-    fun currentSignals(): NetworkSignals = environmentalSignals.copy(
+    fun currentSignals(): NetworkSignals {
+        expireStaleLeakVerification(elapsedRealtimeClock())
+        return environmentalSignals.copy(
         repeatedConnectionFailures = consecutiveFailures,
         tunnelReady = tunnelReady,
         leakChecksPassed = leakChecksPassed,
         leakCheckFailed = leakCheckFailed
-    )
+        )
+    }
+
+    private fun expireStaleLeakVerification(nowElapsedRealtimeMillis: Long) {
+        val verifiedAt = leakVerificationObservedAtElapsedRealtimeMillis ?: return
+        if (!leakChecksPassed) return
+        val age = nowElapsedRealtimeMillis - verifiedAt
+        if (nowElapsedRealtimeMillis < verifiedAt ||
+            age > LeakVerificationGate.DEFAULT_MAX_REPORT_AGE_MILLIS
+        ) {
+            // A stale/future-dated pass is no longer authority to release traffic. This is not
+            // interpreted as proof of a leak; it merely requires a fresh independent check.
+            leakChecksPassed = false
+            validatedLeakReportReady = false
+            leakVerificationObservedAtElapsedRealtimeMillis = null
+        }
+    }
 
     private fun rememberRecoveryIfSessionWasActive() {
         if (tunnelReady || leakChecksPassed) recoveryRequested = true
     }
 
     private fun calculateDecision(): AutonomyDecision {
+        expireStaleLeakVerification(elapsedRealtimeClock())
         val observed = currentSignals()
         val decision = policyEngine.evaluate(observed)
         val automationConfigured = config.enabled &&
