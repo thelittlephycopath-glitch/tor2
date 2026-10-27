@@ -119,6 +119,15 @@ class AutonomyRecoveryPlanner(
         reset()
     }
 
+    /**
+     * Clears stale scheduled work when the owning VPN service stops.
+     * A later service instance must make a fresh recovery decision.
+     */
+    @Synchronized
+    fun resetAfterServiceStopped() {
+        reset()
+    }
+
     @Synchronized
     fun attemptsStarted(): Int = attemptsStarted
 
