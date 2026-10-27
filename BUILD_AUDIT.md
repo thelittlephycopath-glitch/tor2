@@ -72,3 +72,19 @@ Retried the failed build workflow (run 40570108287, attempt 2) after confirming 
 - Run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40570108287
 
 The failure is reproducible across multiple runs and both Ubuntu and Windows runner labels. This rules out a project-specific compile error as the immediate cause of those failures; it does not prove the account-level root cause. The owner should check repository Actions enablement/policies and account billing/usage restrictions. If those are clear, escalate to GitHub Support with the run URL because there is no job log to diagnose in source code. GitHub's workflow troubleshooting guide documents reviewing workflow logs, billing errors, Actions availability, and runner troubleshooting: https://docs.github.com/en/actions/how-tos/troubleshoot-workflows
+
+## Artifact integrity gate — 2026-10-28
+
+The APK workflow now performs a post-signing integrity pass before artifact upload:
+
+- Re-runs APK signature verification for every signed APK.
+- Reads the APK package ID from the APK manifest and fails if it is not `org.torproject.vpn.tor2beta.dev`.
+- Records each APK's filename, package ID, and byte size in `dist/BUILD-METADATA.txt`.
+- Generates `dist/SHA256SUMS` for the signed APK files and uploads both verification files alongside the APKs.
+
+This makes a successful future artifact independently checkable after download. It does not substitute for a successful workflow run or runtime VPN security tests.
+
+- Workflow change: [`f073559`](https://github.com/thelittlephycopath-glitch/tor2/commit/f0735594c87c062d9d603c50c376b2f76292f866)
+- Triggered run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40571377421
+- Result: runner job failed before any steps/logs were exposed; this run does not validate the new metadata gate.
+
