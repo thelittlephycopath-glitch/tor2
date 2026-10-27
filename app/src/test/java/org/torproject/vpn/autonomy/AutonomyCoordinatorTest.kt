@@ -991,6 +991,7 @@ class AutonomyCoordinatorTest {
         assertFalse(coordinator.currentSignals().charging)
         assertFalse(coordinator.currentSignals().chargingReadingAvailable)
     }
+
     @Test
     fun freshLeakEvidenceFromPreviousNetworkGenerationIsRejected() {
         val coordinator = connectedCoordinator()
@@ -1023,5 +1024,4 @@ class AutonomyCoordinatorTest {
         assertFalse(coordinator.currentSignals().leakChecksPassed)
         assertFalse(coordinator.currentDecision().trafficReleaseEligible)
     }
-
 }
