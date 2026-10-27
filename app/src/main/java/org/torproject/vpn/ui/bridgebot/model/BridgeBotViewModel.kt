@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -41,21 +40,16 @@ class BridgeBotViewModel(
     private var fetchJob: Job? = null
 
     init {
-        events.filterIsInstance<Event.RequestBridges>()
-            .onEach { requestBridges() }
-            .launchIn(viewModelScope)
-
-        events.filterIsInstance<Event.SetTransport>()
-            .onEach { selectTransport(it.transport) }
-            .launchIn(viewModelScope)
-
-        events.filterIsInstance<Event.CancelRequest>()
-            .onEach { cancelRequest() }
-            .launchIn(viewModelScope)
-
-        events.filterIsInstance<Event.SaveBridges>()
-            .onEach { saveBridges() }
-            .launchIn(viewModelScope)
+        // Keep transport selection and the next request ordered. Separate filtered collectors
+        // could otherwise race if a selection and request event arrive back-to-back.
+        events.onEach { event ->
+            when (event) {
+                Event.RequestBridges -> requestBridges()
+                is Event.SetTransport -> selectTransport(event.transport)
+                Event.CancelRequest -> cancelRequest()
+                Event.SaveBridges -> saveBridges()
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onEvent(event: Event) = events.tryEmit(event)
