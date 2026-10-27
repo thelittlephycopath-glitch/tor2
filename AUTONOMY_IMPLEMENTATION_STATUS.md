@@ -214,3 +214,9 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Added coordinator regression tests for captive-portal evidence persistence, DNS-hijack signal persistence, missing session-generation tokens, and replay of fresh evidence from a prior network generation.
 - [ ] Run all coordinator tests and ktlint under Gradle. These tests are committed but remain unexecuted in the hosted build environment.
 
+## Independent CI verification workflow — 2026-10-28
+
+- [x] Added `.github/workflows/security-preflight.yml` to validate shell syntax, positive/negative safety fixtures, action pins, build/release opt-ins, and source-import isolation without building an APK.
+- [x] Confirmed its push-triggered run was created on the latest branch commit.
+- [ ] Hosted job failed before its first step (`steps: null`, no log URL), so no remote test result exists yet. Runner/Actions availability remains a blocking infrastructure issue.
+
