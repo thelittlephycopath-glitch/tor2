@@ -1,4 +1,4 @@
-name: Build g-tor APK
+name: Build gtor APK
 
 on:
   # APK work is intentionally deferred until the backend/security plan is complete.
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build, sign, and verify g-tor APKs
+    name: Build, sign, and verify gtor APKs
     if: ${{ inputs.run_apk_build }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -121,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: g-tor-build-diagnostics
+          name: gtor-build-diagnostics
           path: |
             ${{ runner.temp }}/tor2-build.log
             ${{ runner.temp }}/tor2-build-status.txt
@@ -145,7 +145,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: g-tor-apk-build-outputs
+          name: gtor-apk-build-outputs
           path: |
             build/*-release-unsigned.apk
             app/build/outputs/apk/release/*.apk
@@ -169,7 +169,7 @@ jobs:
                 echo "No release APKs were produced." >&2
                 exit 1
               fi
-              key=/tmp/g-tor-debug.keystore
+              key=/tmp/gtor-debug.keystore
               keytool -genkeypair -noprompt \
                 -keystore "$key" -storepass android -alias androiddebugkey \
                 -keypass android -dname "CN=Android Debug,O=Android,C=US" \
@@ -228,13 +228,13 @@ jobs:
             adb shell monkey -p org.torproject.vpn.tor2beta.dev 1
             for attempt in $(seq 1 20); do
               if adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
-                echo "g-tor process started in Android emulator."
+                echo "gtor process started in Android emulator."
                 break
               fi
               sleep 2
             done
             if ! adb shell pidof org.torproject.vpn.tor2beta.dev >/dev/null 2>&1; then
-              echo "g-tor process did not remain alive after launch." >&2
+              echo "gtor process did not remain alive after launch." >&2
               adb logcat -d -t 500 >&2
               exit 1
             fi
@@ -273,7 +273,7 @@ jobs:
       - name: Upload APK artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: g-tor-debug-signed-apks
+          name: gtor-debug-signed-apks
           path: |
             dist/*.apk
             dist/SHA256SUMS
@@ -307,7 +307,7 @@ jobs:
       - name: Download verified APK artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: g-tor-debug-signed-apks
+          name: gtor-debug-signed-apks
           path: dist
 
       - name: Publish APK download page
@@ -315,8 +315,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: g-tor-build-${{ github.run_number }}
-          name: g-tor build ${{ github.run_number }}
+          tag_name: gtor-build-${{ github.run_number }}
+          name: gtor build ${{ github.run_number }}
           body: |
             Community-built debug-signed APKs compiled from this private repository.
 
