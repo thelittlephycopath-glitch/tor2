@@ -205,3 +205,9 @@ The standalone CI preflight now also checks that Android backup is disabled, bot
 
 The standalone security-preflight workflow was triggered again after the latest safety-test change: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40579647166. It again failed before the job exposed any steps (`steps: null`, no `logs_url`). This repeated infrastructure symptom prevents us from determining whether the repository's exact preflight/test suite passes in hosted CI. No Gradle or Android build was attempted by this lightweight workflow.
 
+## Stale network callback hardening — 2026-10-28
+
+`AndroidEnvironmentMonitor.onCapabilitiesChanged` now accepts capability updates only when the callback's `Network` equals the active network previously established by `onAvailable`. Previously, a delayed callback arriving after `onLost`/`onUnavailable` could be accepted when `activeNetwork == null`, potentially repopulating connectivity/trust state from a stale network. The new guard ignores that callback rather than treating it as a new active path.
+
+This is a source-level race-condition fix. There is no dedicated Android callback test and it has not been exercised on-device or under Android instrumentation; Gradle/hosted verification remains blocked by the runner allocation failure.
+
