@@ -432,7 +432,7 @@ class AutonomyCoordinatorTest {
     }
 
     @Test
-    fun startingNewLeakCheckDoesNotClearPreviousFailure() {
+    fun failedLeakCheckRequiresReconnectAndFreshVerificationBeforeClearingFailure() {
         val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
         coordinator.observe(
@@ -440,21 +440,29 @@ class AutonomyCoordinatorTest {
             source = AutonomyEventSource.LEAK_CHECKER,
             elapsedRealtimeMillis = 2
         )
-        assertTrue(coordinator.currentSignals().leakCheckFailed)
 
-        val inProgress = coordinator.observe(
-            AutonomyEventType.LEAK_CHECK_STARTED,
-            source = AutonomyEventSource.LEAK_CHECKER,
+        assertTrue(coordinator.currentSignals().leakCheckFailed)
+        assertFalse(coordinator.currentSignals().tunnelReady)
+        val recovery = coordinator.planRecovery()
+        assertTrue(recovery.shouldScheduleReconnect)
+        assertTrue(coordinator.markRecoveryAttemptStarted(recovery.attempt!!))
+
+        // A new tunnel-ready event does not erase the failure; it enables a fresh check.
+        val ready = coordinator.observe(
+            AutonomyEventType.TUNNEL_READY,
             elapsedRealtimeMillis = 3
         )
-
         assertTrue(coordinator.currentSignals().leakCheckFailed)
         assertFalse(coordinator.currentSignals().leakChecksPassed)
-        assertFalse(inProgress.trafficReleaseEligible)
-        assertTrue(inProgress.blockTrafficUntilTunnelVerified)
+        assertTrue(AutonomyAction.RUN_LEAK_CHECKS in ready.recommendedActions)
+        assertFalse(coordinator.planRecovery().shouldScheduleReconnect)
 
-        // Only a fresh, complete report can clear the earlier failure.
-        val verified = submitPassingLeakCheck(coordinator, timestamp = 4L)
+        coordinator.observe(
+            AutonomyEventType.LEAK_CHECK_STARTED,
+            source = AutonomyEventSource.LEAK_CHECKER,
+            elapsedRealtimeMillis = 4
+        )
+        val verified = submitPassingLeakCheck(coordinator, timestamp = 5L)
         assertTrue(verified.passed)
         assertFalse(coordinator.currentSignals().leakCheckFailed)
         assertTrue(coordinator.currentDecision().trafficReleaseEligible)
