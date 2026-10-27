@@ -172,3 +172,20 @@ The project is complete only when:
 - Monitor callback shutdown-race protection and regression tests remain outstanding unless subsequent commits prove otherwise.
 
 **Status at plan creation:** execution incomplete; no APK or security certification claimed.
+
+
+## Optional product concept — privacy-safe network overview (inspired by reference screenshots)
+
+**Intent:** evaluate a future, lightweight network overview inspired by the reference screenshots' global map and usage dashboard. This is a product idea only, not authorization to change the existing UI/UX. Keep the current interface unchanged until the user explicitly approves a concrete design and implementation.
+
+- [ ] First verify whether GTor has a trustworthy, supported data source for any network map; do not invent relay locations, online counts, IP-pool sizes, coverage, or availability.
+- [ ] If a map is feasible, use aggregate/coarse public network metadata only. Never display the user's current IP, live circuit path, precise user location, destination, DNS query, or per-user traffic.
+- [ ] Clearly distinguish Tor relay/network metadata from a commercial residential-proxy IP pool. Do not imply GTor owns or provides “205M IPs” or one-request access to residential IPs.
+- [ ] If reliable map data is unavailable, prefer a clearly labelled static educational illustration or omit the map rather than presenting simulated dots as live infrastructure.
+- [ ] Consider a compact status/usage view using facts GTor can actually measure: tunnel state, session duration, connection events, and optional local performance metrics. Show “unknown” or “not measured” when evidence is unavailable.
+- [ ] Keep statistics local by default; do not add analytics, background polling, or persistent browsing/activity history just to populate a dashboard.
+- [ ] Define freshness, data source, units, and measurement method for each metric; never show fake request counts or success rates.
+- [ ] Review accessibility, battery/network overhead, and small-screen performance before proposing implementation.
+- [ ] Create a separate design proposal and obtain explicit approval before any visible UI/UX change. Preserve all existing screens and navigation unless that approval specifically authorizes changes.
+
+**Acceptance gate:** concept remains NOT IMPLEMENTED until data provenance, privacy review, performance impact, and explicit UI/UX approval are documented. Any future implementation must have tests for unavailable/stale data and must not weaken VPN safety gates.
