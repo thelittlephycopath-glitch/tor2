@@ -10,7 +10,7 @@ on:
         description: Publish signed APKs as a private GitHub Release
         required: true
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
