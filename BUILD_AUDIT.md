@@ -114,3 +114,10 @@ The action gate test suite now also includes an exhaustive scenario where every 
 - The workflow run therefore does not verify action execution, preflight execution, compilation, tests, APK signing, or artifact integrity.
 - No APK is confirmed as built. The runner/Actions environment blocker remains open.
 
+## APK build deferral aligned with plan execution — 2026-10-28
+
+The APK workflow now uses manual dispatch only. Automatic push triggers were removed from `dangerous-experiment` so backend and privacy work can proceed without repeatedly launching a known-failing hosted-runner job while APK work is intentionally deferred. The existing explicit manual release-publication gate remains default-off and restricted to manual dispatch on `main`.
+
+- Workflow change: [`f8b7a4b`](https://github.com/thelittlephycopath-glitch/tor2/commit/f8b7a4b112426fc93d82492dde209944a8662bae)
+- This does not repair the runner assignment problem or validate source compilation. The APK workflow can be manually resumed after the backend plan's acceptance gates are ready.
+
