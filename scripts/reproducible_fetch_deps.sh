@@ -179,11 +179,21 @@ echo "  Android NDK 27.3.13750724 OK!"
 
 # zipalign.py recommended by f-droid and incorporated there in https://github.com/f-droid/fdroiddata/blob/master/srclibs/reproducible-apk-tools.yml
 # so we'll use here. It's been archived (and not mainteined) since 2025.05.12, so we'll always get the right / latest version
-if [ ! -d bin/reproducible-apk-tools ]; then
-  echo "Fetching reproducible-apk-tools..."
-  cd bin
-  git clone https://github.com/obfusk/reproducible-apk-tools
-  cd ..
+# Pin the archived helper repository to an immutable commit. Cloning its default branch
+# would make identical source revisions depend on whichever commit happens to be current.
+REPRODUCIBLE_APK_TOOLS_COMMIT="9401d827a2404827ec3de6cb90a879d9fbd3f60d"
+TOOLS_DIR="$PWD/bin/reproducible-apk-tools"
+if [ ! -d "$TOOLS_DIR/.git" ]; then
+  echo "Fetching reproducible-apk-tools at pinned commit $REPRODUCIBLE_APK_TOOLS_COMMIT..."
+  mkdir -p bin
+  git clone --no-checkout https://github.com/obfusk/reproducible-apk-tools "$TOOLS_DIR"
+fi
+git -C "$TOOLS_DIR" fetch --depth=1 origin "$REPRODUCIBLE_APK_TOOLS_COMMIT"
+git -C "$TOOLS_DIR" checkout --detach --force "$REPRODUCIBLE_APK_TOOLS_COMMIT"
+ACTUAL_TOOLS_COMMIT="$(git -C "$TOOLS_DIR" rev-parse HEAD)"
+if [ "$ACTUAL_TOOLS_COMMIT" != "$REPRODUCIBLE_APK_TOOLS_COMMIT" ]; then
+  echo "reproducible-apk-tools commit mismatch: expected $REPRODUCIBLE_APK_TOOLS_COMMIT, got $ACTUAL_TOOLS_COMMIT" >&2
+  exit 1
 fi
 
 ./scripts/reproducible_fetch_rust_deps.sh
