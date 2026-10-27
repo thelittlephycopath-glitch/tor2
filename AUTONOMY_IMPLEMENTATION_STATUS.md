@@ -120,3 +120,12 @@ No successful Android APK build, APK signature verification, or emulator smoke t
 
 
 No UI/UX changes were made. No verified APK artifact is available from these failed runs.
+
+
+## Follow-up work — 2026-10-27
+
+- [x] Fixed a recovery lifecycle edge case: explicit tunnel/service stop now clears the recovery planner's pending attempt and retry budget, so stale scheduled work cannot block a fresh service lifecycle. Added a focused regression test. Gradle execution remains pending.
+- [x] Refined the bridge settings information surface with a black-to-charcoal gradient, restrained white outline, and more consistent internal spacing. The palette remains strictly monochrome; no navigation or bridge-selection behavior was changed. UI rendering and accessibility checks remain pending.
+- [ ] Bridge strategy proposal: investigate a **layered resilience policy** before attempting transport chaining. The first layer is the configured active bridge/transport; the second is a ranked, separately validated standby candidate; a third layer is a conservative recovery policy that keeps traffic blocked when neither path is verified. This avoids assuming that multiple bridge transports can be chained inside Onionmasq when the supported API may not provide that capability.
+- [ ] Do not claim simultaneous bridge stacking or activate multiple bridges until Onionmasq/Tor control APIs and the resulting routing semantics are verified. A standby strategy is not equivalent to stacking transport tunnels, and no bridge switch or traffic path is activated by the current advisory planner.
+- [ ] Visual follow-up: review the connection home screen and bridge settings together on narrow Android screens, then refine typography, card rhythm, touch targets, and motion without adding non-monochrome colors or changing connection semantics.
