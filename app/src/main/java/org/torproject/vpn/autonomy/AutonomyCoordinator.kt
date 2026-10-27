@@ -30,6 +30,15 @@ class AutonomyCoordinator(
     private var recoveryRequested = false
     private var latestNetworkTrustEvidence: NetworkTrustEvidence? = null
     private var lowBatteryActive = false
+    private var verificationGeneration = 0L
+
+    /** Current session token for evidence collected by an independent verifier. */
+    @Synchronized
+    fun currentVerificationGeneration(): Long = verificationGeneration
+
+    private fun advanceVerificationGeneration() {
+        verificationGeneration = Math.addExact(verificationGeneration, 1L)
+    }
 
     @Synchronized
     fun observe(
@@ -38,6 +47,33 @@ class AutonomyCoordinator(
         elapsedRealtimeMillis: Long = elapsedRealtimeClock()
     ): AutonomyDecision {
         journal.record(AutonomyEvent(type, source, elapsedRealtimeMillis))
+        when (type) {
+            AutonomyEventType.TUNNEL_START_REQUESTED,
+            AutonomyEventType.TUNNEL_BOOTSTRAPPING,
+            AutonomyEventType.TUNNEL_READY,
+            AutonomyEventType.TUNNEL_FAILED,
+            AutonomyEventType.CONNECTION_FAILED,
+            AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED,
+            AutonomyEventType.DNS_CONFIGURATION_CONFLICT,
+            AutonomyEventType.DNS_CONFIGURATION_CLEARED,
+            AutonomyEventType.DNS_HIJACK_SUSPECTED,
+            AutonomyEventType.DNS_HIJACK_CLEARED,
+            AutonomyEventType.TLS_INTERCEPTION_SUSPECTED,
+            AutonomyEventType.TLS_INTERCEPTION_CLEARED,
+            AutonomyEventType.CAPTIVE_PORTAL_DETECTED,
+            AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+            AutonomyEventType.TUNNEL_STOPPED,
+            AutonomyEventType.SERVICE_STOPPED,
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceVerificationGeneration()
+            AutonomyEventType.LEAK_CHECK_STARTED,
+            AutonomyEventType.LEAK_CHECK_FAILED -> {
+                if (source == AutonomyEventSource.LEAK_CHECKER) {
+                    advanceVerificationGeneration()
+                }
+            }
+            else -> Unit
+        }
         when (type) {
             AutonomyEventType.TUNNEL_START_REQUESTED,
             AutonomyEventType.TUNNEL_BOOTSTRAPPING -> {
@@ -239,6 +275,7 @@ class AutonomyCoordinator(
                 environmentalSignals.captivePortalDetected != captivePortalDetected ||
                 environmentalSignals.mobileData != mobileData
         if (networkChanged) {
+            advanceVerificationGeneration()
             // Preserve the need to recover only when a previously active/verified session is invalidated.
             rememberRecoveryIfSessionWasActive()
             // Trust belongs to the observed network and must never carry over to a new path.
@@ -354,6 +391,9 @@ class AutonomyCoordinator(
     ): LeakVerificationResult {
         val failures = leakVerificationGate.evaluate(evidence, nowElapsedRealtimeMillis)
             .failures.toMutableList()
+        if (evidence.sessionGeneration != verificationGeneration) {
+            failures += LeakVerificationFailure.SESSION_GENERATION_MISMATCH
+        }
         if (!tunnelReady) failures += LeakVerificationFailure.TUNNEL_NOT_READY
         if (!environmentalSignals.networkAvailable) failures += LeakVerificationFailure.NETWORK_NOT_AVAILABLE
         if (environmentalSignals.dnsConfigurationConflict) {
@@ -407,6 +447,7 @@ class AutonomyCoordinator(
             NetworkTrust.UNKNOWN
         }
         if (classifiedTrust == NetworkTrust.HOSTILE) {
+            advanceVerificationGeneration()
             // Previously successful tunnel/leak checks do not remain authoritative after a hostile
             // network indicator. Record the classification without pretending a leak probe ran.
             rememberRecoveryIfSessionWasActive()
