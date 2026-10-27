@@ -155,7 +155,11 @@ class AutonomyCoordinator(
             AutonomyEventType.DNS_HIJACK_CLEARED -> {
                 tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = false)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    dnsHijackSuspected = false,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 tunnelReady = false
                 leakChecksPassed = false
             }
@@ -169,7 +173,11 @@ class AutonomyCoordinator(
             AutonomyEventType.TLS_INTERCEPTION_CLEARED -> {
                 tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = false)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    tlsInterceptionSuspected = false,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 tunnelReady = false
                 leakChecksPassed = false
             }
@@ -183,7 +191,11 @@ class AutonomyCoordinator(
             AutonomyEventType.CAPTIVE_PORTAL_CLEARED -> {
                 tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(captivePortalDetected = false)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    captivePortalDetected = false,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 tunnelReady = false
                 leakChecksPassed = false
             }
