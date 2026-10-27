@@ -79,7 +79,12 @@ class PreferenceHelper(context: Context) {
         set(value) = sharedPreference.edit { putString(EXIT_NODE_COUNTRY, value.code) }
 
     var bridgeType: BridgeType
-        get() = BridgeType.valueOf(sharedPreference.getString(BRIDGE_TYPE, BridgeType.None.name)!!)
+        get() = runCatching {
+            BridgeType.valueOf(
+                sharedPreference.getString(BRIDGE_TYPE, BridgeType.None.name)
+                    ?: BridgeType.None.name
+            )
+        }.getOrDefault(BridgeType.None)
         set(bridgeType) = sharedPreference.edit { putString(BRIDGE_TYPE, bridgeType.name) }
 
     var bridgeLines: List<String>
