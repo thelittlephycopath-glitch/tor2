@@ -13,11 +13,16 @@ data class NetworkTrustEvidence(
     val knownPublicNetwork: Boolean = false,
     val captivePortalDetected: Boolean = false,
     val dnsHijackSuspected: Boolean = false,
-    val tlsInterceptionSuspected: Boolean = false
+    val tlsInterceptionSuspected: Boolean = false,
+    /** Generation of the observed network path; null is not authoritative to the coordinator. */
+    val sessionGeneration: Long? = null
 ) {
     init {
         require(observedAtElapsedRealtimeMillis >= 0L) {
             "Observation time must not be negative"
+        }
+        require(sessionGeneration == null || sessionGeneration >= 0L) {
+            "Session generation must not be negative"
         }
     }
 }
