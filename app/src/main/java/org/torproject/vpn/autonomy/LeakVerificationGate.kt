@@ -49,7 +49,7 @@ data class LeakVerificationResult(val failures: List<LeakVerificationFailure>) {
  * each field independently. Missing/unsupported measurements must fail closed, not be guessed.
  */
 class LeakVerificationGate(
-    private val maxReportAgeMillis: Long = DEFAULT_MAX_REPORT_AGE_MILLIS
+    val maxReportAgeMillis: Long = DEFAULT_MAX_REPORT_AGE_MILLIS
 ) {
     init {
         require(maxReportAgeMillis > 0L) { "Maximum report age must be positive" }
