@@ -201,3 +201,7 @@ Added `.github/workflows/security-preflight.yml`, a lightweight workflow that ru
 
 The standalone CI preflight now also checks that Android backup is disabled, both backup/device-transfer rule files are wired in the manifest, and the opt-in network-learning SharedPreferences file is excluded from cloud backup and device transfer. The fixture suite includes a negative case that removes the extraction-rule exclusion and confirms the preflight rejects it. A local mirrored fixture run passed the valid case and all seven unsafe cases. The exact repository workflow still has not completed on a hosted runner.
 
+### Latest runner retry — 2026-10-28
+
+The standalone security-preflight workflow was triggered again after the latest safety-test change: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40579647166. It again failed before the job exposed any steps (`steps: null`, no `logs_url`). This repeated infrastructure symptom prevents us from determining whether the repository's exact preflight/test suite passes in hosted CI. No Gradle or Android build was attempted by this lightweight workflow.
+
