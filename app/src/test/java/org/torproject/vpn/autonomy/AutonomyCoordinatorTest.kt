@@ -742,6 +742,40 @@ class AutonomyCoordinatorTest {
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
     @Test
+    fun staleLeakVerificationExpiresAndRequiresANewCheck() {
+        var now = 100L
+        val coordinator = AutonomyCoordinator(elapsedRealtimeClock = { now })
+        coordinator.updateNetworkEnvironment(
+            networkAvailable = true,
+            captivePortalDetected = false,
+            mobileData = false
+        )
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = now)
+
+        val accepted = coordinator.submitLeakCheckEvidence(
+            evidence = LeakVerificationEvidence(
+                checkedAtElapsedRealtimeMillis = now,
+                ipv4DefaultRouteProtected = true,
+                ipv6ContainedOrBlocked = true,
+                dnsProtectedByTunnel = true,
+                systemLockdownVerified = true,
+                appRoutingVerified = true
+            ),
+            nowElapsedRealtimeMillis = now
+        )
+        assertTrue(accepted.passed)
+        assertTrue(coordinator.currentDecision().trafficReleaseEligible)
+
+        now += LeakVerificationGate.DEFAULT_MAX_REPORT_AGE_MILLIS + 1L
+        val expired = coordinator.currentDecision()
+        assertFalse(coordinator.currentSignals().leakChecksPassed)
+        assertFalse(expired.trafficReleaseEligible)
+        assertTrue(expired.blockTrafficUntilTunnelVerified)
+        assertTrue(AutonomyAction.RUN_LEAK_CHECKS in expired.recommendedActions)
+        assertFalse(coordinator.planRecovery().shouldScheduleReconnect)
+    }
+
+    @Test
     fun hostileTrustEvidenceCannotBeOverriddenByACompleteLeakReport() {
         val coordinator = connectedCoordinator()
         coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
