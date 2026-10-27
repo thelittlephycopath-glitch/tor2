@@ -174,18 +174,49 @@ The project is complete only when:
 **Status at plan creation:** execution incomplete; no APK or security certification claimed.
 
 
-## Optional product concept — privacy-safe network overview (inspired by reference screenshots)
+## New strategic direction — free, user-owned distributed IP ecosystem
 
-**Intent:** evaluate a future, lightweight network overview inspired by the reference screenshots' global map and usage dashboard. This is a product idea only, not authorization to change the existing UI/UX. Keep the current interface unchanged until the user explicitly approves a concrete design and implementation.
+**User decision:** pursue BOTH tracks: (1) continue strengthening GTor's existing Tor/relay capability rather than treating it as a new feature, and (2) investigate a separate, consent-based distributed IP network. The product goal is free access for users; infrastructure still has real costs, so “free” must be supported by a sustainable, transparent operating model rather than hidden data collection, undisclosed bandwidth sharing, or unsafe monetization.
 
-- [ ] First verify whether GTor has a trustworthy, supported data source for any network map; do not invent relay locations, online counts, IP-pool sizes, coverage, or availability.
-- [ ] If a map is feasible, use aggregate/coarse public network metadata only. Never display the user's current IP, live circuit path, precise user location, destination, DNS query, or per-user traffic.
-- [ ] Clearly distinguish Tor relay/network metadata from a commercial residential-proxy IP pool. Do not imply GTor owns or provides “205M IPs” or one-request access to residential IPs.
-- [ ] If reliable map data is unavailable, prefer a clearly labelled static educational illustration or omit the map rather than presenting simulated dots as live infrastructure.
-- [ ] Consider a compact status/usage view using facts GTor can actually measure: tunnel state, session duration, connection events, and optional local performance metrics. Show “unknown” or “not measured” when evidence is unavailable.
-- [ ] Keep statistics local by default; do not add analytics, background polling, or persistent browsing/activity history just to populate a dashboard.
-- [ ] Define freshness, data source, units, and measurement method for each metric; never show fake request counts or success rates.
-- [ ] Review accessibility, battery/network overhead, and small-screen performance before proposing implementation.
-- [ ] Create a separate design proposal and obtain explicit approval before any visible UI/UX change. Preserve all existing screens and navigation unless that approval specifically authorizes changes.
+**Important status distinction:** this is a planning decision, not evidence that a new residential IP network has been built. The user says the existing Tor/relay capability is already implemented; audit the current repository to verify exactly what is present before proposing incremental improvements. Do not claim that GTor has a large residential IP pool unless it has been independently measured and verified.
 
-**Acceptance gate:** concept remains NOT IMPLEMENTED until data provenance, privacy review, performance impact, and explicit UI/UX approval are documented. Any future implementation must have tests for unavailable/stale data and must not weaken VPN safety gates.
+### Track A — Improve what GTor already has
+
+- [ ] Map existing Tor integration, relay-related code, network lifecycle, routing, and current user-visible claims to actual implementation and tests.
+- [ ] Preserve Tor protocol compatibility and existing UI/UX; prioritize reliability, safe lifecycle behavior, performance measurement, privacy, and reproducible builds.
+- [ ] Identify improvements that add measurable value on top of existing functionality instead of reimplementing an already-present feature.
+- [ ] Keep any relay operation transparent and compliant with Tor's architecture and relevant operator/provider requirements.
+- [ ] Never route Tor exit traffic through an extra proxy layer by default or make unsupported anonymity/security claims.
+
+### Track B — Research a new, opt-in distributed IP network
+
+- [ ] Evaluate a separate network in which informed participants explicitly contribute a device or connection; participation must be opt-in, revocable, and off by default.
+- [ ] Compare designs and threat models without connecting the new network to production traffic during research.
+- [ ] Define technical isolation between participant devices, the control plane, and routed traffic; secure enrollment, authentication, updates, node revocation, rate limits, and abuse response.
+- [ ] Specify traffic policy, participant controls, bandwidth/data-cap protections, resource limits, complaint handling, and legal/provider obligations before any prototype.
+- [ ] Assess whether the intended use is compatible with Tor's security model. Treat residential proxy routing as a separate trust domain; never silently insert it into Tor circuits or claim it provides Tor anonymity.
+- [ ] Do not expose participants' private IPs, precise locations, identifiers, browsing destinations, or DNS queries in dashboards or logs.
+- [ ] Distinguish node count, distinct public IP count, independent networks/ASNs, geographic coverage, measured uptime, and usable bandwidth. Report only measured values, with freshness and methodology.
+- [ ] Design for free end-user access from the start. Compare transparent funding, grants/donations, community-operated infrastructure, and carefully bounded sponsorship; do not assume bandwidth or hosting is costless.
+- [ ] Prohibit hidden bandwidth resale, covert enrollment, forced participation, sale of user data, undisclosed ads, or monetization that undermines privacy.
+- [ ] Estimate hosting, bandwidth, support, abuse operations, legal review, security monitoring, and replacement/revocation costs before selecting a scale target.
+- [ ] Define measurable success criteria and a kill switch; abandon the design if participant safety, abuse control, legal feasibility, or sustainable free operation cannot be demonstrated.
+
+### Learn from paid VPNs — benchmark features, not marketing claims
+
+- [ ] Compare reputable paid VPN offerings for useful capabilities such as kill switch, IPv6/DNS leak protection, modern protocols, auto-reconnect, split tunneling, multi-hop options, independent audits, transparent privacy policies, and clear performance reporting.
+- [ ] For every candidate feature, record the user benefit, implementation cost, battery/performance impact, privacy impact, compatibility with Tor, test evidence, and whether it belongs in GTor at all.
+- [ ] Prefer features that can be delivered safely without subscriptions or user tracking. Do not copy proprietary code, branding, or unsupported “no logs,” “military-grade,” “unlimited,” or speed claims.
+- [ ] Treat multi-hop or proxy chaining as an architecture decision requiring a threat-model review, not an automatic upgrade.
+- [ ] Keep existing UI/UX unchanged. This research does not authorize new screens, navigation, or user-facing behavior.
+
+### Free-for-users acceptance gates
+
+- [ ] Document the actual cost model and credible funding/hosting plan before promising a sustainable network at scale.
+- [ ] Demonstrate explicit participant consent, simple withdrawal, secure isolation, and a tested emergency disable/revocation path.
+- [ ] Complete abuse, privacy, legal/provider-terms, and threat-model reviews.
+- [ ] Verify all network and IP counts from live, privacy-safe measurements; never invent scale or availability.
+- [ ] Prove that the existing Tor path is not weakened and that failures fail closed where required.
+- [ ] Obtain explicit approval before any implementation or UI/UX change.
+
+**Current status:** PLANNING / RESEARCH ONLY. No new distributed IP network has been implemented by this plan update. No UI/UX changes are authorized. “Free for users” is a goal; sustainable zero-cost infrastructure is not assumed.
