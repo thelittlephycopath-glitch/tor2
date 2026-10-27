@@ -178,3 +178,9 @@ Local isolated fixture checks passed for a valid pinned-action workflow and reje
 
 The negative-test helper originally invoked the preflight outside the temporary fixture directory, so failures could be caused by missing relative workflow paths rather than the intended unsafe fixture. Corrected the helper to run from the fixture root. The complete fixture suite then passed locally: valid SHA-pinned workflow accepted; mutable action tag, missing version comment, missing release gate, missing APK opt-in gate, invalid build-script syntax, and unrestricted/unpinned source-import fixtures all rejected. A separate static inspection of all five committed workflow files found 16 external action references and no missing SHA pins/version comments; the APK/release and source-import guard strings were also present. This is local validation of the scripts and source contents, not a hosted workflow run.
 
+## Leak-evidence session binding — 2026-10-28
+
+The coordinator now uses a monotonically increasing verification generation. Tunnel lifecycle transitions, network-path changes, DNS/TLS anomaly transitions, captive-portal transitions, network-monitor failure, and authoritative leak-check start/failure invalidate earlier evidence generations. `submitLeakCheckEvidence` rejects missing or mismatched generation tokens even if the report timestamp remains within the freshness window. A regression test covers reuse of a fresh report after a network change.
+
+The read-only Android diagnostic probe accepts a session-generation token but still returns false for all protection claims; it does not perform active packet/DNS/IPv6 verification. The Kotlin regression test and full Gradle suite remain unexecuted because hosted Actions jobs have not reached the first step.
+
