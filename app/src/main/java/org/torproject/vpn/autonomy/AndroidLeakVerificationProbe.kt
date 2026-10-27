@@ -38,15 +38,16 @@ data class AndroidVpnPathSnapshot(
         get() = alwaysOnVpnPackageMatches && lockdownSettingEnabled
 }
 
-/**
- * Read-only diagnostic probe. It does not generate network traffic, perform external DNS probes,
- * change routes, or inspect another app's private state.
- */
+/** A read-only path snapshot paired with deliberately non-authoritative enforcement evidence. */
 data class AndroidLeakDiagnosticReport(
     val snapshot: AndroidVpnPathSnapshot,
     val evidence: LeakVerificationEvidence
 )
 
+/**
+ * Read-only diagnostic probe. It does not generate network traffic, perform external DNS probes,
+ * change routes, or inspect another app's private state.
+ */
 class AndroidLeakVerificationProbe(context: Context) {
     private val appContext = context.applicationContext
     private val connectivityManager = appContext
