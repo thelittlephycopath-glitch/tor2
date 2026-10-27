@@ -233,3 +233,8 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Added a regression test proving DNS-hijack clear drops cached hostile evidence but still requires a new tunnel-ready event and a fresh leak report before traffic eligibility returns.
 - [ ] Run coordinator tests under Gradle; the regression test is committed but not executed.
 
+## Network callback identity guard — 2026-10-28
+
+- [x] Ignore `onCapabilitiesChanged` callbacks unless the callback network matches the active network established by `onAvailable`, preventing stale callbacks from resurrecting lost network state.
+- [ ] Add Android callback-level test coverage and verify callback ordering on supported Android versions.
+- [ ] Run Android lint/unit tests and device network-switch tests; source change is committed but not runtime-verified.
