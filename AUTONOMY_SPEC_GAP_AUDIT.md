@@ -292,3 +292,13 @@ A further review found that `updateNetworkTrust` classified caller-supplied DNS/
 
 The coordinator now records fresh DNS/TLS indicators as sticky signals until explicit clear events, records fresh captive-portal evidence as active, and invalidates the current tunnel-verification generation when a portal is newly observed. Regression tests cover portal evidence, sticky DNS-hijack evidence, missing generation tokens, and prior-generation report replay. **The tests have not been run with Gradle; this is source-level hardening awaiting execution.**
 
+### Transport capability inventory — 2026-10-28
+
+Source inspection found a deliberate mismatch between the advisory autonomy model and the live settings/service surface:
+
+- `PreferenceHelper.BridgeType` exposes `None`, `Manual`, `Snowflake`, and `Obfs4`.
+- The autonomy model also names `WEBTUNNEL` and `DIRECT_BRIDGE`, but an enum entry is not proof that the current Android UI, Onionmasq configuration, and runtime support those transports.
+- `TorVpnService.recordAutonomyBridgeOutcome` records outcomes only for explicitly selected Snowflake or Obfs4. Manual bridge definitions are skipped rather than guessed, which avoids corrupting the learning ledger but leaves those outcomes unlearned.
+
+**Next required work:** trace the actual Onionmasq transport configuration and manual bridge-line grammar, then add parsing/tests only for transport types proven to be accepted by this repository. Do not add new UI options or claim WebTunnel support based on the enum alone.
+
