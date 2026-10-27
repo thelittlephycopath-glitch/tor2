@@ -594,12 +594,9 @@ class TorVpnService : VpnService() {
         if (bridgeList.isEmpty()) {
             return null
         }
-        var bridgeLines = ""
-        for (line in bridgeList) {
-            bridgeLines += "$line\n"
-        }
-
-        return bridgeLines
+        // Join once rather than repeatedly reallocating the growing string.
+        // Preserve the existing newline-terminated format consumed by OnionMasq.
+        return bridgeList.joinToString(separator = "\n", postfix = "\n")
     }
 
     /**
