@@ -31,6 +31,7 @@ class AutonomyCoordinator(
     private var latestNetworkTrustEvidence: NetworkTrustEvidence? = null
     private var lowBatteryActive = false
     private var verificationGeneration = 0L
+    private var networkGeneration = 0L
 
     /**
      * Current session token for an independent verifier.
@@ -41,6 +42,14 @@ class AutonomyCoordinator(
      */
     @Synchronized
     fun currentVerificationGeneration(): Long = verificationGeneration
+
+    /** Current generation for observations about the underlying network path. */
+    @Synchronized
+    fun currentNetworkGeneration(): Long = networkGeneration
+
+    private fun advanceNetworkGeneration() {
+        networkGeneration = Math.addExact(networkGeneration, 1L)
+    }
 
     /**
      * Starts a new verification attempt and returns the token that must be attached to its report.
@@ -86,6 +95,18 @@ class AutonomyCoordinator(
             AutonomyEventType.TUNNEL_STOPPED,
             AutonomyEventType.SERVICE_STOPPED,
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceVerificationGeneration()
+            // These observations describe the underlying path and invalidate network trust evidence.
+            AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+            AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED,
+            AutonomyEventType.DNS_CONFIGURATION_CONFLICT,
+            AutonomyEventType.DNS_CONFIGURATION_CLEARED,
+            AutonomyEventType.DNS_HIJACK_SUSPECTED,
+            AutonomyEventType.DNS_HIJACK_CLEARED,
+            AutonomyEventType.TLS_INTERCEPTION_SUSPECTED,
+            AutonomyEventType.TLS_INTERCEPTION_CLEARED,
+            AutonomyEventType.CAPTIVE_PORTAL_DETECTED,
+            AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+            AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> advanceNetworkGeneration()
             // Any start/failure event invalidates older evidence, regardless of producer.
             // This transition only tightens the gate; it never grants traffic eligibility.
             AutonomyEventType.LEAK_CHECK_STARTED,
@@ -306,6 +327,7 @@ class AutonomyCoordinator(
                 environmentalSignals.mobileData != mobileData
         if (networkChanged) {
             advanceVerificationGeneration()
+            advanceNetworkGeneration()
             // Preserve the need to recover only when a previously active/verified session is invalidated.
             rememberRecoveryIfSessionWasActive()
             // Trust belongs to the observed network and must never carry over to a new path.
@@ -471,7 +493,7 @@ class AutonomyCoordinator(
         val evidenceIsFresh = evidence.observedAtElapsedRealtimeMillis <= nowElapsedRealtimeMillis &&
             evidenceAge <= trustClassifier.maxEvidenceAgeMillis &&
             (evidence.sessionGeneration == null ||
-                evidence.sessionGeneration == verificationGeneration)
+                evidence.sessionGeneration == networkGeneration)
         // Stale/future observations and explicitly session-bound evidence from an older path are
         // rejected, not cached to become valid automatically later. Null tokens remain compatible
         // with legacy callers and must be removed when the live monitor is migrated.
