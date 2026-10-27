@@ -280,3 +280,9 @@ Inspection uncovered structural corruption in the CI preflight script. It has be
 
 The CI preflight's negative-test helper was also corrected to execute within its temporary fixture directory; otherwise, negative cases could pass because the preflight ran from the wrong working directory. The full fixture suite passed locally with the valid case accepted and six unsafe cases rejected. Static inspection of the five checked-in workflows found 16 external action references, all SHA-pinned with version comments, and confirmed the build/release/source-import guard clauses. This remains local test evidence only; hosted CI and all Kotlin/Android runtime checks are still open.
 
+### Session-bound evidence hardening — 2026-10-28
+
+A report's monotonic timestamp alone did not bind it to the tunnel/network path it described. Added a session-generation field to `LeakVerificationEvidence`; `AutonomyCoordinator` advances the generation when tunnel lifecycle, network path, DNS/TLS indicators, captive-portal state, monitor availability, or authoritative leak-check state invalidates prior evidence. A report with no token or a token from an earlier generation is rejected with `SESSION_GENERATION_MISMATCH`. Added a regression test for replaying still-fresh evidence after a network transition and passed the token through the read-only diagnostic probe API.
+
+**Verification boundary:** source and test changes are committed, but Gradle tests have not run. The probe continues to report all enforcement flags as false. Session binding prevents accidental/stale report reuse; it does not prove the underlying evidence was measured honestly or that Android packet-level enforcement works.
+
