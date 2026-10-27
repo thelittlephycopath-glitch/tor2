@@ -162,3 +162,13 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Updated the connection artwork palette to black/gray/white and refined the bridge-information card. This is a visual-only change; device rendering, contrast, and small-screen layout still need validation.
 
 - [x] Invalid persisted bridge-type enum values now fall back to the existing `None` option instead of throwing during preference access. This is defensive compatibility handling; it does not select or activate a bridge.
+
+
+## Visual refinement follow-up — 2026-10-28
+
+- [x] Converted the connect-screen onion-ring artwork from purple to charcoal and silver.
+- [x] Converted the connect-state accent artwork from mint/green to grayscale so the active connection visuals stay within the requested black-and-white palette.
+- [x] Updated palette comments that still described the old purple/green theme.
+- [x] Kept the bridge-info card consistent in portrait and landscape layouts, with a restrained gradient, outline, and more comfortable spacing.
+- [ ] Still required: visual inspection on an actual narrow Android screen and accessibility review of contrast, text scaling, and touch targets. XML edits alone do not prove the UI renders correctly.
+- [ ] Bridge layering remains a design investigation, not active failover. The service currently resolves one selected bridge mode into one bridge configuration string for Onionmasq. A safe next step is to model primary + standby candidates and their validation states, but actual transport chaining or hot switching must wait until the supported Onionmasq/Tor API behavior is confirmed.
