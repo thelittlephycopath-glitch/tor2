@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 360
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Test and verify CI security preflight
         run: |
           bash -n scripts/test_ci_security.sh
