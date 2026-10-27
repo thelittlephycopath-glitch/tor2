@@ -20,6 +20,7 @@ class AutonomyCoordinator(
 ) {
     private var environmentalSignals = NetworkSignals()
     private var tunnelReady = false
+    private var tunnelStartupInProgress = false
     private var leakChecksPassed = false
     private var leakCheckFailed = false
     private var validatedLeakReportReady = false
@@ -40,22 +41,26 @@ class AutonomyCoordinator(
         when (type) {
             AutonomyEventType.TUNNEL_START_REQUESTED,
             AutonomyEventType.TUNNEL_BOOTSTRAPPING -> {
+                tunnelStartupInProgress = true
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.TUNNEL_READY -> {
+                tunnelStartupInProgress = false
                 tunnelReady = true
                 leakChecksPassed = false
                 consecutiveFailures = 0
             }
             AutonomyEventType.TUNNEL_FAILED,
             AutonomyEventType.CONNECTION_FAILED -> {
+                tunnelStartupInProgress = false
                 recoveryRequested = true
                 consecutiveFailures = (consecutiveFailures + 1).coerceAtMost(10_000)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_LOST -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 latestNetworkTrustEvidence = null
                 environmentalSignals = environmentalSignals.copy(
@@ -69,6 +74,7 @@ class AutonomyCoordinator(
                 recoveryPlanner.onNetworkChanged()
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 latestNetworkTrustEvidence = null
                 environmentalSignals = environmentalSignals.copy(
@@ -84,48 +90,56 @@ class AutonomyCoordinator(
                 recoveryPlanner.onNetworkChanged()
             }
             AutonomyEventType.DNS_CONFIGURATION_CONFLICT -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = true)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.DNS_CONFIGURATION_CLEARED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsConfigurationConflict = false)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.DNS_HIJACK_SUSPECTED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = true)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.DNS_HIJACK_CLEARED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(dnsHijackSuspected = false)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.TLS_INTERCEPTION_SUSPECTED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = true)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.TLS_INTERCEPTION_CLEARED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(tlsInterceptionSuspected = false)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.CAPTIVE_PORTAL_DETECTED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(captivePortalDetected = true)
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.CAPTIVE_PORTAL_CLEARED -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 environmentalSignals = environmentalSignals.copy(captivePortalDetected = false)
                 tunnelReady = false
@@ -175,11 +189,13 @@ class AutonomyCoordinator(
             }
             AutonomyEventType.TUNNEL_STOPPED,
             AutonomyEventType.SERVICE_STOPPED -> {
+                tunnelStartupInProgress = false
                 recoveryRequested = false
                 tunnelReady = false
                 leakChecksPassed = false
             }
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
+                tunnelStartupInProgress = false
                 rememberRecoveryIfSessionWasActive()
                 latestNetworkTrustEvidence = null
                 environmentalSignals = environmentalSignals.copy(
@@ -427,6 +443,13 @@ class AutonomyCoordinator(
     @Synchronized
     fun planRecovery(): RecoveryPlan {
         expireStaleLeakVerification(elapsedRealtimeClock())
+        if (tunnelStartupInProgress) {
+            return RecoveryPlan(
+                shouldScheduleReconnect = false,
+                keepTrafficBlocked = true,
+                reason = "Tunnel startup is in progress; await its result"
+            )
+        }
         return recoveryPlanner.planReconnect(
             networkAvailable = environmentalSignals.networkAvailable,
             tunnelReady = tunnelReady,
