@@ -121,3 +121,13 @@ The APK workflow now uses manual dispatch only. Automatic push triggers were rem
 - Workflow change: [`f8b7a4b`](https://github.com/thelittlephycopath-glitch/tor2/commit/f8b7a4b112426fc93d82492dde209944a8662bae)
 - This does not repair the runner assignment problem or validate source compilation. The APK workflow can be manually resumed after the backend plan's acceptance gates are ready.
 
+## Post-change static workflow verification — 2026-10-28
+
+A fresh repository-tree read of `dangerous-experiment` checked all five workflow YAML files after deferring APK work:
+
+- 16 external `uses:` references checked; all 16 are pinned to 40-character commit SHAs and include version comments.
+- No unpinned external action reference was found.
+- APK build workflow has no `push` trigger and is manual-dispatch only.
+- Release publication still requires `refs/heads/main`, `workflow_dispatch`, and explicit `inputs.publish_release`; the input default remains `false`.
+- This was a source-content inspection through the GitHub API, not execution of the repository's shell preflight or a CI job. No build/test pass is implied.
+
