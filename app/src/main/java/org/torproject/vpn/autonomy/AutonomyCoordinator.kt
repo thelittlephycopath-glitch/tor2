@@ -29,7 +29,6 @@ class AutonomyCoordinator(
     private var recoveryRequested = false
     private var latestNetworkTrustEvidence: NetworkTrustEvidence? = null
     private var lowBatteryActive = false
-    private var lastDecision = policyEngine.evaluate(environmentalSignals)
 
     @Synchronized
     fun observe(
@@ -485,8 +484,7 @@ class AutonomyCoordinator(
         val automationConfigured = config.enabled &&
             config.mode != AutonomyMode.OBSERVE_ONLY &&
             config.hasAutomationFeatureEnabled
-        lastDecision = decision.copy(automationConfigured = automationConfigured)
-        return lastDecision
+        return decision.copy(automationConfigured = automationConfigured)
     }
 
     companion object {
