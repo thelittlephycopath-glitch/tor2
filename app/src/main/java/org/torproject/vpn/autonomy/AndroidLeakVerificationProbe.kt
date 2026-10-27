@@ -117,10 +117,10 @@ class AndroidLeakVerificationProbe(context: Context) {
         val servers = dnsServers
         if (servers.size != 2) return false
         val expectedIpv4 = byteArrayOf(169.toByte(), 254.toByte(), 42, 53)
+        // fe80::53 is exactly 16 bytes: FE 80, thirteen zero bytes, then 53.
         val expectedIpv6 = byteArrayOf(
             0xfe.toByte(), 0x80.toByte(),
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0x53
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x53
         )
         return servers.any { it.address.contentEquals(expectedIpv4) } &&
             servers.any { it.address.contentEquals(expectedIpv6) }
