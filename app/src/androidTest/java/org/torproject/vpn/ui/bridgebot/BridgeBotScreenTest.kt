@@ -196,6 +196,26 @@ class BridgeBotScreenTest {
         onNodeWithText(getString(R.string.action_try_again)).assertIsDisplayed()
     }
 
+
+    @Test
+    fun webTunnelErrorStateShowsOfficialBridgeDBFallback() = runComposeUiTest {
+        val state = BridgeBotViewModel.State(
+            botState = BotState.ERROR,
+            errorMessage = R.string.error_fetching_bridges,
+            selectedTransport = BridgeRequestTransport.WEBTUNNEL
+        )
+
+        setContent {
+            BridgeBotScreen(
+                state = state,
+                onEvent = {}
+            )
+        }
+
+        onNodeWithText(getString(R.string.webtunnel_fetch_fallback)).assertIsDisplayed()
+        onNodeWithText(getString(R.string.open_bridges_website)).assertIsDisplayed()
+    }
+
     @Test
     fun errorState_clickTryAgain_emitsRequestBridgesEvent() = runComposeUiTest {
         var receivedEvent: BridgeBotViewModel.Event? = null
