@@ -130,3 +130,17 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [ ] Bridge strategy proposal: investigate a **layered resilience policy** before attempting transport chaining. The first layer is the configured active bridge/transport; the second is a ranked, separately validated standby candidate; a third layer is a conservative recovery policy that keeps traffic blocked when neither path is verified. This avoids assuming that multiple bridge transports can be chained inside Onionmasq when the supported API may not provide that capability.
 - [ ] Do not claim simultaneous bridge stacking or activate multiple bridges until Onionmasq/Tor control APIs and the resulting routing semantics are verified. A standby strategy is not equivalent to stacking transport tunnels, and no bridge switch or traffic path is activated by the current advisory planner.
 - [ ] Visual follow-up: review the connection home screen and bridge settings together on narrow Android screens, then refine typography, card rhythm, touch targets, and motion without adding non-monochrome colors or changing connection semantics.
+
+
+## Full specification audit follow-up — 2026-10-27
+
+- [x] Read the complete supplied 802-line `TOR VPN BETA 2 — FULLY AUTONOMOUS BACKEND SPECIFICATION` and added a gap-by-gap audit: [AUTONOMY_SPEC_GAP_AUDIT.md](AUTONOMY_SPEC_GAP_AUDIT.md). It separates implemented source, advisory scaffolding, missing features, and work that remains unverified.
+- [x] Added a user-selectable **obfs4 / WebTunnel** bridge-fetch option in Bridge Bot. The request uses the selected transport name (`webtunnel` or `obfs4`) and transport-mismatched settings are filtered out before bridge lines are returned.
+- [x] Saved WebTunnel bridge lines through the existing manual bridge storage path. This preserves the supplied WebTunnel URL/path and avoids hard-coding a public or fake bridge address.
+- [x] Serialized Bridge Bot events through one collector so a transport selection is processed before a following bridge request, avoiding a race between separate filtered event collectors.
+- [x] Changed the bridge-result icon tint to white and added the WebTunnel selector styling in monochrome, consistent with the requested black/white direction.
+- [x] Added unit tests for WebTunnel-specific API request/filtering and the WebTunnel save flow. These tests have **not** been run by Gradle.
+- [ ] WebTunnel is not yet an automatic failover option. The live bridge-distribution API, parser/configuration, bootstrap, real device connection, and no-direct-fallback behavior still require verification.
+- [ ] No full Android build, Gradle test, lint, emulator run, or device leak test has been completed. The known GitHub Actions runner-startup blocker remains.
+- [ ] The visual changes remain source-only until the app can be compiled and checked on narrow screens and with accessibility services.
+
