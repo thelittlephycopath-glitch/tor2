@@ -33,6 +33,7 @@ class AndroidEnvironmentMonitor(
             var shouldInvalidate = false
             var shouldClearPortal = false
             synchronized(lock) {
+                if (!registered) return
                 if (activeNetwork != network) {
                     // Invalidate even when the old path was not yet validated: trust evidence is
                     // path-specific, and the connectivity booleans can be identical across networks.
@@ -63,6 +64,7 @@ class AndroidEnvironmentMonitor(
             var connectivityEvent: AutonomyEventType? = null
             var portalEvent: AutonomyEventType? = null
             synchronized(lock) {
+                if (!registered) return
                 // onAvailable establishes the current network identity first. Ignore delayed
                 // capabilities for a replaced/lost network instead of resurrecting stale state.
                 if (activeNetwork != network) return
@@ -102,7 +104,7 @@ class AndroidEnvironmentMonitor(
 
         override fun onLost(network: Network) {
             val wasActive = synchronized(lock) {
-                if (activeNetwork != network) {
+                if (!registered || activeNetwork != network) {
                     false
                 } else {
                     activeNetwork = null
@@ -127,6 +129,7 @@ class AndroidEnvironmentMonitor(
 
         override fun onUnavailable() {
             synchronized(lock) {
+                if (!registered) return
                 activeNetwork = null
                 networkAvailable = false
                 captivePortalDetected = false
@@ -173,8 +176,16 @@ class AndroidEnvironmentMonitor(
     @Synchronized
     fun unregister() {
         if (!registered) return
+        // Invalidate callbacks before unregistering: a callback already queued by Android
+        // must not mutate the environment after shutdown has started.
+        synchronized(lock) {
+            registered = false
+            activeNetwork = null
+            networkAvailable = false
+            captivePortalDetected = false
+            mobileData = false
+        }
         runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
-        registered = false
         synchronized(lock) {
             activeNetwork = null
             networkAvailable = false
