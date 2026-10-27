@@ -68,7 +68,6 @@ class AutonomyLifecycleOrderingTest {
 
         val oldGeneration = coordinator.beginLeakVerification()
         val delayedReport = passingEvidence(
-            coordinator = coordinator,
             checkedAt = 2L,
             generation = oldGeneration
         )
