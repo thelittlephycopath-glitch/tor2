@@ -461,7 +461,7 @@ class AutonomyCoordinator(
         if (!leakChecksPassed) return
         val age = nowElapsedRealtimeMillis - verifiedAt
         if (nowElapsedRealtimeMillis < verifiedAt ||
-            age > LeakVerificationGate.DEFAULT_MAX_REPORT_AGE_MILLIS
+            age > leakVerificationGate.maxReportAgeMillis
         ) {
             // A stale/future-dated pass is no longer authority to release traffic. This is not
             // interpreted as proof of a leak; it merely requires a fresh independent check.
