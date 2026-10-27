@@ -58,7 +58,11 @@ class AutonomyCoordinator(
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_LOST -> {
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(networkAvailable = false)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    networkAvailable = false,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 tunnelReady = false
                 leakChecksPassed = false
                 // Transport outcomes from the previous network are not reliable evidence here.
@@ -67,7 +71,11 @@ class AutonomyCoordinator(
             }
             AutonomyEventType.NETWORK_CONNECTIVITY_RESTORED -> {
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(networkAvailable = true)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    networkAvailable = true,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 // A network return invalidates both the old tunnel verification and old transport
                 // learning. Failure streaks from a previous network must not trigger false failover.
                 tunnelReady = false
@@ -174,7 +182,11 @@ class AutonomyCoordinator(
             }
             AutonomyEventType.NETWORK_MONITOR_UNAVAILABLE -> {
                 rememberRecoveryIfSessionWasActive()
-                environmentalSignals = environmentalSignals.copy(networkAvailable = false)
+                latestNetworkTrustEvidence = null
+                environmentalSignals = environmentalSignals.copy(
+                    networkAvailable = false,
+                    trust = NetworkTrust.UNKNOWN
+                )
                 tunnelReady = false
                 leakChecksPassed = false
             }
@@ -212,6 +224,9 @@ class AutonomyCoordinator(
         if (networkChanged) {
             // Preserve the need to recover only when a previously active/verified session is invalidated.
             rememberRecoveryIfSessionWasActive()
+            // Trust belongs to the observed network and must never carry over to a new path.
+            latestNetworkTrustEvidence = null
+            environmentalSignals = environmentalSignals.copy(trust = NetworkTrust.UNKNOWN)
             // Network or transport changes invalidate verification and session-scoped learning.
             tunnelReady = false
             leakChecksPassed = false
