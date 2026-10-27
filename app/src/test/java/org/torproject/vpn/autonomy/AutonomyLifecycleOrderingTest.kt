@@ -10,7 +10,6 @@ import org.junit.Test
  */
 class AutonomyLifecycleOrderingTest {
     private fun passingEvidence(
-        coordinator: AutonomyCoordinator,
         checkedAt: Long,
         generation: Long
     ) = LeakVerificationEvidence(
@@ -41,7 +40,6 @@ class AutonomyLifecycleOrderingTest {
         connectAndStart(coordinator, timestamp = 1L)
         val oldGeneration = coordinator.currentVerificationGeneration()
         val delayedReport = passingEvidence(
-            coordinator = coordinator,
             checkedAt = 2L,
             generation = oldGeneration
         )
