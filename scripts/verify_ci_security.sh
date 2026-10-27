@@ -14,8 +14,8 @@ fi
 checked=0
 for workflow in "${workflows[@]}"; do
   while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ "$line" =~ ^[[:space:]]*uses:[[:space:]]*([^[:space:]]+) ]] || continue
-    target="${BASH_REMATCH[1]}"
+    [[ "$line" =~ ^[[:space:]]*(-[[:space:]]+)?uses:[[:space:]]*([^[:space:]]+) ]] || continue
+    target="${BASH_REMATCH[2]}"
 
     # Local reusable workflows and local composite actions do not use external refs.
     [[ "$target" == ./* ]] && continue
