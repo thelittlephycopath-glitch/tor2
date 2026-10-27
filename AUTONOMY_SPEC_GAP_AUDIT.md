@@ -256,3 +256,21 @@ No verified APK is available. The current GitHub Actions runner-assignment failu
 - No Android build, lint run, emulator smoke test, real Wi-Fi/cellular test, end-to-end leak test, signature check, or verified APK artifact is available.
 - All UI edits in this branch are experimental and uncompiled until the build gate is restored.
 - The original UI and main branch must remain untouched unless the user explicitly approves a tested merge.
+
+## Additional implementation evidence — 2026-10-28
+
+**CI/supply-chain controls — implemented in source, runtime verification pending**
+
+- GitHub Actions refs across the repository workflows are SHA-pinned, with release-version comments to allow Dependabot to update them via reviewable PRs.
+- Weekly GitHub Actions dependency update checks are configured.
+- A lightweight preflight validates immutable action refs, version comments, release-publication default-off/manual-only gating, and shell syntax for both reproducible build scripts.
+- A local fixture test confirmed the preflight accepts SHA-pinned action references and rejects a mutable tag. Full-checkout execution by GitHub Actions remains unverified because hosted jobs continue to fail before step logs are available.
+
+**Autonomy command safety — stronger regression coverage, not runtime execution**
+
+- An exhaustive test case exercises every autonomy action with all configuration flags enabled and an empty failure list from the supplied leak-verification result.
+- The only approved actions are the fail-closed recommendations `KEEP_TRAFFIC_BLOCKED` and `SUPPRESS_COVER_TRAFFIC`; all action types that could have side effects remain suppressed until their execution adapters are actually implemented.
+- The test is committed but has not yet been run with Gradle.
+
+These improvements do not close the main gaps in this audit: there is still no active end-to-end IPv4/IPv6/DNS/per-app leak verifier, automatic recovery executor, verified circuit-control executor, device-level kill-switch proof, or successful Android compile/test/emulator run.
+
