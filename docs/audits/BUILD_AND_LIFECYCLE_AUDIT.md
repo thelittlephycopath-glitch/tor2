@@ -13,7 +13,7 @@ This is an evidence ledger, not a release approval. No build or runtime pass is 
 - The workflow runs `bash -n` and `scripts/test_ci_security.sh` / `scripts/verify_ci_security.sh` before building.
 - The reproducible build script runs Onionmasq native/Android builds, then `testReleaseUnitTest`, then `assembleRelease`; it optionally builds an AAB and runs APK alignment verification.
 - `LeakVerificationGate` checks timestamp freshness and five caller-supplied booleans, but explicitly does not measure the network itself. Its comments require a separate independent verifier.
-- `AndroidEnvironmentMonitor` checks registration and network identity, but callback side effects occur after releasing its state lock. A callback can pass the registration check, race with `unregister()`, and then call `coordinator.observe()` or publish stale environment state after shutdown begins. This remains a source-level race concern; no regression test currently proves it fixed.
+- `AndroidEnvironmentMonitor` now serializes callback side effects with `unregister()` using `callbackDispatchLock` and rechecks registration/network identity before dispatch. This is a source-level fix; compilation and Android callback-scheduling tests remain outstanding.
 - `AutonomyLifecycleOrderingTest` adds three stale-evidence ordering tests. The repository status endpoint returned no CI status entries for the reviewed commit, and the commit-workflow-runs query returned no runs. Therefore these tests are not verified as compiled or passing.
 
 ## Blockers and next evidence required
