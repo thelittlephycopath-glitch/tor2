@@ -40,3 +40,23 @@ If this reports `FAILED_BEFORE_RUNNER_OR_STEP_START`, check the repository/accou
 ## Release gate
 
 No APK has been produced or verified from these runs. This report does not certify the app as buildable, secure, or release-ready.
+
+
+## Follow-up retry — 2026-10-28
+
+After the diagnostic script and this note were committed, both workflows were dispatched again against commit `b84e8108ccb40cd69ffd74c4fac26199adb26c38`.
+
+- APK run [40604376977](https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40604376977): build job `122540098305` failed in ~2 seconds, runner label `ubuntu-24.04`, `runner_id=0`, empty runner name, zero steps. Release job was correctly skipped.
+- Diagnostic run [40604376709](https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40604376709): job `122540096540` failed in ~2 seconds with the same runner metadata and zero steps.
+- Repository Actions permission API says Actions are enabled and all actions are allowed.
+- Repository runner listing reports zero self-hosted runners.
+- Workflow usage endpoint returns an empty `billable` object. This endpoint response does not establish the account's remaining included minutes.
+- Changing the runner label from `ubuntu-latest` to `ubuntu-24.04` did not change the failure pattern.
+
+### Current root-cause boundary
+
+The reproducible fault is **job startup / hosted-runner assignment before step execution**, not an observed Gradle/Kotlin/native compiler failure. Available job/check metadata contains no actionable platform message, and the logs endpoint has not supplied runner logs. Do not claim the exact cause is quota, billing, or a GitHub outage without account/service evidence.
+
+### Next action
+
+Run `scripts/diagnose_actions_runner.py <run-id>` with a token kept locally in `GITHUB_TOKEN`, then inspect the repository owner's Actions billing/usage and spending-limit settings and GitHub's Actions service status. If the account settings look normal and jobs continue to fail before runner assignment, report the run URLs and timestamps to GitHub Support. Once a runner executes steps, fix the concrete failure shown in logs. No APK, successful build, or merge to `main` is evidenced by these attempts.
