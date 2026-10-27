@@ -1024,4 +1024,68 @@ class AutonomyCoordinatorTest {
         assertFalse(coordinator.currentSignals().leakChecksPassed)
         assertFalse(coordinator.currentDecision().trafficReleaseEligible)
     }
+
+    @Test
+    fun captivePortalInTrustEvidenceInvalidatesSessionAndCannotBeClearedByGenericTrustRefresh() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        assertTrue(submitPassingLeakCheck(coordinator).passed)
+
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 3L,
+                internetValidated = true,
+                captivePortalDetected = true
+            ),
+            nowElapsedRealtimeMillis = 3L
+        )
+
+        assertTrue(coordinator.currentSignals().captivePortalDetected)
+        assertFalse(coordinator.currentSignals().tunnelReady)
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 4)
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 5L,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis = 5L
+        )
+
+        val result = submitPassingLeakCheck(coordinator, timestamp = 6L)
+        assertFalse(result.passed)
+        assertTrue(result.failures.contains(LeakVerificationFailure.CAPTIVE_PORTAL_ACTIVE))
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
+
+    @Test
+    fun benignTrustRefreshCannotErasePreviouslyObservedDnsHijackSignal() {
+        val coordinator = connectedCoordinator()
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 2L,
+                internetValidated = true,
+                dnsHijackSuspected = true
+            ),
+            nowElapsedRealtimeMillis = 2L
+        )
+        assertTrue(coordinator.currentSignals().dnsHijackSuspected)
+
+        coordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 3)
+        coordinator.updateNetworkTrust(
+            evidence = NetworkTrustEvidence(
+                observedAtElapsedRealtimeMillis = 4L,
+                internetValidated = true,
+                explicitlyTrustedByUser = true
+            ),
+            nowElapsedRealtimeMillis = 4L
+        )
+
+        assertTrue(coordinator.currentSignals().dnsHijackSuspected)
+        val result = submitPassingLeakCheck(coordinator, timestamp = 5L)
+        assertFalse(result.passed)
+        assertTrue(result.failures.contains(LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR))
+        assertFalse(coordinator.currentDecision().trafficReleaseEligible)
+    }
 }
