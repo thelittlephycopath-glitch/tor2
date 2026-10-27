@@ -157,6 +157,7 @@ class AutonomyActionGateTest {
         assertTrue(result.approvedActions.contains(AutonomyAction.SUPPRESS_COVER_TRAFFIC))
         assertTrue(result.suppressedActions.isEmpty())
     }
+
     @Test
     fun everySideEffectingActionRemainsSuppressedUntilAnExecutorIsReviewed() {
         val config = AutonomyConfig(
