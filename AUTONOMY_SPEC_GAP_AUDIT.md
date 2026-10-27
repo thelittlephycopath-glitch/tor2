@@ -91,8 +91,8 @@ No verified APK is available. The current GitHub Actions runner-assignment failu
 - The base service passes a selected bridge configuration to Onionmasq.
 - Existing built-in modes use obfs4 and Snowflake assets; manually supplied bridge lines use the existing line-parser/configuration path.
 - Existing source references the bridge parser's WebTunnel type and can label WebTunnel lines.
-- The Bridge Bot screen now has a transport choice for requesting obfs4 or WebTunnel lines. The WebTunnel request is transport-specific, and mixed API responses are filtered rather than silently returning another transport.
-- Saved WebTunnel lines use the existing manual-bridge storage path; this preserves the bridge line, including its URL/path, rather than inventing a public default bridge.
+- The Bridge Bot screen now has a monochrome transport choice for requesting obfs4 or WebTunnel lines. The WebTunnel request is transport-specific, and mixed API responses are filtered rather than silently returning another transport. If that request fails, the screen offers the official Bridges website as a fallback and explains that WebTunnel lines can be added manually.
+- Saved WebTunnel lines use the existing manual-bridge storage path; this preserves the bridge line, including its URL/path, rather than inventing a public default bridge. A Compose UI test was added for the selector and fallback guidance.
 - This branch does **not** yet automatically rank and activate bridge candidates, rotate transports after a failure, run bridge tests in parallel, or perform actual circuit refresh through a verified Tor/Onionmasq control API.
 - The newly added WebTunnel request/save path has not been built or tested against the live bridge API or a real connection.
 
