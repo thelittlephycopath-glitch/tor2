@@ -197,3 +197,7 @@ Added `.github/workflows/security-preflight.yml`, a lightweight workflow that ru
 - Result: failed before the first step, with `steps: null` and no job log URL. The lightweight workflow therefore did not execute its preflight checks in GitHub Actions.
 - Interpretation: the failure remains consistent with the previously observed runner/Actions allocation problem; it is not evidence of a shell/test failure. The local mirrored fixture suite passed, and the checked workflow files passed static pin/guard inspection, but hosted validation is still blocked.
 
+## Local-only learning storage guard — 2026-10-28
+
+The standalone CI preflight now also checks that Android backup is disabled, both backup/device-transfer rule files are wired in the manifest, and the opt-in network-learning SharedPreferences file is excluded from cloud backup and device transfer. The fixture suite includes a negative case that removes the extraction-rule exclusion and confirms the preflight rejects it. A local mirrored fixture run passed the valid case and all seven unsafe cases. The exact repository workflow still has not completed on a hosted runner.
+
