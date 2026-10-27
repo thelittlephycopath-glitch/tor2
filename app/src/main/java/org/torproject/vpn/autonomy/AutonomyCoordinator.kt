@@ -458,7 +458,10 @@ class AutonomyCoordinator(
 
     private fun expireStaleLeakVerification(nowElapsedRealtimeMillis: Long) {
         val verifiedAt = leakVerificationObservedAtElapsedRealtimeMillis ?: return
-        if (!leakChecksPassed) return
+        if (!leakChecksPassed) {
+            leakVerificationObservedAtElapsedRealtimeMillis = null
+            return
+        }
         val age = nowElapsedRealtimeMillis - verifiedAt
         if (nowElapsedRealtimeMillis < verifiedAt ||
             age > leakVerificationGate.maxReportAgeMillis
