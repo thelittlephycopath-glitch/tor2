@@ -102,8 +102,11 @@ No successful Android APK build, APK signature verification, or emulator smoke t
 - [x] A leak-check failure now invalidates tunnel readiness as well as traffic-release eligibility. The prior failure remains latched across tunnel start/ready, network changes, and monitor events; only a new complete, safe leak report clears it.
 - [x] The policy recommends another leak check after a tunnel is ready even when the previous check failed. The recovery plan avoids asking for another reconnect while a ready tunnel is waiting for its next check.
 - [x] The evidence submission path rejects the coordinator's explicit `HOSTILE` trust classification, even if a caller supplies a set of otherwise-positive leak-check fields.
+- [x] The coordinator stores the monotonic timestamp of a successful leak report and invalidates traffic-release eligibility when the report becomes stale or future-dated; it requests a fresh check without treating staleness alone as proof of a leak. Regression coverage was added; Gradle execution remains pending.
+- [x] The `dangerous-experiment` push trigger was removed from the APK workflow so backend-only work does not launch APK builds while APK work is paused; the `main` trigger and manual dispatch remain unchanged.
 - [x] Added regression tests in `AutonomyCoordinatorTest.kt` and `AutonomousPolicyEngineTest.kt` for network-restoration recovery, hostile-trust rejection, preservation of failed verification, and retrying verification after a tunnel rebuild.
 - [ ] Execute the repository Gradle test suite and Android compilation. The hosted runner has previously failed before any steps begin; these newly added tests have not yet been executed.
+- [ ] Recheck the final workflow behavior through GitHub Actions after runner access is restored; the workflow-trigger edit is statically verified from the file contents only.
 - [ ] Perform real Android device/emulator validation of VPN lock-down, DNS/IPv6, per-app routing, and actual no-direct-fallback behavior. The current read-only probe is not a substitute for these tests.
 
 
