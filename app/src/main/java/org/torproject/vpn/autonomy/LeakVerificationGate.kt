@@ -9,6 +9,8 @@ package org.torproject.vpn.autonomy
  */
 data class LeakVerificationEvidence(
     val checkedAtElapsedRealtimeMillis: Long,
+    /** Generation of the tunnel/network session this evidence belongs to; null is untrusted. */
+    val sessionGeneration: Long? = null,
     val ipv4DefaultRouteProtected: Boolean,
     val ipv6ContainedOrBlocked: Boolean,
     val dnsProtectedByTunnel: Boolean,
@@ -18,6 +20,9 @@ data class LeakVerificationEvidence(
     init {
         require(checkedAtElapsedRealtimeMillis >= 0L) {
             "Verification timestamp must not be negative"
+        }
+        require(sessionGeneration == null || sessionGeneration >= 0L) {
+            "Session generation must not be negative"
         }
     }
 }
@@ -34,7 +39,8 @@ enum class LeakVerificationFailure {
     NETWORK_NOT_AVAILABLE,
     DNS_CONFIGURATION_CONFLICT,
     HOSTILE_NETWORK_INDICATOR,
-    CAPTIVE_PORTAL_ACTIVE
+    CAPTIVE_PORTAL_ACTIVE,
+    SESSION_GENERATION_MISMATCH
 }
 
 data class LeakVerificationResult(val failures: List<LeakVerificationFailure>) {
