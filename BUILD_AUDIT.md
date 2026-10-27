@@ -219,3 +219,9 @@ This is a source-level race-condition fix. There is no dedicated Android callbac
 - The job failed before exposing any steps (`steps: null`, `logs_url: null`). The run does not establish a shell preflight, Kotlin test, Android build, or emulator result.
 - The source-level callback guard is committed at `1a268b63c0f5002697cda9a25905af208d552e69`; the subsequent audit record is `e26fa0aca87113c810bf633112ebc8e3f910ba29`.
 - A temporary attempt to add a static monitor guard to the CI preflight was reverted because the existing fixture suite does not provide the Android monitor source tree. The shipped preflight remains independent of Android source files; the monitor change itself remains in the branch.
+
+## Reproducible helper pin — 2026-10-28
+
+The dependency bootstrap no longer clones the mutable default branch of `obfusk/reproducible-apk-tools`. It fetches and checks out immutable commit `9401d827a2404827ec3de6cb90a879d9fbd3f60d` and verifies the resulting HEAD before proceeding. Change: `a0e3f5c8723e8385032502f1748886379bda807b`.
+
+Remaining supply-chain work: validate official SHA-256 checksums for downloaded JDK and Android SDK command-line tools, pin the rustup installer/bootstrap source, and add a test that proves the helper checkout stays at the selected commit. This edit has not been exercised in a real dependency-bootstrap run.
