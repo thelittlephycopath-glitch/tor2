@@ -63,8 +63,9 @@ class AndroidEnvironmentMonitor(
             var connectivityEvent: AutonomyEventType? = null
             var portalEvent: AutonomyEventType? = null
             synchronized(lock) {
-                if (activeNetwork != null && activeNetwork != network) return
-                activeNetwork = network
+                // onAvailable establishes the current network identity first. Ignore delayed
+                // capabilities for a replaced/lost network instead of resurrecting stale state.
+                if (activeNetwork != network) return
                 val portalNow = capabilities.hasCapability(
                     NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL
                 )
