@@ -149,3 +149,15 @@ The offline preflight now also enforces the upstream-import safety contract: dis
 
 Static content inspection confirms that the current preflight and fixtures contain the intended checks. The shell suite has not been executed in this environment because a local checkout could not be cloned (network DNS resolution failed); the GitHub-hosted workflow has not yet run these checks either.
 
+## APK work remains explicitly paused — 2026-10-28
+
+The build workflow now has two separate manual controls: `run_apk_build` defaults to `false` and gates the build job itself; `publish_release` remains independently default-off and can publish only from a manual dispatch on `main`. A manual workflow dispatch with no affirmative build input should therefore not consume build-runner capacity.
+
+The CI preflight now checks that the build-job gate exists and the fixture suite includes a negative case for a missing gate.
+
+- Workflow guard: [`70d3d12`](https://github.com/thelittlephycopath-glitch/tor2/commit/70d3d125d4ee35f0d86dd03dc71ada86196f33b4)
+- Preflight guard: [`e1cf92f`](https://github.com/thelittlephycopath-glitch/tor2/commit/e1cf92f0f781ed9a14435a4df0813a4e0d9e7330)
+- Regression fixture: [`f72d4ad`](https://github.com/thelittlephycopath-glitch/tor2/commit/f72d4ad783010d686a7540b2da5fd3bcf985f376)
+
+This guard is source-inspected, not yet executed by GitHub Actions. The build remains intentionally unrun until the plan's backend/security acceptance work is ready.
+
