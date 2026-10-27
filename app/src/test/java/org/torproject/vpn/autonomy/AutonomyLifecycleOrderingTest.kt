@@ -91,7 +91,6 @@ class AutonomyLifecycleOrderingTest {
         connectAndStart(coordinator, timestamp = 1L)
         val oldGeneration = coordinator.currentVerificationGeneration()
         val delayedReport = passingEvidence(
-            coordinator = coordinator,
             checkedAt = 2L,
             generation = oldGeneration
         )
