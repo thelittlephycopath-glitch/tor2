@@ -172,3 +172,14 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [x] Kept the bridge-info card consistent in portrait and landscape layouts, with a restrained gradient, outline, and more comfortable spacing.
 - [ ] Still required: visual inspection on an actual narrow Android screen and accessibility review of contrast, text scaling, and touch targets. XML edits alone do not prove the UI renders correctly.
 - [ ] Bridge layering remains a design investigation, not active failover. The service currently resolves one selected bridge mode into one bridge configuration string for Onionmasq. A safe next step is to model primary + standby candidates and their validation states, but actual transport chaining or hot switching must wait until the supported Onionmasq/Tor API behavior is confirmed.
+
+## Additional hardening — 2026-10-28
+
+- [x] External GitHub Actions references are pinned to full commit SHAs with version comments; weekly Dependabot updates are configured to propose reviewed version upgrades.
+- [x] A portable CI preflight checks immutable action refs, version comments, the manual release-publication gate, and syntax for both reproducible build scripts.
+- [x] Local positive/negative fixtures for the preflight passed: valid SHA pins pass, while mutable action tags fail. GitHub-hosted execution remains unverified because the workflow job fails before exposing any steps/logs.
+- [x] An exhaustive action-gate regression test now enables every autonomy configuration flag and verifies that only `KEEP_TRAFFIC_BLOCKED` and `SUPPRESS_COVER_TRAFFIC` may be approved; every other action stays suppressed until a reviewed executor exists.
+- [ ] Run the new Kotlin regression test with Gradle. It has not been executed in this environment.
+- [ ] Run the offline preflight on the complete branch checkout in GitHub Actions and pass the entire workflow.
+- [ ] Implement and validate a real leak verifier and reviewed execution boundary before enabling recovery, bridge failover, circuit refresh, notifications, captive-portal allowances, or traffic restoration.
+
