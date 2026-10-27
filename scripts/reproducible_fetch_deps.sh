@@ -8,9 +8,27 @@ cd "$SCRIPT_DIR/.."
 
 echo "Fetching Environment..."
 
-# Detect OS and architecture
+# Detect and validate the host platform before selecting toolchain archives.
 OS="$(uname -s)"
 ARCH="$(uname -m)"
+case "$OS" in
+  Darwin|Linux) ;;
+  *)
+    echo "Unsupported build host OS: $OS" >&2
+    exit 1
+    ;;
+esac
+case "$ARCH" in
+  x86_64|aarch64|arm64) ;;
+  *)
+    echo "Unsupported build host architecture: $ARCH" >&2
+    exit 1
+    ;;
+esac
+if [ "$OS" = "Linux" ] && [ "$ARCH" = "arm64" ]; then
+  echo "Unsupported Linux architecture alias: $ARCH (expected aarch64)" >&2
+  exit 1
+fi
 
 if ! command -v unzip &>/dev/null; then
   echo "Error: unzip is required, please install"
@@ -77,11 +95,20 @@ else
     rm "$JDK_ARCHIVE"
     cd ..
   fi
-  export PATH="$PWD/bin/${JDK_INNER}/bin/":$PATH
-  export ONIONMASQ_JAVA_HOME="$PWD/bin/${JDK_INNER}"
-  export TORVPN_JAVA_HOME="$PWD/bin/${JDK_INNER}"
+  JDK_HOME="$PWD/bin/$JDK_INNER"
+  if [ ! -x "$JDK_HOME/bin/java" ]; then
+    echo "Java 21 installation is missing its executable: $JDK_HOME/bin/java" >&2
+    exit 1
+  fi
+  export PATH="$JDK_HOME/bin:$PATH"
+  export ONIONMASQ_JAVA_HOME="$JDK_HOME"
+  export TORVPN_JAVA_HOME="$JDK_HOME"
 fi
 
+if [ ! -x "$TORVPN_JAVA_HOME/bin/java" ]; then
+  echo "Java 21 executable was not found at $TORVPN_JAVA_HOME/bin/java" >&2
+  exit 1
+fi
 echo "  Java 21 OK!"
 
 # set a default
