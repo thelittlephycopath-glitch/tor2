@@ -1,8 +1,6 @@
 name: Diagnose GitHub Actions runner availability
 
 on:
-  push:
-    branches: [main, dangerous-experiment]
   workflow_dispatch:
 
 permissions:
