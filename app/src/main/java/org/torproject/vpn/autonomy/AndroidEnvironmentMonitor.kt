@@ -169,7 +169,9 @@ class AndroidEnvironmentMonitor(
         try {
             manager.registerDefaultNetworkCallback(networkCallback)
             registered = true
-            publishEnvironment()
+            synchronized(callbackDispatchLock) {
+                publishEnvironment()
+            }
         } catch (_: RuntimeException) {
             registered = false
             runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
