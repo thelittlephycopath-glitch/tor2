@@ -77,6 +77,25 @@ if ! grep -Fq 'cp -a .github /tmp/tor-vpn-local-github' "$import_workflow" ||
   exit 1
 fi
 
+# Network-learning digests are opt-in and must remain local to this installation.
+manifest=app/src/main/AndroidManifest.xml
+backup_rules=app/src/main/res/xml/backup_rules.xml
+extraction_rules=app/src/main/res/xml/data_extraction_rules.xml
+if ! grep -Fq 'android:allowBackup="false"' "$manifest"; then
+  echo "App backup must remain disabled by default." >&2
+  exit 1
+fi
+if ! grep -Fq 'android:fullBackupContent="@xml/backup_rules"' "$manifest" ||
+   ! grep -Fq 'android:dataExtractionRules="@xml/data_extraction_rules"' "$manifest"; then
+  echo "Explicit backup and device-transfer rules must remain wired in the manifest." >&2
+  exit 1
+fi
+if ! grep -Fq 'path="autonomy_network_learning_v1.xml"' "$backup_rules" ||
+   ! grep -Fq 'path="autonomy_network_learning_v1.xml"' "$extraction_rules"; then
+  echo "Opt-in network-learning records must be excluded from backup and device transfer." >&2
+  exit 1
+fi
+
 for script in scripts/reproducible_build.sh scripts/reproducible_fetch_deps.sh; do
   bash -n "$script"
 done
