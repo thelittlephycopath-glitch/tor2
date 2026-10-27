@@ -302,3 +302,7 @@ Source inspection found a deliberate mismatch between the advisory autonomy mode
 
 **Next required work:** trace the actual Onionmasq transport configuration and manual bridge-line grammar, then add parsing/tests only for transport types proven to be accepted by this repository. Do not add new UI options or claim WebTunnel support based on the enum alone.
 
+### Standalone preflight workflow — 2026-10-28
+
+A dedicated low-cost workflow now validates shell syntax and the CI security fixtures on pushes to `dangerous-experiment`, pull requests to `main`, or manual dispatch. It deliberately does not build the APK. The first run (`40579231067`) failed before any step started, with no job log URL; therefore it supplies no evidence that the workflow script passed or failed. Runner/Actions availability remains unresolved.
+
