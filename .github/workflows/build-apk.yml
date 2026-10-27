@@ -56,7 +56,7 @@ jobs:
       # Persist only downloaded dependencies. Never mount all of /root/.cargo:
       # that directory also contains rustup/cargo binaries installed in Containerfile.
       - name: Restore Gradle cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/tor2-gradle
           key: ${{ runner.os }}-gradle-v1-${{ github.run_id }}
@@ -64,7 +64,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Restore Cargo dependency cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ runner.temp }}/tor2-cargo/registry
