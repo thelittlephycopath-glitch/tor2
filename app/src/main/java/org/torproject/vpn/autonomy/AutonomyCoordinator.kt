@@ -400,13 +400,16 @@ class AutonomyCoordinator(
      * This method only plans; it never schedules Android work or modifies routing.
      */
     @Synchronized
-    fun planRecovery(): RecoveryPlan = recoveryPlanner.planReconnect(
+    fun planRecovery(): RecoveryPlan {
+        expireStaleLeakVerification(elapsedRealtimeClock())
+        return recoveryPlanner.planReconnect(
         networkAvailable = environmentalSignals.networkAvailable,
         tunnelReady = tunnelReady,
         leakChecksPassed = leakChecksPassed,
         recoveryRequired = !tunnelReady &&
             (recoveryRequested || consecutiveFailures > 0 || leakCheckFailed)
-    )
+        )
+    }
 
     /** Confirms that a previously planned attempt actually began, preventing duplicate work. */
     @Synchronized
