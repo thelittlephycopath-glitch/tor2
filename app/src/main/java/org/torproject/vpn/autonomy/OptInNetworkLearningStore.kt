@@ -46,15 +46,23 @@ class OptInNetworkLearningStore(
             return false
         }
         require(nowEpochMillis >= 0L) { "Current time cannot be negative" }
-        require(observedAtEpochMillis >= 0L) { "Observation time cannot be negative" }
-        require(isValidDigest(digest)) { "Only lowercase 64-character SHA-256/HMAC digests may be stored" }
+        val records = readValidRecords(nowEpochMillis)
+        val digestValid = isValidDigest(digest)
+        if (observedAtEpochMillis < 0L || !digestValid) {
+            // Even a rejected sample must not leave expired or malformed persisted records behind.
+            persist(records)
+            require(observedAtEpochMillis >= 0L) { "Observation time cannot be negative" }
+            require(digestValid) {
+                "Only lowercase 64-character SHA-256/HMAC digests may be stored"
+            }
+        }
         if (observedAtEpochMillis > nowEpochMillis ||
             nowEpochMillis - observedAtEpochMillis > retentionMillis
         ) {
+            persist(records)
             return false
         }
 
-        val records = readValidRecords(nowEpochMillis)
         val existingTimestamp = records
             .firstOrNull { it.digest == digest }
             ?.observedAtEpochMillis
