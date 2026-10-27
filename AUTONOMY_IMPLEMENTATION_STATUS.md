@@ -190,3 +190,10 @@ No UI/UX changes were made. No verified APK artifact is available from these fai
 - [ ] Run the complete `scripts/test_ci_security.sh` fixture suite and the preflight against the full repository checkout in hosted CI.
 - [ ] Run Gradle unit tests and the Android/Rust build after runner allocation becomes available.
 
+### CI preflight regression suite — local verification
+
+- [x] Fixed the negative-test helper to execute inside the generated fixture root, ensuring it tests the intentionally malformed workflow rather than accidentally failing on missing files.
+- [x] Ran the complete fixture suite locally: all six negative cases were rejected and the valid case passed.
+- [x] Statically inspected all five repository workflow files: 16 external action references were present, and every one had a full SHA plus version comment.
+- [ ] Hosted CI, Gradle unit tests, Android lint, emulator tests, and the complete reproducible build remain unverified.
+
