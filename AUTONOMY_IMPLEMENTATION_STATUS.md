@@ -16,6 +16,9 @@ Integration rule: keep changes additive; do not change the existing UI/UX; do no
 - [x] Leak-verification reports require fresh evidence for IPv4 routing, IPv6 containment, DNS protection, system lockdown, and app routing.
 - [x] Raw `LEAK_CHECK_PASSED` events cannot authorize the coordinator without a validated evidence report.
 - [x] Starting a new leak check invalidates any prior pass but preserves an active failure until a fresh, complete, safe report passes; a regression test was added, but the repository Gradle suite remains unexecuted.
+- [x] A failed leak report now invalidates tunnel readiness, keeps the failure latched through reconnect/network events, requests bounded recovery while the tunnel is down, and only clears after a fresh safe report; regression tests were added, but Gradle execution is pending.
+- [x] The policy continues recommending a new leak check after tunnel readiness even when a prior check failed; a regression test was added, but Gradle execution is pending.
+- [x] A prior verified session invalidated by network/hostile-state changes retains a recovery trigger until successful verification, while a newly observed idle network does not trigger reconnect by itself; regression coverage was added, but Gradle execution is pending.
 - [x] Opt-out deletion now runs before validating an unused read-clock value, so an invalid clock cannot prevent a requested erase; a regression test was added, but Gradle execution remains pending.
 - [x] Corrected a malformed literal `\\n` sequence in the existing service's coordinator declaration that would prevent Kotlin parsing; nearby autonomy/service source was scanned for the same escaped-newline pattern. Full compiler verification is still pending.
 - [x] One coordinator now exposes trust classification, bounded reconnect planning, circuit-refresh recommendations, and cover-traffic budget decisions as advisory APIs.
@@ -92,5 +95,16 @@ No successful Android APK build, APK signature verification, or emulator smoke t
 - [x] Checked a separate runner-diagnostic workflow using a Windows hosted runner as a cross-platform control. That also failed with zero steps; the job summaries expose no runner assignment or logs. This makes a Linux-only image issue less likely, but does not by itself prove whether the cause is account/repository policy or GitHub's hosted-runner service.
 - [ ] Restore hosted-runner execution before any Gradle compile/test, signing, or emulator result can be obtained.
 - [ ] Do not mark an APK as produced until a real artifact exists and signature/build checks pass.
+
+## Source-level safety audit — 2026-10-27
+
+- [x] The coordinator now retains a recovery request when a previously ready/verified session is invalidated by network or hostile-state changes. Once connectivity returns, it can recommend bounded recovery; a first-time idle network does not create a retry loop.
+- [x] A leak-check failure now invalidates tunnel readiness as well as traffic-release eligibility. The prior failure remains latched across tunnel start/ready, network changes, and monitor events; only a new complete, safe leak report clears it.
+- [x] The policy recommends another leak check after a tunnel is ready even when the previous check failed. The recovery plan avoids asking for another reconnect while a ready tunnel is waiting for its next check.
+- [x] The evidence submission path rejects the coordinator's explicit `HOSTILE` trust classification, even if a caller supplies a set of otherwise-positive leak-check fields.
+- [x] Added regression tests in `AutonomyCoordinatorTest.kt` and `AutonomousPolicyEngineTest.kt` for network-restoration recovery, hostile-trust rejection, preservation of failed verification, and retrying verification after a tunnel rebuild.
+- [ ] Execute the repository Gradle test suite and Android compilation. The hosted runner has previously failed before any steps begin; these newly added tests have not yet been executed.
+- [ ] Perform real Android device/emulator validation of VPN lock-down, DNS/IPv6, per-app routing, and actual no-direct-fallback behavior. The current read-only probe is not a substitute for these tests.
+
 
 No UI/UX changes were made. No verified APK artifact is available from these failed runs.
