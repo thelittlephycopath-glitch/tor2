@@ -58,7 +58,7 @@ YAML
 
 expect_failure() {
   local label="$1"
-  if bash "$fixture/scripts/verify_ci_security.sh" > "$fixture/output.log" 2>&1; then
+  if (cd "$fixture" && bash scripts/verify_ci_security.sh) > "$fixture/output.log" 2>&1; then
     echo "FAIL: expected preflight to reject $label" >&2
     cat "$fixture/output.log" >&2
     exit 1
