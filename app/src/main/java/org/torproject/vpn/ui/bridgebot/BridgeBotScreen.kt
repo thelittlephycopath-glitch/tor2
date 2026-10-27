@@ -80,6 +80,13 @@ fun BridgeBotScreen(
                 .padding(paddingValues)
         ) {
             val screenHeight = maxHeight
+            val contentHeightFraction = if (
+                state.botState == BotState.IDLE || state.botState == BotState.ERROR
+            ) {
+                0.62f
+            } else {
+                0.8f
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,7 +186,7 @@ fun BridgeBotScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = screenHeight * 0.8f),
+                        .heightIn(min = screenHeight * contentHeightFraction),
                     verticalArrangement = Arrangement.spacedBy(
                         spacingSizeNormal,
                         Alignment.CenterVertically
