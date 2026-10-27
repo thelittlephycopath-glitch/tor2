@@ -42,6 +42,11 @@ data class AndroidVpnPathSnapshot(
  * Read-only diagnostic probe. It does not generate network traffic, perform external DNS probes,
  * change routes, or inspect another app's private state.
  */
+data class AndroidLeakDiagnosticReport(
+    val snapshot: AndroidVpnPathSnapshot,
+    val evidence: LeakVerificationEvidence
+)
+
 class AndroidLeakVerificationProbe(context: Context) {
     private val appContext = context.applicationContext
     private val connectivityManager = appContext
@@ -94,12 +99,13 @@ class AndroidLeakVerificationProbe(context: Context) {
      * they cannot prove that packets are contained or that app routing/system lockdown are enforced.
      * Keeping every protection flag false prevents this diagnostic probe from authorizing traffic.
      */
-    fun collectEvidence(
+    fun collectDiagnosticReport(
         checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime(),
         sessionGeneration: Long? = null
-    ): LeakVerificationEvidence {
-        collectSnapshot(checkedAtElapsedRealtimeMillis)
-        return LeakVerificationEvidence(
+    ): AndroidLeakDiagnosticReport {
+        val snapshot = collectSnapshot(checkedAtElapsedRealtimeMillis)
+        // Configuration facts are useful for diagnosis, but never upgrade enforcement evidence.
+        val evidence = LeakVerificationEvidence(
             checkedAtElapsedRealtimeMillis = checkedAtElapsedRealtimeMillis,
             sessionGeneration = sessionGeneration,
             ipv4DefaultRouteProtected = false,
@@ -108,7 +114,16 @@ class AndroidLeakVerificationProbe(context: Context) {
             systemLockdownVerified = false,
             appRoutingVerified = false
         )
+        return AndroidLeakDiagnosticReport(snapshot = snapshot, evidence = evidence)
     }
+
+    fun collectEvidence(
+        checkedAtElapsedRealtimeMillis: Long = SystemClock.elapsedRealtime(),
+        sessionGeneration: Long? = null
+    ): LeakVerificationEvidence = collectDiagnosticReport(
+        checkedAtElapsedRealtimeMillis = checkedAtElapsedRealtimeMillis,
+        sessionGeneration = sessionGeneration
+    ).evidence
 
     private inline fun <reified T : InetAddress> List<RouteInfo>.hasDefaultRoute(): Boolean =
         any { route ->
