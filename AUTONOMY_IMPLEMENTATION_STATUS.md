@@ -84,3 +84,13 @@ GitHub Actions is triggering for pushes but the latest inspected jobs terminate 
 A separate minimal runner-diagnostic workflow was tried with `ubuntu-latest`, explicit `ubuntu-24.04`, and then `ubuntu-22.04`; the APK workflow also failed on `ubuntu-latest` during the same push. The newest runs again failed in about two seconds with zero steps, `runner_id: 0`, an empty runner name, no job logs URL, and no artifacts. Changing the hosted image therefore did not fix runner assignment. This rules out a single runner-label/image alias as the simple cause; the failure is still before workflow commands, and the exact account/repository billing or Actions-policy cause cannot be identified through the available repository APIs. The next required check is in GitHub's repository/account Actions settings and usage/billing controls; changing app source or the Dockerfile cannot repair a job that never receives a runner.
 
 No successful Android APK build, APK signature verification, or emulator smoke test has been verified yet. Do not publish or merge the branch as build-verified until these checks actually pass.
+
+## Latest build-blocker investigation — 2026-10-27
+
+- [x] Corrected the Kotlin Gradle DSL placement of `jvmToolchain(21)`: it now sits directly inside `kotlin { }`, not inside `compilerOptions { }`. Commit: `757f07b23f41101186ee4e3e76cd1dacafac0718`.
+- [x] Re-ran the APK workflow after that correction. It still failed before executing any step.
+- [x] Checked a separate runner-diagnostic workflow using a Windows hosted runner as a cross-platform control. That also failed with zero steps; the job summaries expose no runner assignment or logs. This makes a Linux-only image issue less likely, but does not by itself prove whether the cause is account/repository policy or GitHub's hosted-runner service.
+- [ ] Restore hosted-runner execution before any Gradle compile/test, signing, or emulator result can be obtained.
+- [ ] Do not mark an APK as produced until a real artifact exists and signature/build checks pass.
+
+No UI/UX changes were made. No verified APK artifact is available from these failed runs.
