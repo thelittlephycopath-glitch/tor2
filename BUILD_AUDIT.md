@@ -30,3 +30,29 @@ A static pass cannot certify every Kotlin, Rust, native networking, DNS, or runt
 ## Security notes
 
 Tor VPN Beta is experimental and may leak information. These changes focus on build correctness and delivery and do not intentionally alter upstream networking behavior. Do not use these community builds for sensitive activity.
+
+## Current execution blocker — 2026-10-27
+
+The APK workflow is now enabled on `dangerous-experiment` as well as `main`, while release publication remains separately gated. The first verification run for the current branch is:
+
+- Commit: `556a4f6ee30f211f5e7e42ddffaf878aa76b4fcc`
+- Workflow run: https://github.com/thelittlephycopath-glitch/tor2/actions/runs/40568144676
+- Result: failed before any job step executed.
+- GitHub's job record reports `runner_id: 0`, an empty `runner_name`, and `steps: []`; the job completed in roughly three seconds. The cross-platform diagnostic has shown the same pattern on `windows-latest`.
+
+This is evidence of a hosted-runner assignment/service/account-level blocker, not evidence of a Kotlin, Rust, Gradle, SDK, or APK-signing failure. The build has not reached compilation, and no APK artifact was produced. Repeated source edits cannot fix runner allocation. Check repository **Settings → Actions → General** and the account's Actions/billing/usage eligibility, then rerun the workflow. Do not treat a rerun as a code fix; once a runner executes steps, use the preserved build log to diagnose actual compiler or dependency failures.
+
+## Current verified status
+
+- [x] Build workflow push trigger includes `dangerous-experiment`.
+- [x] Release publication remains explicitly opt-in and is not enabled by the default input.
+- [ ] Hosted runner successfully assigned.
+- [ ] Container/toolchain build reaches completion.
+- [ ] Onionmasq Rust/Android build completes.
+- [ ] Tor VPN Gradle release build completes.
+- [ ] APK signing, alignment, and signature verification complete.
+- [ ] Unit tests, ktlint, Android lint, staging build, and emulator smoke test pass.
+- [ ] APK artifact uploaded and independently checked for package metadata, signature, and SHA-256.
+- [ ] Device-level VPN, DNS, IPv4/IPv6, lockdown, reconnect, and traffic-leak tests pass.
+
+Do not describe the APK as built until the remaining blocking checks are evidenced by successful runs.
