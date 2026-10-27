@@ -183,6 +183,10 @@ echo "  Android NDK 27.3.13750724 OK!"
 # would make identical source revisions depend on whichever commit happens to be current.
 REPRODUCIBLE_APK_TOOLS_COMMIT="9401d827a2404827ec3de6cb90a879d9fbd3f60d"
 TOOLS_DIR="$PWD/bin/reproducible-apk-tools"
+if [ -e "$TOOLS_DIR" ] && [ ! -d "$TOOLS_DIR/.git" ]; then
+  echo "Refusing to overwrite non-Git path: $TOOLS_DIR" >&2
+  exit 1
+fi
 if [ ! -d "$TOOLS_DIR/.git" ]; then
   echo "Fetching reproducible-apk-tools at pinned commit $REPRODUCIBLE_APK_TOOLS_COMMIT..."
   mkdir -p bin
