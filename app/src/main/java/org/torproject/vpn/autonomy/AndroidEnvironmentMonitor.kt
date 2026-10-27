@@ -19,6 +19,8 @@ class AndroidEnvironmentMonitor(
     private val connectivityManager = context.applicationContext
         .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     private val lock = Any()
+    // Serializes callback side effects with unregister so queued callbacks cannot publish after shutdown.
+    private val callbackDispatchLock = Any()
 
     @Volatile
     private var registered = false
@@ -45,19 +47,24 @@ class AndroidEnvironmentMonitor(
                     mobileData = false
                 }
             }
-            if (shouldInvalidate) {
-                coordinator.observe(
-                    AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
+            synchronized(callbackDispatchLock) {
+                synchronized(lock) {
+                    if (!registered || activeNetwork != network) return
+                }
+                if (shouldInvalidate) {
+                    coordinator.observe(
+                        AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                }
+                if (shouldClearPortal) {
+                    coordinator.observe(
+                        AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                }
+                publishEnvironment()
             }
-            if (shouldClearPortal) {
-                coordinator.observe(
-                    AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
-            }
-            publishEnvironment()
         }
 
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
@@ -93,13 +100,18 @@ class AndroidEnvironmentMonitor(
                     portalEvent = AutonomyEventType.CAPTIVE_PORTAL_CLEARED
                 }
             }
-            connectivityEvent?.let {
-                coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
+            synchronized(callbackDispatchLock) {
+                synchronized(lock) {
+                    if (!registered || activeNetwork != network) return
+                }
+                connectivityEvent?.let {
+                    coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
+                }
+                portalEvent?.let {
+                    coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
+                }
+                publishEnvironment()
             }
-            portalEvent?.let {
-                coordinator.observe(it, source = AutonomyEventSource.NETWORK_MONITOR)
-            }
-            publishEnvironment()
         }
 
         override fun onLost(network: Network) {
@@ -115,15 +127,20 @@ class AndroidEnvironmentMonitor(
                 }
             }
             if (wasActive) {
-                coordinator.observe(
-                    AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
-                coordinator.observe(
-                    AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-                    source = AutonomyEventSource.NETWORK_MONITOR
-                )
-                publishEnvironment()
+                synchronized(callbackDispatchLock) {
+                    synchronized(lock) {
+                        if (!registered || activeNetwork != null) return
+                    }
+                    coordinator.observe(
+                        AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                    coordinator.observe(
+                        AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+                        source = AutonomyEventSource.NETWORK_MONITOR
+                    )
+                    publishEnvironment()
+                }
             }
         }
 
@@ -135,15 +152,20 @@ class AndroidEnvironmentMonitor(
                 captivePortalDetected = false
                 mobileData = false
             }
-            coordinator.observe(
-                AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
-                source = AutonomyEventSource.NETWORK_MONITOR
-            )
-            coordinator.observe(
-                AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
-                source = AutonomyEventSource.NETWORK_MONITOR
-            )
-            publishEnvironment()
+            synchronized(callbackDispatchLock) {
+                synchronized(lock) {
+                    if (!registered || activeNetwork != null) return
+                }
+                coordinator.observe(
+                    AutonomyEventType.NETWORK_CONNECTIVITY_LOST,
+                    source = AutonomyEventSource.NETWORK_MONITOR
+                )
+                coordinator.observe(
+                    AutonomyEventType.CAPTIVE_PORTAL_CLEARED,
+                    source = AutonomyEventSource.NETWORK_MONITOR
+                )
+                publishEnvironment()
+            }
         }
     }
 
@@ -176,23 +198,19 @@ class AndroidEnvironmentMonitor(
     @Synchronized
     fun unregister() {
         if (!registered) return
-        // Invalidate callbacks before unregistering: a callback already queued by Android
-        // must not mutate the environment after shutdown has started.
-        synchronized(lock) {
-            registered = false
-            activeNetwork = null
-            networkAvailable = false
-            captivePortalDetected = false
-            mobileData = false
+        // Wait for any callback already dispatching, then invalidate registration before
+        // unregistering. Queued callbacks re-check registration under callbackDispatchLock.
+        synchronized(callbackDispatchLock) {
+            synchronized(lock) {
+                registered = false
+                activeNetwork = null
+                networkAvailable = false
+                captivePortalDetected = false
+                mobileData = false
+            }
+            runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
+            publishEnvironment()
         }
-        runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
-        synchronized(lock) {
-            activeNetwork = null
-            networkAvailable = false
-            captivePortalDetected = false
-            mobileData = false
-        }
-        publishEnvironment()
     }
 
     private fun publishEnvironment() {
