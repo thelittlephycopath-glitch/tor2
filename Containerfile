@@ -1,9 +1,9 @@
 FROM containers.torproject.org/tpo/tpa/base-images/debian:trixie
 
-# The app currently compiles against Android 17/API 37 from the preview SDK channel.
+# Android 17/API 37 is published by sdkmanager as platform package 37.0.
 # Onionmasq remains pinned to the stable API 36 toolchain through separate variables.
 ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_COMPILE_SDK=37 \
+    ANDROID_COMPILE_SDK=37.0 \
     ANDROID_BUILD_TOOLS=37.0.0 \
     ANDROID_CLT=13114758 \
     ANDROID_CLT_SHA256=7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee \
