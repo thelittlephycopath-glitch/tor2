@@ -202,3 +202,15 @@ The README was further corrected without changing app UI/UX:
 - Removed the inaccurate claim that the Onionmasq source is pinned to an immutable revision; the README now explicitly says the current tag-based source selection is still under reproducibility review.
 
 These are documentation-only changes and do not modify app UI/UX or runtime behavior. They do not clear the source-pin, build, privacy-policy, history-scan, or release-artifact gates.
+
+
+## Additional remediation during continued review
+
+- README on `release/public-readiness-audit` now uses the fork's actual application ID (`org.torproject.vpn.tor2beta.dev`) in the signature-mismatch instructions, warns that uninstalling deletes local app data, and states that release visibility follows repository visibility. Commit: `c5a073fa09acd14391096c476038da413cd8d057`.
+- `.github/workflows/build-apk.yml` on the audit branch no longer describes a GitHub Release as inherently private; its manual input now explicitly says release visibility follows repository visibility. Commit: `ebc638186028a504458bc0b2c70347da5a7c0429`.
+- The AutoFix workflow branch had an unnecessary `issues: write` permission. It has been removed; current declared permissions are limited to `contents: write`, `pull-requests: write`, and `actions: read`. Commit: `e70a6976e03e70e8916b6e1da98a6865631e96ed`. This reduces scope but does not remove the need for human review of an agent that can write to PR branches.
+- These are branch-only changes; none has been merged to `main`.
+
+## Remaining documentation issue
+
+The README still contains upstream Tor Project localization/offline-help links and inherited developer instructions. Some may be valid upstream contribution references, but they need a final pass to distinguish fork-maintainer guidance from upstream project guidance. The privacy policy has deliberately not been rewritten because actual data practices and policy ownership are not yet established. Do not make public until a maintainer-approved, accurate policy exists in both source and bundled HTML.
