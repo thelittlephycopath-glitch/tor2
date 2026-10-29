@@ -32,7 +32,9 @@ jobs:
       - name: Ask Claude to diagnose the failed Android validation
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OpenRouter key is passed through the action's required key input;
+          # ANTHROPIC_BASE_URL below routes requests to OpenRouter.
+          anthropic_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           additional_permissions: |
             actions: read
           prompt: |
@@ -62,3 +64,6 @@ jobs:
               for a human to inspect. Never push changes directly to main.
           claude_args: |
             --max-turns 12
+        env:
+          ANTHROPIC_BASE_URL: https://openrouter.ai/api
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
