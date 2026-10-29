@@ -74,3 +74,28 @@ Do not switch the repository to public until all of the following have evidence:
 9. A final go/no-go review is recorded and the maintainer explicitly approves changing visibility.
 
 **Decision today: NO-GO. Keep the repository private.**
+
+
+## Workflow-specific security review update
+
+### CI guard design and observed failure boundary
+
+`scripts/verify_ci_security.sh` statically checks all workflow `uses:` references for a full 40-character SHA and a semantic-version comment, and checks that the APK build/release gates, source-import branch restriction, and backup exclusions remain in place. The fixture test script includes positive and negative cases for mutable action tags, missing comments, missing release gates, invalid shell syntax, source-import restriction, and backup exclusions.
+
+This is a useful offline policy guard, but it is a text-pattern checker, not a complete YAML semantic/security validator. It does not itself prove action SHAs correspond to the comments, review permissions, assess third-party action source, validate workflow event privilege boundaries, or prove VPN behavior. Those need separate review.
+
+The failed run's job metadata was retrievable, but the step list and logs were not: the GitHub API wrapper returned the jobs with `steps: null` and `logs_url: null`, and log download failed. Therefore the precise failing command is still unknown. Do not state that the mutable-action guard is the proven failing step without logs; it is a plausible failure source based on the guard's checks and branch differences, not confirmed run evidence.
+
+### AutoFix PR #8 — privilege review required
+
+PR #8 remains draft/open. Its workflow uses `workflow_run` after failed PR validation and requests `contents: write`, `pull-requests: write`, `issues: write`, `actions: read`, and `id-token: write`. It passes `OPENROUTER_API_KEY` to the Claude action and sets `ANTHROPIC_BASE_URL` to OpenRouter. It restricts execution to failed pull-request runs from the same repository and excludes branches starting `claude/`, but the job still runs in a privileged automation context while processing a PR branch.
+
+Before merging, verify from the pinned action's source/documentation which permissions are strictly required. Remove unused write scopes and `id-token: write` if not needed. Review how the action checks out and edits PR content, prompt-injection exposure from repository files/logs, whether it can access secrets or alter workflow files, and whether generated commits are isolated to a new branch. Confirm that no action can publish releases or modify repository settings. The existing prompt guardrails are not a substitute for least-privilege token scopes and independent human review.
+
+### APK release workflow — distribution constraints
+
+The manual APK workflow creates an ephemeral debug key, emits debug-signed APKs, runs a limited emulator launch smoke test, and verifies package metadata/checksums. This is not equivalent to a stable production release: ephemeral signing keys prevent normal in-place upgrades across builds, the smoke test does not validate VPN traffic containment, and debug signing is not a trusted publisher identity. Keep this clearly labeled experimental. Before any public distribution, decide whether APK artifacts should be published at all, and separately review every historical release asset.
+
+### Branch configuration and policy enforcement
+
+The available review reported no protected branch on `main` or the visible branches. The connector may not have administrative permission to set repository rules. Treat protection as unresolved until verified in repository settings; a workflow file alone cannot enforce required review/merge policy if the repository settings do not require it.
