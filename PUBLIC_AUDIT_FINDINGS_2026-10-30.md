@@ -163,3 +163,12 @@ After the fixture-root correction was committed, GitHub Actions generated new fa
 The security preflight failed again when its failed job was rerun. The GitHub API exposed no step summaries (`steps: []`) and the log download endpoint returned `BlobNotFound`; this prevents identifying the first failed command from these runs. This means the fixture-root fix is **not yet CI-verified**, and there may be an additional runner/workflow/startup or test issue. No further root cause is asserted without logs.
 
 The combined status query for commit `e35ee980da3a2ce1751bca3174307e7af5aea3f0` also reports a `CircleCI Pipeline` status of `error`. No `.circleci/config.yml` or `.circleci/config.yaml` was found at the expected paths in the audit branch. Determine whether this is a stale external integration, an absent required configuration, or a separate configured pipeline before deciding whether to disable or repair it. Do not ignore a failing required check just to make the PR mergeable.
+
+
+## Follow-up: complete release metadata inventory
+
+The releases API returned **10 published releases and 40 APK assets** across tags `tor2-build-63`, `64`, `71`, `72`, `73`, `76`, `77`, `78`, `80`, and `88`. Each release contains ARM64, ARMv7, universal, and x86_64 APK assets. All ten release records report `immutable: false`. The newest release is `tor2-build-88`, published 2026-10-24 13:39:28 UTC.
+
+GitHub supplies SHA-256 digests and asset sizes in release metadata, but that is not a malware, source-equivalence, signing, permission, or embedded-content audit. The APK bytes were not downloaded or inspected in this pass. Since these are debug-signed community builds, no release should be described as a verified stable or official release. Preserve existing assets until a deliberate retention decision is made; do not delete or overwrite them as part of this audit.
+
+The repository API confirms `private: true` and description text stating the baseline build is not yet verified. The branch-protection endpoint is inaccessible to the connected integration (HTTP 403), so current protection settings cannot be independently confirmed by this pass; the prior inventory reported no protection. Treat branch protection as unresolved until checked by an authorized maintainer.
