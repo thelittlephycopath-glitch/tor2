@@ -138,3 +138,8 @@ The connected repository metadata confirms the repository remains private and th
 A code-level defect was found in `scripts/test_ci_security.sh`: the positive fixture invokes `bash "$fixture/scripts/verify_ci_security.sh"` while the current working directory remains the real repository root. The guard script reads relative paths from its current directory, so this does not test the fixture tree as intended and can instead reject the actual checkout. The negative fixtures already run with `cd "$fixture"`.
 
 Fixed on `release/public-readiness-audit` by running the positive fixture as `(cd "$fixture" && bash scripts/verify_ci_security.sh)` (commit `8b54781976fa462676b170a66ef5948bafc296f6`). This is a concrete code defect and a plausible explanation for the security-preflight job's very fast failure; because the job logs were unavailable, it is **not yet proven to be the exact cause of the historical run**. The corrected fixture still needs to be executed and then validated by a fresh CI run before the fix is considered verified.
+
+
+## Follow-up change made during continued audit
+
+On branch `ci/claude-android-autofix`, commit `fe33b9eeef05970d2e542a77d9df2765d0066841` removes the workflow's top-level `id-token: write` permission. The workflow passes an explicit OpenRouter API key, so an OIDC token permission was not evidently necessary for the documented configuration. This is a least-privilege reduction only; it has not been validated by a successful workflow run, and PR #8 remains unmerged. The remaining `contents: write`, `pull-requests: write`, and `issues: write` permissions still need a permission-by-permission check against the action's actual behavior. Do not merge PR #8 based on this single hardening change.
