@@ -28,7 +28,7 @@ For computer-based installation, install Android platform tools and enable USB d
 
 # Build locally
 
-The supported local build path uses the repository's pinned container toolchain. Use Linux with Docker (or a compatible container engine), Git, and network access. The build downloads the pinned Onionmasq source revision and required build dependencies.
+The supported local build path uses the repository's container toolchain. Use Linux with Docker (or a compatible container engine), Git, and network access. The build downloads the selected upstream Onionmasq version and required build dependencies. The Onionmasq version is currently identified by a tag rather than an immutable commit, so full source-level reproducibility is still under review.
 
 ```bash
 git clone https://github.com/thelittlephycopath-glitch/tor2.git
@@ -81,7 +81,7 @@ The script extracts the help content, copies it to `app/src/main/assets/help/off
 When updating the Android SDK/Build-Tools versions, ensure that the following locations are updated.
 
 1. Tor VPN:
-   * `app/build.gradle`: `compileSdk` (and `targetSdk` if upgrading the target version).
+   * `app/build.gradle.kts`: `compileSdk` (and `targetSdk` if upgrading the target version).
 
 2. Container Build Environment:
    * `Containerfile`:
