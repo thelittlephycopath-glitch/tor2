@@ -90,3 +90,43 @@ The API compare summary showed one changed-file summary per branch and is not a 
 ## Go/no-go rule
 
 **Do not make this repository public until the history/ref/artifact secret scan, legal/provenance review, privacy-policy accuracy review, workflow review, and clean build/test verification are complete.** The present status is not cleared.
+
+
+## Deep-audit progress update (2026-10-30)
+
+This is an evidence update from the second review pass. It does not clear the repository for public visibility.
+
+### Changes made only on the preparation branch
+
+- [x] Replaced stale README local-build instructions that directed readers to clone the upstream GitLab repository and create a personal GitLab token. The README now documents this repository's Containerfile/reproducible-build path and distinguishes unsigned local outputs from debug-signed community test builds.
+- [x] Replaced mutable action tags in `.github/workflows/build-apk.yml` and `.github/workflows/diagnostic-build.yml` with commit-SHA pins and version comments:
+  - `actions/checkout` `3d3c42e5aac5ba805825da76410c181273ba90b1` (`v7.0.1`)
+  - `actions/cache` `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` (`v6.1.0`)
+  - `actions/upload-artifact` `cf430e030ddbb5b0abf93d22962f4752f3646cd9` (`v7.0.2`)
+- [x] Re-ran a read-only static inventory of the six workflow files on this branch: 17 external `uses:` references found; all 17 use 40-character commit SHAs and version comments; zero unpinned references in that inventory. This was a script-level inspection, not a GitHub Actions execution, and the workflow validator itself has not yet been observed passing in a new run.
+
+### Newly confirmed blockers and risk findings
+
+- [ ] **Packaged privacy policy identifies the wrong developer and scope.** Both `doc/PRIVACY_POLICY.md` and the bundled `app/src/main/assets/help/PRIVACY_POLICY.md.html` say the developer is The Tor Project, Inc. and describe Tor Browser for desktop and Android as well as TorVPN. They make categorical no-collection/no-telemetry/no-third-party-transmission claims. That text is not an accurate project-specific policy for this community fork without a policy-owner review. It has not been changed because it is user-facing content and must be reconciled with actual behavior before making claims.
+- [ ] **Network trust and leak-protection claims remain unverified.** The existing `PRIVACY_IMPLEMENTATION_AUDIT.md` records that there is no verified runtime call path from Android network callbacks to the network-learning persistence, that trust evidence is not yet bound to session generation end-to-end, and that the Android probe does not prove IPv4/IPv6/DNS containment, system lockdown, or app-routing enforcement. Do not advertise those protections as proven.
+- [ ] **Dependency pin is not immutable.** `scripts/onionmasq.hash` contains `vpn-1.9.1Beta`, a tag name rather than a full commit SHA. The reproducible build script fetches upstream tags and checks out this tag; the exact source commit behind the tag was not independently recorded as a locked SHA during this pass.
+- [ ] **Container base image is tag-pinned only.** `Containerfile` starts from `containers.torproject.org/tpo/tpa/base-images/debian:trixie`, not an immutable image digest. The build pins hashes for downloaded Android command-line tools and the NDK, but its base-image identity can move.
+- [ ] **Repository protection is absent.** The repository metadata and branch listing report `protected: false` for `main` and every visible branch. There are no required-check/approval safeguards evidenced by this review.
+- [ ] **Public releases already exist on the private repository.** The Releases API lists multiple published build releases, including `tor2-build-88` (published 2026-10-24). The latest release assets are debug-signed APKs and include a universal APK of about 281 MB. Release notes correctly say these are unofficial and experimental, but all historical release assets and their contents have not been independently scanned. Do not assume the manual publish gate means no releases exist.
+- [ ] **CI evidence still missing.** The recent Android validation and security-preflight runs failed within seconds, but the GitHub connector returns empty job-step lists and `BlobNotFound` when retrieving those jobs' logs. A mutable-action-ref mismatch is now established in the old `main` workflows and is a deterministic reason the workflow guard would fail; the precise recorded failing step is not available, and the Android compile failure root cause remains unknown. The audit-branch changes have not yet been validated by a successful live CI run.
+- [ ] **A full history scan is still not complete.** The GitHub code-search connector returned no useful code matches for secret keywords and its indexed search results are not a trustworthy history-wide scan. The visible-branch list, current tree, releases inventory sample, and commit-history page do not prove all commits, refs, historical releases, CI artifacts, or uploaded objects are clean. Do not interpret “no search results” as “no secrets.”
+
+### Source-level data handling observed (not runtime certification)
+
+- The manifest requests `QUERY_ALL_PACKAGES`, internet and network-state access, boot-completed, wake-lock, foreground-service, notification and vibration permissions. `allowBackup=false` and cleartext traffic disabled are explicit in the manifest; backup/device-transfer rules separately exclude the network-learning preferences file.
+- The circumvention API client makes HTTPS requests to `bridges.torproject.org/moat/circumvention/` and uses a certificate pin. These remote requests do not, by themselves, establish personal-data collection, but the privacy policy should explain actual app network operations rather than make unqualified blanket claims.
+- The license file is BSD 3-Clause and carries upstream Tor Project copyright. This pass has not completed a file-by-file provenance, notice, or trademark review of all imported source, bundled offline help, screenshots, logos, icons, fonts, translations, and binaries.
+
+### Verification status
+
+- **Repository visibility:** still private.
+- **Main branch:** unchanged by this audit pass.
+- **UI/UX:** unchanged by this audit pass.
+- **Audit branch:** only build-workflow pinning, README build-instruction correction, and this audit document are intended to change.
+- **Build/tests:** no successful new CI run or device/emulator regression pass has been established.
+- **Release decision:** **NO-GO** until history and all ref/artifact surfaces are scanned, privacy/legal attribution is corrected and independently checked, reproducible dependency/image identities are reviewed, workflow guard and Android build/tests pass, and VPN leak/routing behavior is tested.
