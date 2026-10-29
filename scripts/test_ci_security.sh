@@ -90,7 +90,7 @@ expect_failure() {
 }
 
 write_valid_workflows
-bash "$fixture/scripts/verify_ci_security.sh"
+(cd "$fixture" && bash scripts/verify_ci_security.sh)
 echo "PASS: accepts pinned action and guarded release"
 
 # Mutable major tags must be rejected.
