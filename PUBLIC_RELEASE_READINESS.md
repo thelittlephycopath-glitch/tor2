@@ -34,6 +34,18 @@ This document tracks preparation for making the `thelittlephycopath-glitch/tor2`
 - The APK workflow is manual and both build and release inputs default to false. Review all workflows and permissions again before enabling public distribution.
 - Limited GitHub indexed searches for common credential markers returned no results. This is **not** a complete secret scan and must not be treated as one.
 
+
+### Branch inventory snapshot
+
+The branch comparison API reported these branches as diverged from `main` at review time; these are not safe to delete without inspecting the full commit diffs:
+
+- `ci/claude-android-autofix`: 5 commits ahead and 3 behind; includes the AutoFix workflow. PR #8 is still draft/open.
+- `codespaces-build-test`: 3 commits ahead and 4 behind; includes a devcontainer file and a Containerfile change. Preserve until unique build configuration is reviewed.
+- `feat/subtle-cute-connect-polish`: 7 commits ahead and 3 behind; modifies the connect fragment/layout and adds a drawable. This is a UI/UX change and must remain untouched unless explicitly approved. PR #7 is still draft/open.
+- `fix/android-sdk-package`: 1 commit ahead and 4 behind; includes a Containerfile change. Review whether the fix is already present on `main` before deciding whether to retain it.
+
+The API compare summary showed one changed-file summary per branch and is not a substitute for reviewing each commit/diff. Branch names, commit counts, and PR states can change; refresh before any public-visibility decision.
+
 ## Required audit sequence
 
 ### 1. Preserve and inventory
