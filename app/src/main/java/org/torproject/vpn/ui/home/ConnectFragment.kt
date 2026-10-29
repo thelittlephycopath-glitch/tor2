@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -143,6 +145,19 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
         setStatusBarColor(colorRes = R.color.surface)
         // Keep the connection button sharp; give its surrounding container a gentle lifted feel.
         binding.clExitSelectionButton.elevation = getDpInPx(requireContext(), 2f)
+
+        // Soften the decorative halo behind the controls on Android 12+.
+        // RenderEffect blurs only this lightweight overlay, not the whole screen or live content.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val blurRadius = getDpInPx(requireContext(), 16f)
+            binding.connectControlsHalo.setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    blurRadius,
+                    blurRadius * 0.65f,
+                    Shader.TileMode.CLAMP
+                )
+            )
+        }
 
         // Small tactile feedback keeps the original connect control and its click handling intact.
         binding.tvConnectActionBtn.apply {
