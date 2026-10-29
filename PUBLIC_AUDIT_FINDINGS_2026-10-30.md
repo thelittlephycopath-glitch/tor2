@@ -131,3 +131,10 @@ The connected repository metadata confirms the repository remains private and th
 4. Obtain a complete clone in a controlled environment and scan all refs, tags, historical blobs, releases, and downloadable artifacts with a local secret scanner; rotate any exposed credential before considering history rewriting.
 5. Establish required checks and branch rules in GitHub settings; then run unit, lint, staging APK, device/emulator and VPN leak-regression tests.
 6. Re-evaluate all release assets and the two draft PRs; record the disposition and only then produce a final go/no-go checklist.
+
+
+## Follow-up: likely CI preflight failure source and fix
+
+A code-level defect was found in `scripts/test_ci_security.sh`: the positive fixture invokes `bash "$fixture/scripts/verify_ci_security.sh"` while the current working directory remains the real repository root. The guard script reads relative paths from its current directory, so this does not test the fixture tree as intended and can instead reject the actual checkout. The negative fixtures already run with `cd "$fixture"`.
+
+Fixed on `release/public-readiness-audit` by running the positive fixture as `(cd "$fixture" && bash scripts/verify_ci_security.sh)` (commit `8b54781976fa462676b170a66ef5948bafc296f6`). This is a concrete code defect and a plausible explanation for the security-preflight job's very fast failure; because the job logs were unavailable, it is **not yet proven to be the exact cause of the historical run**. The corrected fixture still needs to be executed and then validated by a fresh CI run before the fix is considered verified.
