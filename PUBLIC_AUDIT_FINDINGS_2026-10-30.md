@@ -190,3 +190,15 @@ Next CI action: check the repository's Actions page and account/organization run
 The GitHub Actions job API for the rerun reports `runner_id: 0`, an empty `runner_name`, and `steps: []`; it began and ended within roughly two seconds. This is direct evidence that the job did not execute any workflow steps on a runner. Therefore the recent rapid failures cannot be attributed to the fixture script or Android source on the available evidence. The fixture-root defect is still fixed in code, but its effect has not been exercised by CI.
 
 Next diagnostic: check repository/account Actions usage and hosted-runner eligibility/availability in GitHub settings or billing, and inspect the run's annotations through an authorized GitHub interface. Once a runner is assigned, rerun preflight first, then the full Android validation. Do not change source code to compensate for a job that never reached a runner.
+
+
+## Documentation fixes made on the audit branch
+
+The README was further corrected without changing app UI/UX:
+- Removed obsolete package-install instructions referencing `org.torproject.vpn` and a stale `app-debug.apk` filename.
+- Removed an obsolete shell command that attempted to toggle Android's legacy unknown-source installation setting; replaced it with Android Settings guidance.
+- Clarified that community APKs are temporary debug-signed and may not update over previous builds.
+- Corrected the Gradle file reference to `app/build.gradle.kts`.
+- Removed the inaccurate claim that the Onionmasq source is pinned to an immutable revision; the README now explicitly says the current tag-based source selection is still under reproducibility review.
+
+These are documentation-only changes and do not modify app UI/UX or runtime behavior. They do not clear the source-pin, build, privacy-policy, history-scan, or release-artifact gates.
