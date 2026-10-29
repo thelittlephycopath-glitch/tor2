@@ -143,3 +143,12 @@ Fixed on `release/public-readiness-audit` by running the positive fixture as `(c
 ## Follow-up change made during continued audit
 
 On branch `ci/claude-android-autofix`, commit `fe33b9eeef05970d2e542a77d9df2765d0066841` removes the workflow's top-level `id-token: write` permission. The workflow passes an explicit OpenRouter API key, so an OIDC token permission was not evidently necessary for the documented configuration. This is a least-privilege reduction only; it has not been validated by a successful workflow run, and PR #8 remains unmerged. The remaining `contents: write`, `pull-requests: write`, and `issues: write` permissions still need a permission-by-permission check against the action's actual behavior. Do not merge PR #8 based on this single hardening change.
+
+
+## CI follow-up after the least-privilege commit
+
+The GitHub API reports two failed runs for commit `fe33b9eeef05970d2e542a77d9df2765d0066841`:
+- Security preflight run `40951489267`, job `123720470682`.
+- Android validation run `40951489377`, job `123720471796`.
+
+Both runs began at `2026-10-29T20:42:56Z` and were marked updated/completed at approximately `20:42:59Z`. Job metadata contains `steps: null` and `logs_url: null`; attempts to retrieve the job logs return a missing log blob. This timing and missing telemetry do not establish a source-code failure or an infrastructure failure; the exact cause remains undiagnosed. A rerun of the preflight also failed, with the same unavailable log interface. Do not treat the code as buildable until a usable run with step-level evidence succeeds.
