@@ -11,7 +11,7 @@ on:
         type: boolean
         default: false
       publish_release:
-        description: Publish signed APKs as a private GitHub Release
+        description: Publish experimental debug-signed APKs as a GitHub Release (visibility follows repository visibility)
         required: true
         type: boolean
         default: false
