@@ -183,3 +183,10 @@ The feature branch had mutable GitHub Action refs in `.github/workflows/build-ap
 However, the subsequent security-preflight run `40951589174` still concluded failure. Its GitHub job metadata reports `steps: []`, `runner_id: 0`, `runner_name: ""`, and start/completion only two seconds apart. The prior failed runs show the same pattern. This is strong evidence the job did not execute on a hosted runner, so the failure cannot currently be attributed to the shell guard or its fixtures. Job-log download also returns `BlobNotFound`. Treat runner allocation / Actions service or account policy as the leading explanation, **not a confirmed diagnosis**. A manual runner diagnostic workflow exists, but has not been successfully run in the available evidence.
 
 Next CI action: check the repository's Actions page and account/organization runner availability, billing/usage limits, concurrency, and workflow permissions; manually dispatch `runner-diagnostic.yml` on the feature branch if permitted. Only after a job is actually assigned a runner and emits step logs can the security guard and Android build failures be diagnosed from execution evidence. The immutable-action fix is verified by source inspection, but the guard and build are not yet passing.
+
+
+### Runner-allocation evidence
+
+The GitHub Actions job API for the rerun reports `runner_id: 0`, an empty `runner_name`, and `steps: []`; it began and ended within roughly two seconds. This is direct evidence that the job did not execute any workflow steps on a runner. Therefore the recent rapid failures cannot be attributed to the fixture script or Android source on the available evidence. The fixture-root defect is still fixed in code, but its effect has not been exercised by CI.
+
+Next diagnostic: check repository/account Actions usage and hosted-runner eligibility/availability in GitHub settings or billing, and inspect the run's annotations through an authorized GitHub interface. Once a runner is assigned, rerun preflight first, then the full Android validation. Do not change source code to compensate for a job that never reached a runner.
