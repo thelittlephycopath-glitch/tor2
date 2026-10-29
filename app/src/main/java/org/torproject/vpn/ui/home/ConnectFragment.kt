@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
@@ -140,6 +141,29 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
             requireContext().resources.getDimension(R.dimen.connection_button_lower_guideline)
         )
         setStatusBarColor(colorRes = R.color.surface)
+        // Small tactile feedback keeps the original connect control and its click handling intact.
+        binding.tvConnectActionBtn.apply {
+            elevation = getDpInPx(requireContext(), 5f)
+            setOnTouchListener { touchedView, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> touchedView.animate()
+                        .scaleX(0.97f)
+                        .scaleY(0.97f)
+                        .setDuration(90L)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> touchedView.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(150L)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                // Do not consume the event; XML data binding still handles the actual VPN action.
+                false
+            }
+        }
+
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = connectFragmentViewModel
 
