@@ -64,44 +64,24 @@ If you get this error: `adb: failed to install tor-vpn-debug.apk: Failure [INSTA
 $ adb uninstall org.torproject.vpn
 ```
 
-# Build and run a debug version
-If you are only wanting to install the CI built apk, you do not need to follow this step, simply follow the process detailed above instead. This step is only if you wish to build the app locally, independent of the CI build.
+# Build locally
 
-To build the app the Android SDK is required and the command line tool ADB is recommended.
+The supported local build path uses the repository's pinned container toolchain. Use Linux with Docker (or a compatible container engine), Git, and network access. The build downloads the pinned Onionmasq source revision and required build dependencies.
 
-For now the build and installation steps are as easy as:
-1. Get the repository:
-```
-    git clone https://gitlab.torproject.org/tpo/applications/vpn.git`
-    cd vpn
-```
-2. create a [personal access token](https://docs.gitlab.com/ee/security/token_overview.html#personal-access-tokens) with the permission `read_api`
-3. configure access to AndroidOnionmasq with one of:
-   * a. use gitlab ci prebuilt: add the line `gitLabPrivateToken=<YOUR_PRIVATE_ACCESS_TOKEN>` to your `local.properties` file in your projects root directory. (Replace <YOUR_PRIVATE_ACCESS_TOKEN> ;))
-   * b. use local build: run `./gradlew :onionmasq:publishLibraryDebugPublicationToMavenLocal` in your local copy of onionmasq/android/OnionmasqAndroid to publish to your local maven repo, default `~/.m2/repository`
-4. Build the app: `./gradlew assembleUniversalDebug`
-5. Install it on your phone: `adb -d install -t app/build/outputs/apk/debug/app-universal-debug.apk`
-
-Have fun!
-
-## Reproducible builds
-
-To create a reproducible build (Linux only), run:
-
-```
-./scripts/reproducible_build.sh
+```bash
+git clone https://github.com/thelittlephycopath-glitch/tor2.git
+cd tor2
+docker build --pull --file Containerfile --tag tor2-android-builder .
+docker run --rm \
+  --volume "$PWD:/build/vpn" \
+  --workdir /build/vpn \
+  tor2-android-builder \
+  env BUILD_AAB=0 bash scripts/reproducible_build.sh
 ```
 
-By default, the script checks out the onionmasq commit specified in `scripts/onionmasq.hash`. To override it, set the `ONIONMASQ_HASH` environment variable:
+The unsigned release APK outputs are written to `build/`. They are for local build inspection and are not ready to install until signed. For an installable community test build, use a successful run from the repository's **Build gtor APK** workflow; its artifacts use a temporary debug signing key and are not official Tor Project releases.
 
-```
-ONIONMASQ_HASH=<commit-or-tag> ./scripts/reproducible_build.sh
-```
-
-## Update gitlab maven onionmasq artifacts during development
-If you need to fetch the latest onionmasq library from gitlabs maven repo during the development, you have to clear your gradle cache before you invoke a new build. Gradle will automatically
-fetch the latest version from https://gitlab.torproject.org/tpo/core/onionmasq/-/packages (`main-branch-debug` version, if you're building a debug apk).
-You can have a look at `./scripts/clear_onionmasq_gradle_cache.sh` to get an idea how to remove onionmasq from the gradle cache.
+Do not place API tokens, signing keys, or other credentials in source files or commits. This repository's build path does not require a personal GitLab access token in `local.properties`. The build still downloads upstream Onionmasq source from Tor Project-hosted infrastructure, so availability of that upstream source is a build-time dependency.
 
 # Instrumentation Testing
 
