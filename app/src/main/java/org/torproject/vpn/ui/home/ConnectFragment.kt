@@ -9,8 +9,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
@@ -143,14 +141,8 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
             requireContext().resources.getDimension(R.dimen.connection_button_lower_guideline)
         )
         setStatusBarColor(colorRes = R.color.surface)
-        // Subtle frosted halo behind the existing button; keep the button itself crisp.
-        // RenderEffect is API 31+, so older Android versions retain the original rendering.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            binding.tvConnectActionBtn.background = binding.tvConnectActionBtn.background?.mutate()
-            binding.tvConnectActionBtn.setRenderEffect(
-                RenderEffect.createBlurEffect(0.7f, 0.7f, Shader.TileMode.DECAL)
-            )
-        }
+        // Keep the connection button sharp; give its surrounding container a gentle lifted feel.
+        binding.clExitSelectionButton.elevation = getDpInPx(requireContext(), 2f)
 
         // Small tactile feedback keeps the original connect control and its click handling intact.
         binding.tvConnectActionBtn.apply {
