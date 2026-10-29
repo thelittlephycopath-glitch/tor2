@@ -172,3 +172,14 @@ The releases API returned **10 published releases and 40 APK assets** across tag
 GitHub supplies SHA-256 digests and asset sizes in release metadata, but that is not a malware, source-equivalence, signing, permission, or embedded-content audit. The APK bytes were not downloaded or inspected in this pass. Since these are debug-signed community builds, no release should be described as a verified stable or official release. Preserve existing assets until a deliberate retention decision is made; do not delete or overwrite them as part of this audit.
 
 The repository API confirms `private: true` and description text stating the baseline build is not yet verified. The branch-protection endpoint is inaccessible to the connected integration (HTTP 403), so current protection settings cannot be independently confirmed by this pass; the prior inventory reported no protection. Treat branch protection as unresolved until checked by an authorized maintainer.
+
+
+## New evidence from latest PR #8 CI attempts (2026-10-30)
+
+The feature branch had mutable GitHub Action refs in `.github/workflows/build-apk.yml` and `.github/workflows/diagnostic-build.yml` (`actions/checkout@v4`, `actions/cache@v4`, and `actions/upload-artifact@v4`). Those were real policy violations under `scripts/verify_ci_security.sh` and have now been replaced on `ci/claude-android-autofix` with the reviewed immutable SHA references and semantic-version comments already used on the audit branch. Commits:
+- `59ef91fab980fec970adc92551bead90c9a1d97b` — build workflow action pins.
+- `8ff8bcbcae48af1ce74068799e2a6d0509b0a68a` — diagnostic workflow action pins.
+
+However, the subsequent security-preflight run `40951589174` still concluded failure. Its GitHub job metadata reports `steps: []`, `runner_id: 0`, `runner_name: ""`, and start/completion only two seconds apart. The prior failed runs show the same pattern. This is strong evidence the job did not execute on a hosted runner, so the failure cannot currently be attributed to the shell guard or its fixtures. Job-log download also returns `BlobNotFound`. Treat runner allocation / Actions service or account policy as the leading explanation, **not a confirmed diagnosis**. A manual runner diagnostic workflow exists, but has not been successfully run in the available evidence.
+
+Next CI action: check the repository's Actions page and account/organization runner availability, billing/usage limits, concurrency, and workflow permissions; manually dispatch `runner-diagnostic.yml` on the feature branch if permitted. Only after a job is actually assigned a runner and emits step logs can the security guard and Android build failures be diagnosed from execution evidence. The immutable-action fix is verified by source inspection, but the guard and build are not yet passing.
