@@ -4,10 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Build
-import android.os.Bundle
 import android.graphics.RenderEffect
 import android.graphics.Shader
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -149,7 +149,7 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
         // Soften the decorative halo behind the controls on Android 12+.
         // RenderEffect blurs only this lightweight overlay, not the whole screen or live content.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val blurRadius = getDpInPx(requireContext(), 16f)
+            val blurRadius = getDpInPx(requireContext(), 16f).toFloat()
             binding.connectControlsHalo.setRenderEffect(
                 RenderEffect.createBlurEffect(
                     blurRadius,
