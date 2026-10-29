@@ -44,18 +44,25 @@ jobs:
             ${{ github.event.workflow_run.html_url }}
 
             Requirements:
-            - Read the failed run and logs before changing anything.
+            - Read the failed run and relevant logs before changing anything.
             - Identify the root cause, not just the first visible symptom.
             - Make the smallest safe fix for Kotlin, Android, Gradle, Rust integration,
               build configuration, or tests when the evidence supports it.
+            - Keep touched code clean and consistently formatted. Follow the repository's
+              existing style and formatter/linter configuration; run the relevant formatter
+              or formatting check when available.
+            - Tidy only files directly related to the fix. Remove accidental whitespace,
+              stale comments, or clearly unused imports only when safe. Do not perform
+              broad reformatting, unrelated refactors, mass renames, or dependency/tooling
+              changes merely for aesthetics.
             - Preserve the existing UI/UX and VPN connection, routing, privacy, and
-              security behavior. Do not weaken tests, lint, permissions, TLS, or
-              security checks to make CI green.
+              security behavior. Do not redesign screens or change visual behavior.
+            - Do not weaken tests, lint, permissions, TLS, or security checks to make CI green.
             - Never modify signing secrets, credentials, repository settings, release
               publishing, or deployment workflows.
             - Add or update a regression test when practical.
             - Run the narrowest relevant verification commands available; report
-              clearly what was and was not run.
+              clearly what was and was not run, including formatter/linter results.
             - Do not merge anything or publish an APK/release.
             - If the failure is caused by runner allocation, GitHub infrastructure,
               missing secrets, or another external issue rather than source code,
