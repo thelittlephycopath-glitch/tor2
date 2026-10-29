@@ -99,3 +99,35 @@ The manual APK workflow creates an ephemeral debug key, emits debug-signed APKs,
 ### Branch configuration and policy enforcement
 
 The available review reported no protected branch on `main` or the visible branches. The connector may not have administrative permission to set repository rules. Treat protection as unresolved until verified in repository settings; a workflow file alone cannot enforce required review/merge policy if the repository settings do not require it.
+
+
+## Branch disposition matrix (refreshed 2026-10-30)
+
+Comparison against `main` confirms these branches are divergent, so they must not be blindly merged or deleted:
+
+| Branch | Ahead / behind main | Files in reported diff | Disposition |
+|---|---:|---|---|
+| `feat/subtle-cute-connect-polish` | 7 / 3 | `ConnectFragment.kt`, `fragment_connect.xml`, new connect halo drawable | Keep separate; explicit UI/UX changes are outside this audit's authorization. |
+| `ci/claude-android-autofix` | 5 / 3 | new `.github/workflows/claude-android-autofix.yml` | Keep separate; review workflow permissions and prompt-injection boundaries before any merge. |
+| `codespaces-build-test` | 3 / 4 | new devcontainer config; modified `Containerfile` | Keep for review; compare its container edits against the audit branch's build-input changes. |
+| `fix/android-sdk-package` | 1 / 4 | modified `Containerfile` | Check whether its package fix is superseded or conflicts; do not delete based on commit count alone. |
+| `release/public-readiness-audit` | 6 / 0 at the earlier comparison | README/build-input documentation, action pinning and audit documents | Preparation-only branch; not merged and not build-verified. |
+
+The compare API provides a file summary but not a full enough patch/history audit to conclude that any branch is disposable. No branches have been deleted.
+
+## Access and verification constraints
+
+The connected repository metadata confirms the repository remains private and the connected identity has admin/maintain/push permissions. That does not imply the connector exposes every GitHub API capability. In this pass:
+- Job listings were available, but step lists were null and downloadable job-log blobs returned `BlobNotFound`.
+- The artifacts endpoint returned no artifacts for the specific failed CI run checked; this is not a statement about all historical release assets.
+- Repository settings indicate the repository is private; branch-protection/ruleset enforcement has not been verified and was not changed.
+- A complete local clone was not available through the connector. Consequently no all-ref history scanner or local APK static-analysis tool was run here.
+
+## Next technical actions, in order
+
+1. Obtain a new validation run with logs accessible without activating the privileged AutoFix path; diagnose the earliest failing step.
+2. Verify upstream Onionmasq tag resolution and replace tag-based pinning only with a reviewed full commit SHA; pin the base container image only to a digest verified from its registry.
+3. Review the full Android source paths for data flows and the exact VPN tunnel lifecycle, then correct both policy copies after the maintainer/support identity is defined.
+4. Obtain a complete clone in a controlled environment and scan all refs, tags, historical blobs, releases, and downloadable artifacts with a local secret scanner; rotate any exposed credential before considering history rewriting.
+5. Establish required checks and branch rules in GitHub settings; then run unit, lint, staging APK, device/emulator and VPN leak-regression tests.
+6. Re-evaluate all release assets and the two draft PRs; record the disposition and only then produce a final go/no-go checklist.
