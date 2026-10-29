@@ -214,3 +214,19 @@ These are documentation-only changes and do not modify app UI/UX or runtime beha
 ## Remaining documentation issue
 
 The README still contains upstream Tor Project localization/offline-help links and inherited developer instructions. Some may be valid upstream contribution references, but they need a final pass to distinguish fork-maintainer guidance from upstream project guidance. The privacy policy has deliberately not been rewritten because actual data practices and policy ownership are not yet established. Do not make public until a maintainer-approved, accurate policy exists in both source and bundled HTML.
+
+
+## Historical releases: complete listing page checked
+
+The Releases API currently returns **10 published releases and 40 APK assets**: `tor2-build-88`, `80`, `78`, `77`, `76`, `73`, `72`, `71`, `64`, and `63`. Each listed release has four architecture/universal debug-signed APK assets. Release descriptions say these are unofficial and experimental, but the assets have not been downloaded and binary-inspected. If the repository is made public, these releases/assets will also become public. Do not switch visibility until the maintainer decides which artifacts are appropriate to expose; no release has been deleted or modified.
+
+## Latest CI evidence after workflow pin changes
+
+Runs `40951998697` (Android validation) and `40951998768` (security preflight), created after the action-pin and permission changes, both failed before any step was recorded. Their job metadata reports zero steps, `runner_id: 0`, and an empty runner name. The workflow-log endpoint remains unavailable. This reinforces the runner-allocation/Actions-service hypothesis, but it still does not prove why GitHub marked the jobs failed. The source-level action-pin violations have been corrected on the AutoFix branch, but neither CI gate has actually executed successfully.
+
+## Current branch and change status
+
+- Audit branch latest report update: `535fdd989d879a2e01bfeb42f04c4d46435b693c`.
+- AutoFix branch latest permission reduction: `e70a6976e03e70e8916b6e1da98a6865631e96ed`.
+- PR #8 remains open/draft; no merge was performed.
+- Main remains unchanged by these audit commits and the repository remains private.
