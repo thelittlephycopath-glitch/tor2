@@ -152,3 +152,14 @@ The GitHub API reports two failed runs for commit `fe33b9eeef05970d2e542a77d9df2
 - Android validation run `40951489377`, job `123720471796`.
 
 Both runs began at `2026-10-29T20:42:56Z` and were marked updated/completed at approximately `20:42:59Z`. Job metadata contains `steps: null` and `logs_url: null`; attempts to retrieve the job logs return a missing log blob. This timing and missing telemetry do not establish a source-code failure or an infrastructure failure; the exact cause remains undiagnosed. A rerun of the preflight also failed, with the same unavailable log interface. Do not treat the code as buildable until a usable run with step-level evidence succeeds.
+
+
+## Follow-up: CI retry and external status
+
+After the fixture-root correction was committed, GitHub Actions generated new failed runs:
+- Security preflight run `40951493564` (job `123720483429`).
+- Android validation run `40951493524` (job `123720483601`).
+
+The security preflight failed again when its failed job was rerun. The GitHub API exposed no step summaries (`steps: []`) and the log download endpoint returned `BlobNotFound`; this prevents identifying the first failed command from these runs. This means the fixture-root fix is **not yet CI-verified**, and there may be an additional runner/workflow/startup or test issue. No further root cause is asserted without logs.
+
+The combined status query for commit `e35ee980da3a2ce1751bca3174307e7af5aea3f0` also reports a `CircleCI Pipeline` status of `error`. No `.circleci/config.yml` or `.circleci/config.yaml` was found at the expected paths in the audit branch. Determine whether this is a stale external integration, an absent required configuration, or a separate configured pipeline before deciding whether to disable or repair it. Do not ignore a failing required check just to make the PR mergeable.
