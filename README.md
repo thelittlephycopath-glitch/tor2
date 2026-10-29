@@ -10,9 +10,11 @@
 ## Downloading the APK
 
 1. Open the [gtor APK workflow](https://github.com/thelittlephycopath-glitch/tor2/actions/workflows/build-apk.yml).
-2. Open the latest **successful** “Build gtor APK” run.
-3. Under **Artifacts**, download and extract `gtor-debug-signed-apks`.
-4. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
+2. Choose **Run workflow** on the `main` branch.
+3. Set **run_apk_build** to `true` and leave **publish_release** set to `false`. The build is intentionally disabled by default, and this produces a temporary test artifact rather than a public release.
+4. Wait for the run to finish successfully. If the workflow fails or is skipped, there is no verified APK to install.
+5. Under **Artifacts**, download and extract `gtor-debug-signed-apks`. Artifacts expire after 14 days.
+6. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
 
 These are community-built APKs signed with a temporary debug key, not official Tor Project releases. Each build uses a new key, so Android may reject an in-place upgrade from a different build. The app ID for this fork is `org.torproject.vpn.tor2beta.dev`; uninstalling an older build may remove its local app data. Do not install these over an official Tor-signed version.
 
