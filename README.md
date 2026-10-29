@@ -14,7 +14,7 @@
 3. Under **Artifacts**, download and extract `gtor-debug-signed-apks`.
 4. On Android, open the extracted APK and approve installation. Choose the universal APK when available; otherwise use the APK matching your device's CPU architecture.
 
-These are community-built APKs signed with a temporary debug key, not official Tor Project releases. Each build uses a new key, so upgrading from an earlier community build may require uninstalling it first. Do not install these over an official Tor-signed version unless you understand the consequences.
+These are community-built APKs signed with a temporary debug key, not official Tor Project releases. Each build uses a new key, so Android may reject an in-place upgrade from a different build. The app ID for this fork is `org.torproject.vpn.tor2beta.dev`; uninstalling an older build may remove its local app data. Do not install these over an official Tor-signed version.
 
 ## Install with ADB
 
