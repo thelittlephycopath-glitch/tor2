@@ -20,49 +20,11 @@ These are community-built APKs signed with a temporary debug key, not official T
 
 For computer-based installation, install Android platform tools and enable USB debugging on the phone. The command is `adb install <path-to-downloaded-apk.apk>`. On a phone, you can usually install by opening the APK directly after allowing installation from your chosen file manager.
 
-## Enable Developer mode
-On your Android device, you will need to have `Developer Mode` enabled. To do this, you have to follow a little bit of a secret pathway:
+### Installation troubleshooting
 
-1. Open Settings on your phone
-2. Then go to `About phone` (near the bottom of the list)
-4. Tap `Build number` (bottom of list) *seven* times in a row.
-5. When you have finished you will see a message saying it is enabled.
-6. Now go back to the main Settings screen and you should see a new Developer options menu. On Google Pixel phones and some other devices, you might need to navigate to Settings > System to find the Developer options menu.
-7. Go in there and enable the USB debugging option.
-
-## Connect to your phone
-Attach your phone to your computer via a USB cable. 
-
-You should get a pop-up on your phone asking you if you want the device to connect. You will need to accept it (possibly a few times, unless you tell it to remember your device).
-
-Then go to a shell and type `adb devices`, you should see something similar to the following:
-
-```
-List of devices attached
-1e778e25        device
-```
-
-The number on the left will be unique to your device.
-
-## Install the package
-While in the directory that you unzipped the archive, install the application with `adb install app-debug.apk`.
-
-Once you have installed the application, you should be able to find it in your normal list of applications.
-
-You are finished! You do not need to follow the next section, if you are just wanting to install the apk from the CI. The following section is only if you wish to build it locally.
-
-### Installation problems
-
-There are a few edge cases where installation will not work, here are a few possibilities:
-
-You may need to enable installation of apps from 'unknown sources' (unsigned apps):
-`adb shell settings put secure install_non_market_apps 1`
-
-If you get this error: `adb: failed to install tor-vpn-debug.apk: Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package org.torproject.vpn signatures do not match newer version; ignoring!]`, in that case you will need to remove the existing app, and then after do the install:
-
-```
-$ adb uninstall org.torproject.vpn
-```
+- Android may ask you to allow your file manager or browser to install APK files. If you choose to continue, enable that permission through Android Settings for that specific app, then turn it off again when it is no longer needed.
+- If Android reports that an update's signature does not match an installed version, stop and verify which app you installed and who signed it. Community debug builds use temporary signing keys and may not update over previous builds. Do not uninstall an existing app unless you understand that its local data may be removed.
+- Do not use shell commands to weaken Android's package-install security settings.
 
 # Build locally
 
