@@ -1,0 +1,74 @@
+name: Claude Android AutoFix
+
+on:
+  workflow_run:
+    workflows: ["Validate Tor VPN PR"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: claude-android-autofix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  diagnose-and-propose-fix:
+    # Only handle failed validation runs for pull requests from this repository.
+    # Exclude Claude-created branches to prevent fix-loop recursion.
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.pull_requests[0] &&
+      github.event.workflow_run.pull_requests[0].head.repo.full_name == github.repository &&
+      !startsWith(github.event.workflow_run.head_branch, 'claude/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Ask Claude to diagnose the failed Android validation
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
+        with:
+          # OpenRouter key is passed through the action's required key input;
+          # ANTHROPIC_BASE_URL below routes requests to OpenRouter.
+          anthropic_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          additional_permissions: |
+            actions: read
+          prompt: |
+            You are maintaining GTor, an Android VPN app primarily written in Kotlin.
+
+            Diagnose the failed GitHub Actions validation run:
+            ${{ github.event.workflow_run.html_url }}
+
+            Requirements:
+            - Read the failed run and relevant logs before changing anything.
+            - Identify the root cause, not just the first visible symptom.
+            - Make the smallest safe fix for Kotlin, Android, Gradle, Rust integration,
+              build configuration, or tests when the evidence supports it.
+            - Keep touched code clean and consistently formatted. Follow the repository's
+              existing style and formatter/linter configuration; run the relevant formatter
+              or formatting check when available.
+            - Tidy only files directly related to the fix. Remove accidental whitespace,
+              stale comments, or clearly unused imports only when safe. Do not perform
+              broad reformatting, unrelated refactors, mass renames, or dependency/tooling
+              changes merely for aesthetics.
+            - Preserve the existing UI/UX and VPN connection, routing, privacy, and
+              security behavior. Do not redesign screens or change visual behavior.
+            - Do not weaken tests, lint, permissions, TLS, or security checks to make CI green.
+            - Never modify signing secrets, credentials, repository settings, release
+              publishing, or deployment workflows.
+            - Add or update a regression test when practical.
+            - Run the narrowest relevant verification commands available; report
+              clearly what was and was not run, including formatter/linter results.
+            - Do not merge anything or publish an APK/release.
+            - If the failure is caused by runner allocation, GitHub infrastructure,
+              missing secrets, or another external issue rather than source code,
+              do not invent a code change. Report the evidence and recommended next step.
+            - Work on a separate Claude-prefixed branch and provide a reviewable fix
+              for a human to inspect. Never push changes directly to main.
+          claude_args: |
+            --max-turns 12
+        env:
+          ANTHROPIC_BASE_URL: https://openrouter.ai/api
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
