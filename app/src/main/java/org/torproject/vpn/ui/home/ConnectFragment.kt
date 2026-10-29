@@ -4,10 +4,13 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
@@ -140,6 +143,45 @@ class ConnectFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeLi
             requireContext().resources.getDimension(R.dimen.connection_button_lower_guideline)
         )
         setStatusBarColor(colorRes = R.color.surface)
+        // Keep the connection button sharp; give its surrounding container a gentle lifted feel.
+        binding.clExitSelectionButton.elevation = getDpInPx(requireContext(), 2f)
+
+        // Soften the decorative halo behind the controls on Android 12+.
+        // RenderEffect blurs only this lightweight overlay, not the whole screen or live content.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val blurRadius = getDpInPx(requireContext(), 16f).toFloat()
+            binding.connectControlsHalo.setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    blurRadius,
+                    blurRadius * 0.65f,
+                    Shader.TileMode.CLAMP
+                )
+            )
+        }
+
+        // Small tactile feedback keeps the original connect control and its click handling intact.
+        binding.tvConnectActionBtn.apply {
+            elevation = getDpInPx(requireContext(), 5f)
+            setOnTouchListener { touchedView, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> touchedView.animate()
+                        .scaleX(0.97f)
+                        .scaleY(0.97f)
+                        .setDuration(90L)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> touchedView.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(150L)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                // Do not consume the event; XML data binding still handles the actual VPN action.
+                false
+            }
+        }
+
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = connectFragmentViewModel
 
