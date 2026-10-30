@@ -64,8 +64,8 @@ if [[ -f local.properties ]]; then
 fi
 
 ./gradlew clean
-# Run unit tests before producing release APKs so policy regressions fail the build.
-ENFORCE_LOCAL_MAVEN=1 ./gradlew :app:testReleaseUnitTest
+# Unit tests are run by the validation workflow against the app's configured debug variant.
+# This project does not expose a release unit-test task, so do not request one here.
 ENFORCE_LOCAL_MAVEN=1 ./gradlew assembleRelease
 mkdir -p build
 cp app/build/outputs/apk/release/app-*-release-unsigned.apk build/
