@@ -726,7 +726,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 100L,
                 internetValidated = true,
-                knownPublicNetwork = true
+                knownPublicNetwork = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 100L
@@ -751,7 +751,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 1L,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = staleNow
@@ -771,7 +771,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 3L,
                 internetValidated = true,
-                dnsHijackSuspected = true
+                dnsHijackSuspected = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 3L
@@ -791,7 +791,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = TEST_CLOCK_MILLIS,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
         sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = TEST_CLOCK_MILLIS
@@ -820,7 +820,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = TEST_CLOCK_MILLIS,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = TEST_CLOCK_MILLIS
@@ -850,7 +850,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 101L,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = now
@@ -876,7 +876,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = now,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = now
@@ -969,7 +969,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 2L,
                 internetValidated = true,
-                dnsHijackSuspected = true
+                dnsHijackSuspected = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 2L
@@ -1043,7 +1043,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 3L,
                 internetValidated = true,
-                captivePortalDetected = true
+                captivePortalDetected = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 3L
@@ -1056,7 +1056,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 5L,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 5L
@@ -1076,7 +1076,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 2L,
                 internetValidated = true,
-                dnsHijackSuspected = true
+                dnsHijackSuspected = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 2L
@@ -1088,7 +1088,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 4L,
                 internetValidated = true,
-                explicitlyTrustedByUser = true
+                explicitlyTrustedByUser = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 4L
@@ -1130,7 +1130,7 @@ class AutonomyCoordinatorTest {
             evidence = NetworkTrustEvidence(
                 observedAtElapsedRealtimeMillis = 2L,
                 internetValidated = true,
-                dnsHijackSuspected = true
+                dnsHijackSuspected = true,
                 sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = 2L
