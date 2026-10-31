@@ -8,7 +8,7 @@ import org.junit.Test
 
 class LeakVerificationGateTest {
     private val gate = LeakVerificationGate()
-    private val now = 10_000L
+    private val now = LeakVerificationGate.DEFAULT_MAX_REPORT_AGE_MILLIS + 10_000L
 
     @Test
     fun onlyCompleteFreshEvidencePasses() {
