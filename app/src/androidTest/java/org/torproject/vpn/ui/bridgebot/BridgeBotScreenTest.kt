@@ -38,7 +38,6 @@ class BridgeBotScreenTest {
         onNodeWithText(getString(R.string.new_bridges)).assertIsDisplayed()
     }
 
-
     @Test
     fun idleState_clickWebTunnel_emitsWebTunnelTransportSelection() = runComposeUiTest {
         var receivedEvent: BridgeBotViewModel.Event? = null
@@ -195,7 +194,6 @@ class BridgeBotScreenTest {
         ).assertTextEquals(getString(R.string.error_fetching_bridges)).assertIsDisplayed()
         onNodeWithText(getString(R.string.action_try_again)).assertIsDisplayed()
     }
-
 
     @Test
     fun webTunnelErrorStateShowsOfficialBridgeDBFallback() = runComposeUiTest {
