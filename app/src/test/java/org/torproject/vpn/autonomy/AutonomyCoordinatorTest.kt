@@ -792,7 +792,7 @@ class AutonomyCoordinatorTest {
                 observedAtElapsedRealtimeMillis = TEST_CLOCK_MILLIS,
                 internetValidated = true,
                 explicitlyTrustedByUser = true,
-        sessionGeneration = coordinator.currentNetworkGeneration()
+                sessionGeneration = coordinator.currentNetworkGeneration()
             ),
             nowElapsedRealtimeMillis = TEST_CLOCK_MILLIS
         )
