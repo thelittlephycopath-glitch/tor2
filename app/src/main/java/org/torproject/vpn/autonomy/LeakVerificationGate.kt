@@ -70,11 +70,12 @@ class LeakVerificationGate(
             "Current elapsed realtime must not be negative"
         }
 
+        val reportAgeMillis = nowElapsedRealtimeMillis - evidence.checkedAtElapsedRealtimeMillis
         val failures = linkedSetOf<LeakVerificationFailure>()
         when {
             evidence.checkedAtElapsedRealtimeMillis > nowElapsedRealtimeMillis ->
                 failures += LeakVerificationFailure.FUTURE_REPORT
-            nowElapsedRealtimeMillis - evidence.checkedAtElapsedRealtimeMillis > maxReportAgeMillis ->
+            reportAgeMillis > maxReportAgeMillis ->
                 failures += LeakVerificationFailure.STALE_REPORT
         }
 
