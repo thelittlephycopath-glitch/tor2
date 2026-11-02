@@ -50,7 +50,12 @@ jobs:
           git add -- 'app/src/**/*.kt'
           if git diff --cached --quiet; then
             echo "Kotlin sources are already formatted."
-            exit 0
+          else
+            git commit -m "style: apply ktlint formatting"
+            git push origin HEAD:main
           fi
-          git commit -m "style: apply ktlint formatting"
-          git push origin HEAD:main
+
+      - name: Trigger validation for the formatted main branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run validate-pr.yml --ref main
