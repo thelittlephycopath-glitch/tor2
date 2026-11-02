@@ -107,6 +107,21 @@
         </ScrollView>
 
 
+        <!-- Lightweight translucent halo behind the main controls; no expensive real-time blur. -->
+        <View
+            android:id="@+id/connect_controls_halo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:alpha="0.16"
+            android:background="@drawable/bg_connect_controls_halo"
+            android:importantForAccessibility="no"
+            android:clickable="false"
+            android:focusable="false"
+            app:layout_constraintBottom_toTopOf="@+id/lower_guideline_action_btns"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/upper_guideline_action_btns" />
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cl_exit_selection_button"
             android:layout_width="wrap_content"
