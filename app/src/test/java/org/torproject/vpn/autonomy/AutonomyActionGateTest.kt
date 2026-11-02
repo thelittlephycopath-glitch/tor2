@@ -118,7 +118,9 @@ class AutonomyActionGateTest {
         )
 
         val noEvidence = gate.plan(config, actionDecision)
-        assertFalse(noEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC))
+        assertFalse(
+            noEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC)
+        )
         assertEquals(
             ActionSuppressionReason.SAFETY_VERIFICATION_REQUIRED,
             noEvidence.suppressedActions[AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC]
@@ -129,14 +131,22 @@ class AutonomyActionGateTest {
             actionDecision,
             LeakVerificationResult(listOf(LeakVerificationFailure.IPV6_NOT_CONTAINED))
         )
-        assertFalse(failedEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC))
+        assertFalse(
+            failedEvidence.approvedActions.contains(
+                AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC
+            )
+        )
 
         val passedEvidence = gate.plan(
             config,
             actionDecision,
             LeakVerificationResult(emptyList())
         )
-        assertFalse(passedEvidence.approvedActions.contains(AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC))
+        assertFalse(
+            passedEvidence.approvedActions.contains(
+                AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC
+            )
+        )
         assertEquals(
             ActionSuppressionReason.ACTION_NOT_IMPLEMENTED,
             passedEvidence.suppressedActions[AutonomyAction.RESTORE_VERIFIED_TUNNELED_TRAFFIC]

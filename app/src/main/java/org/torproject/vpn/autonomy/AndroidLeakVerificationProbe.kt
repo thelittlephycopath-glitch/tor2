@@ -87,7 +87,8 @@ class AndroidLeakVerificationProbe(context: Context) {
             vpnTransportActive = vpnNetworkActive,
             ipv4DefaultRoutePresent = vpnNetworkActive && routes.hasDefaultRoute<Inet4Address>(),
             ipv6DefaultRoutePresent = vpnNetworkActive && routes.hasDefaultRoute<Inet6Address>(),
-            expectedTorDnsServersPresent = vpnNetworkActive && properties?.hasExpectedTorDnsServers() == true,
+            expectedTorDnsServersPresent =
+            vpnNetworkActive && properties?.hasExpectedTorDnsServers() == true,
             alwaysOnVpnPackageMatches = alwaysOnPackage == appContext.packageName,
             lockdownSettingEnabled = lockdownEnabled
         )

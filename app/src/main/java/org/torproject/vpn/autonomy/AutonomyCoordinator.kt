@@ -26,6 +26,7 @@ class AutonomyCoordinator(
     private var validatedLeakReportReady = false
     private var leakVerificationObservedAtElapsedRealtimeMillis: Long? = null
     private var consecutiveFailures = 0
+
     // Remains set after session invalidation until a fresh leak report verifies recovery.
     private var recoveryRequested = false
     private var latestNetworkTrustEvidence: NetworkTrustEvidence? = null
@@ -379,7 +380,10 @@ class AutonomyCoordinator(
      * represented explicitly so policy callers cannot mistake missing data for "not charging".
      */
     @Synchronized
-    fun updateChargingState(isCharging: Boolean, readingAvailable: Boolean = true): AutonomyDecision {
+    fun updateChargingState(
+        isCharging: Boolean,
+        readingAvailable: Boolean = true
+    ): AutonomyDecision {
         environmentalSignals = environmentalSignals.copy(
             charging = isCharging,
             chargingReadingAvailable = readingAvailable
@@ -442,12 +446,16 @@ class AutonomyCoordinator(
             failures += LeakVerificationFailure.SESSION_GENERATION_MISMATCH
         }
         if (!tunnelReady) failures += LeakVerificationFailure.TUNNEL_NOT_READY
-        if (!environmentalSignals.networkAvailable) failures += LeakVerificationFailure.NETWORK_NOT_AVAILABLE
+        if (!environmentalSignals.networkAvailable) {
+            failures +=
+                LeakVerificationFailure.NETWORK_NOT_AVAILABLE
+        }
         if (environmentalSignals.dnsConfigurationConflict) {
             failures += LeakVerificationFailure.DNS_CONFIGURATION_CONFLICT
         }
         if (environmentalSignals.trust == NetworkTrust.HOSTILE ||
-            environmentalSignals.dnsHijackSuspected || environmentalSignals.tlsInterceptionSuspected
+            environmentalSignals.dnsHijackSuspected ||
+            environmentalSignals.tlsInterceptionSuspected
         ) {
             failures += LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR
         }
@@ -484,9 +492,10 @@ class AutonomyCoordinator(
         nowElapsedRealtimeMillis: Long = elapsedRealtimeClock()
     ): AutonomyDecision {
         val evidenceAge = nowElapsedRealtimeMillis - evidence.observedAtElapsedRealtimeMillis
-        val evidenceIsFresh = evidence.observedAtElapsedRealtimeMillis <= nowElapsedRealtimeMillis &&
-            evidenceAge <= trustClassifier.maxEvidenceAgeMillis &&
-            evidence.sessionGeneration == networkGeneration
+        val evidenceIsFresh =
+            evidence.observedAtElapsedRealtimeMillis <= nowElapsedRealtimeMillis &&
+                evidenceAge <= trustClassifier.maxEvidenceAgeMillis &&
+                evidence.sessionGeneration == networkGeneration
         // Stale/future observations and evidence without the current network-generation token are
         // rejected, not cached to become valid automatically later. A caller must capture the
         // current generation before observing the network and attach it to that exact observation.

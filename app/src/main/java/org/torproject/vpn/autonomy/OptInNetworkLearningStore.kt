@@ -78,10 +78,7 @@ class OptInNetworkLearningStore(
     }
 
     @Synchronized
-    fun readFingerprints(
-        nowEpochMillis: Long,
-        optedIn: Boolean
-    ): List<NetworkLearningRecord> {
+    fun readFingerprints(nowEpochMillis: Long, optedIn: Boolean): List<NetworkLearningRecord> {
         // Opt-out is a deletion request; it must win even if the unused clock input is invalid.
         if (!optedIn) {
             clear()
@@ -130,9 +127,11 @@ class OptInNetworkLearningStore(
             storage.write(null)
             return
         }
-        storage.write(records.joinToString(separator = "\n") {
-            "${it.digest}|${it.observedAtEpochMillis}"
-        })
+        storage.write(
+            records.joinToString(separator = "\n") {
+                "${it.digest}|${it.observedAtEpochMillis}"
+            }
+        )
     }
 
     private fun isValidDigest(digest: String): Boolean =

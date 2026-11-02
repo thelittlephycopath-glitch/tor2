@@ -130,7 +130,10 @@ class OptInNetworkLearningStoreTest {
     fun duplicateDigestUpdatesTimestampAndKeepsSingleEntry() {
         store.recordFingerprint(digestA, 80L, true, 100L)
         store.recordFingerprint(digestA, 95L, true, 100L)
-        assertEquals(listOf(NetworkLearningRecord(digestA, 95L)), store.readFingerprints(100L, true))
+        assertEquals(
+            listOf(NetworkLearningRecord(digestA, 95L)),
+            store.readFingerprints(100L, true)
+        )
     }
 
     @Test

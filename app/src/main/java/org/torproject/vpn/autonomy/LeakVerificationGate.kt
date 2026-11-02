@@ -79,11 +79,20 @@ class LeakVerificationGate(
                 failures += LeakVerificationFailure.STALE_REPORT
         }
 
-        if (!evidence.ipv4DefaultRouteProtected) failures += LeakVerificationFailure.IPV4_ROUTE_NOT_VERIFIED
+        if (!evidence.ipv4DefaultRouteProtected) {
+            failures +=
+                LeakVerificationFailure.IPV4_ROUTE_NOT_VERIFIED
+        }
         if (!evidence.ipv6ContainedOrBlocked) failures += LeakVerificationFailure.IPV6_NOT_CONTAINED
         if (!evidence.dnsProtectedByTunnel) failures += LeakVerificationFailure.DNS_NOT_PROTECTED
-        if (!evidence.systemLockdownVerified) failures += LeakVerificationFailure.SYSTEM_LOCKDOWN_NOT_VERIFIED
-        if (!evidence.appRoutingVerified) failures += LeakVerificationFailure.APP_ROUTING_NOT_VERIFIED
+        if (!evidence.systemLockdownVerified) {
+            failures +=
+                LeakVerificationFailure.SYSTEM_LOCKDOWN_NOT_VERIFIED
+        }
+        if (!evidence.appRoutingVerified) {
+            failures +=
+                LeakVerificationFailure.APP_ROUTING_NOT_VERIFIED
+        }
 
         return LeakVerificationResult(failures.toList())
     }

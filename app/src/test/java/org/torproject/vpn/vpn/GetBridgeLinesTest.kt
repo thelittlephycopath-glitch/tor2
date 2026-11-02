@@ -79,7 +79,6 @@ class GetBridgeLinesTest {
         assertEquals(listOf("obfs4 9.9.9.9:80"), result)
     }
 
-
     @Test
     fun invoke_filtersMixedResponseToRequestedWebTunnelTransport() = runTest {
         val requestSlot = slot<SettingsRequest>()

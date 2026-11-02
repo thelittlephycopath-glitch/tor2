@@ -91,7 +91,7 @@ class AutonomyAssessmentPipelineTest {
                 explicitlyTrustedByUser = true
             ),
             nowElapsedRealtimeMillis =
-                NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 2L
+            NetworkTrustClassifier.DEFAULT_MAX_EVIDENCE_AGE_MILLIS + 2L
         )
 
         assertEquals(ProtectionProfile.HIGH, decision.profile)

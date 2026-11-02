@@ -15,11 +15,15 @@ data class CircuitTelemetry(
     val highRiskSessionStarted: Boolean = false
 ) {
     init {
-        require(observedAtElapsedRealtimeMillis >= 0L) { "Observation timestamp must not be negative" }
+        require(observedAtElapsedRealtimeMillis >= 0L) {
+            "Observation timestamp must not be negative"
+        }
         require(circuitAgeMillis >= 0L) { "Circuit age cannot be negative" }
         require(latencyMillis == null || latencyMillis >= 0L) { "Latency cannot be negative" }
         require(recentStreamFailures >= 0) { "Stream failure count cannot be negative" }
-        require(lastRefreshAtElapsedRealtimeMillis == null || lastRefreshAtElapsedRealtimeMillis >= 0L) {
+        require(
+            lastRefreshAtElapsedRealtimeMillis == null || lastRefreshAtElapsedRealtimeMillis >= 0L
+        ) {
             "Last-refresh timestamp must not be negative"
         }
     }

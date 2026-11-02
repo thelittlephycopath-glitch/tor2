@@ -19,6 +19,7 @@ class AndroidEnvironmentMonitor(
     private val connectivityManager = context.applicationContext
         .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     private val lock = Any()
+
     // Serializes callback side effects with unregister so queued callbacks cannot publish after shutdown.
     private val callbackDispatchLock = Any()
 

@@ -18,7 +18,12 @@ class AndroidNetworkFingerprintKeyStore {
     fun getOrCreateKey(): SecretKey = synchronized(lock) {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
         (keyStore.getKey(KEY_ALIAS, null) as? SecretKey)?.let { existing ->
-            require(existing.algorithm.equals(KeyProperties.KEY_ALGORITHM_HMAC_SHA256, ignoreCase = true)) {
+            require(
+                existing.algorithm.equals(
+                    KeyProperties.KEY_ALGORITHM_HMAC_SHA256,
+                    ignoreCase = true
+                )
+            ) {
                 "Stored network fingerprint key has an unexpected algorithm"
             }
             return@synchronized existing
@@ -40,8 +45,7 @@ class AndroidNetworkFingerprintKeyStore {
         generator.generateKey()
     }
 
-    fun createHasher(): NetworkFingerprintHasher =
-        NetworkFingerprintHasher(getOrCreateKey())
+    fun createHasher(): NetworkFingerprintHasher = NetworkFingerprintHasher(getOrCreateKey())
 
     private companion object {
         const val ANDROID_KEY_STORE = "AndroidKeyStore"

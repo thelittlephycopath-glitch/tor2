@@ -20,10 +20,30 @@ class BridgeHealthLedgerTest {
     @Test
     fun recentOutcomesAreBoundedAndSmoothed() {
         val ledger = BridgeHealthLedger(maxSamplesPerTransport = 3)
-        ledger.record(Transport.OBFS4, succeeded = true, latencyMillis = 100, elapsedRealtimeMillis = 1)
-        ledger.record(Transport.OBFS4, succeeded = false, latencyMillis = 900, elapsedRealtimeMillis = 2)
-        ledger.record(Transport.OBFS4, succeeded = true, latencyMillis = 200, elapsedRealtimeMillis = 3)
-        ledger.record(Transport.OBFS4, succeeded = true, latencyMillis = 300, elapsedRealtimeMillis = 4)
+        ledger.record(
+            Transport.OBFS4,
+            succeeded = true,
+            latencyMillis = 100,
+            elapsedRealtimeMillis = 1
+        )
+        ledger.record(
+            Transport.OBFS4,
+            succeeded = false,
+            latencyMillis = 900,
+            elapsedRealtimeMillis = 2
+        )
+        ledger.record(
+            Transport.OBFS4,
+            succeeded = true,
+            latencyMillis = 200,
+            elapsedRealtimeMillis = 3
+        )
+        ledger.record(
+            Transport.OBFS4,
+            succeeded = true,
+            latencyMillis = 300,
+            elapsedRealtimeMillis = 4
+        )
 
         val health = ledger.snapshot(Transport.OBFS4)
         assertEquals(3, health.sampleCount)
@@ -82,6 +102,7 @@ class BridgeHealthLedgerTest {
         assertEquals(listOf(Transport.SNOWFLAKE, Transport.WEBTUNNEL), ranked.map { it.transport })
         assertFalse(ranked.any { it.knownBlocked })
     }
+
     @Test
     fun randomizedOutcomeStreamPreservesBoundsAndValidStatistics() {
         val ledger = BridgeHealthLedger(maxSamplesPerTransport = 32)
@@ -103,5 +124,4 @@ class BridgeHealthLedgerTest {
             assertEquals(199L, health.lastObservedElapsedRealtimeMillis)
         }
     }
-
 }

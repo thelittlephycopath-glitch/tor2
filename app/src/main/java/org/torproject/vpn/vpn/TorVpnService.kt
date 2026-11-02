@@ -84,6 +84,7 @@ class TorVpnService : VpnService() {
         elapsedRealtimeClock = { SystemClock.elapsedRealtime() }
     )
     private var autonomyTunnelAttemptStartedAtMillis: Long? = null
+
     @Volatile
     private var autonomyOnionMasqStartAttempted = false
     private var autonomyEnvironmentMonitor: AndroidEnvironmentMonitor? = null
@@ -562,7 +563,9 @@ class TorVpnService : VpnService() {
             BridgeType.Snowflake -> Transport.SNOWFLAKE
             // Learn manual bridge outcomes only when every configured line names the same known
             // transport. Unknown or mixed configurations remain unclassified.
-            BridgeType.Manual -> ManualBridgeTransportClassifier.classify(preferenceHelper.bridgeLines)
+            BridgeType.Manual -> ManualBridgeTransportClassifier.classify(
+                preferenceHelper.bridgeLines
+            )
             BridgeType.None -> null
         } ?: return
         val now = SystemClock.elapsedRealtime()

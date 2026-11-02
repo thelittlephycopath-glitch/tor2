@@ -111,7 +111,10 @@ class AutonomyRecoveryPlannerTest {
         )
         assertFalse(awaitingLeakCheck.shouldScheduleReconnect)
         assertTrue(awaitingLeakCheck.keepTrafficBlocked)
-        assertEquals("Tunnel is ready; await independent leak verification", awaitingLeakCheck.reason)
+        assertEquals(
+            "Tunnel is ready; await independent leak verification",
+            awaitingLeakCheck.reason
+        )
     }
 
     @Test

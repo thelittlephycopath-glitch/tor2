@@ -9,10 +9,7 @@ import org.junit.Test
  * has moved to a different session. A callback must never make an old session eligible.
  */
 class AutonomyLifecycleOrderingTest {
-    private fun passingEvidence(
-        checkedAt: Long,
-        generation: Long
-    ) = LeakVerificationEvidence(
+    private fun passingEvidence(checkedAt: Long, generation: Long) = LeakVerificationEvidence(
         checkedAtElapsedRealtimeMillis = checkedAt,
         ipv4DefaultRouteProtected = true,
         ipv6ContainedOrBlocked = true,

@@ -98,7 +98,12 @@ class NetworkTrustClassifierTest {
         assertEquals(
             NetworkTrust.UNKNOWN,
             classifier.classify(
-                evidence(internetValidated = true, explicitlyTrustedByUser = true, observedAt = now + 1L),
+                evidence(
+                    internetValidated = true,
+                    explicitlyTrustedByUser = true,
+                    observedAt =
+                    now + 1L
+                ),
                 now
             )
         )

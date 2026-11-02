@@ -134,35 +134,35 @@ class BridgeBotViewModelTest {
         verify { preferenceHelper.bridgeType = BridgeType.Manual }
     }
 
-
     @Test
-    fun requestBridges_webTunnelRequestsOnlyWebTunnelAndSavesItAsManualBridgeLines() = runTest(dispatcher) {
-        val expectedBridges = listOf(
-            "webtunnel 192.0.2.1:443 0123456789012345678901234567890123456789 url=https://example.invalid/path"
-        )
-        coEvery { getBridgeLines(any()) } returns expectedBridges
+    fun requestBridges_webTunnelRequestsOnlyWebTunnelAndSavesItAsManualBridgeLines() =
+        runTest(dispatcher) {
+            val expectedBridges = listOf(
+                "webtunnel 192.0.2.1:443 0123456789012345678901234567890123456789 url=https://example.invalid/path"
+            )
+            coEvery { getBridgeLines(any()) } returns expectedBridges
 
-        viewModel.onEvent(
-            BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL)
-        )
-        runCurrent()
-        viewModel.onEvent(BridgeBotViewModel.Event.RequestBridges)
-        runCurrent()
+            viewModel.onEvent(
+                BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL)
+            )
+            runCurrent()
+            viewModel.onEvent(BridgeBotViewModel.Event.RequestBridges)
+            runCurrent()
 
-        val state = viewModel.state.value
-        assertEquals(BotState.SUCCESS, state.botState)
-        assertEquals(BridgeRequestTransport.WEBTUNNEL, state.selectedTransport)
-        assertEquals(expectedBridges, state.bridges)
-        coVerify {
-            getBridgeLines(SettingsRequest(transports = listOf("webtunnel")))
+            val state = viewModel.state.value
+            assertEquals(BotState.SUCCESS, state.botState)
+            assertEquals(BridgeRequestTransport.WEBTUNNEL, state.selectedTransport)
+            assertEquals(expectedBridges, state.bridges)
+            coVerify {
+                getBridgeLines(SettingsRequest(transports = listOf("webtunnel")))
+            }
+
+            viewModel.onEvent(BridgeBotViewModel.Event.SaveBridges)
+            runCurrent()
+            verify { preferenceHelper.bridgeLines = expectedBridges }
+            // Manual bridge storage preserves WebTunnel's private URL/path from the bridge line.
+            verify { preferenceHelper.bridgeType = BridgeType.Manual }
         }
-
-        viewModel.onEvent(BridgeBotViewModel.Event.SaveBridges)
-        runCurrent()
-        verify { preferenceHelper.bridgeLines = expectedBridges }
-        // Manual bridge storage preserves WebTunnel's private URL/path from the bridge line.
-        verify { preferenceHelper.bridgeType = BridgeType.Manual }
-    }
 
     @Test
     fun saveBridges_emptyBridges_setsBridgeTypeNone() = runTest(dispatcher) {

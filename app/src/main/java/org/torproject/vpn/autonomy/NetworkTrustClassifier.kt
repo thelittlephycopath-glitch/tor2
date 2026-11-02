@@ -44,10 +44,7 @@ class NetworkTrustClassifier(
         require(maxEvidenceAgeMillis > 0L) { "Maximum evidence age must be positive" }
     }
 
-    fun classify(
-        evidence: NetworkTrustEvidence,
-        nowElapsedRealtimeMillis: Long
-    ): NetworkTrust {
+    fun classify(evidence: NetworkTrustEvidence, nowElapsedRealtimeMillis: Long): NetworkTrust {
         require(nowElapsedRealtimeMillis >= 0L) { "Current elapsed realtime must not be negative" }
 
         val observedAt = evidence.observedAtElapsedRealtimeMillis

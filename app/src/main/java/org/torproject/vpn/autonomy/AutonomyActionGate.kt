@@ -49,7 +49,8 @@ class AutonomyActionGate {
                             suppressed[action] = ActionSuppressionReason.OBSERVE_ONLY_MODE
                         !decision.trafficReleaseEligible ||
                             leakVerificationResult?.passed != true ->
-                            suppressed[action] = ActionSuppressionReason.SAFETY_VERIFICATION_REQUIRED
+                            suppressed[action] =
+                                ActionSuppressionReason.SAFETY_VERIFICATION_REQUIRED
                         else ->
                             suppressed[action] = ActionSuppressionReason.ACTION_NOT_IMPLEMENTED
                     }

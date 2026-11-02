@@ -142,7 +142,11 @@ fun BridgeBotScreen(
                                     }
                                 ),
                                 onClick = {
-                                    onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.OBFS4))
+                                    onEvent(
+                                        BridgeBotViewModel.Event.SetTransport(
+                                            BridgeRequestTransport.OBFS4
+                                        )
+                                    )
                                 }
                             ) {
                                 Text(stringResource(R.string.bridge_transport_obfs4), maxLines = 1)
@@ -169,15 +173,24 @@ fun BridgeBotScreen(
                                     }
                                 ),
                                 onClick = {
-                                    onEvent(BridgeBotViewModel.Event.SetTransport(BridgeRequestTransport.WEBTUNNEL))
+                                    onEvent(
+                                        BridgeBotViewModel.Event.SetTransport(
+                                            BridgeRequestTransport.WEBTUNNEL
+                                        )
+                                    )
                                 }
                             ) {
-                                Text(stringResource(R.string.bridge_transport_webtunnel), maxLines = 1)
+                                Text(
+                                    stringResource(R.string.bridge_transport_webtunnel),
+                                    maxLines = 1
+                                )
                             }
                         }
                         if (state.selectedTransport == BridgeRequestTransport.WEBTUNNEL) {
                             Text(
-                                text = stringResource(R.string.bridge_transport_webtunnel_description),
+                                text = stringResource(
+                                    R.string.bridge_transport_webtunnel_description
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

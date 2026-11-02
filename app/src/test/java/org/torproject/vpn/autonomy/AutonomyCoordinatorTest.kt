@@ -373,7 +373,9 @@ class AutonomyCoordinatorTest {
         assertFalse(portalCoordinator.currentSignals().leakChecksPassed)
         assertFalse(portalDecision.trafficReleaseEligible)
         assertFalse(portalCoordinatorResult.passed)
-        assertTrue(portalCoordinatorResult.failures.contains(LeakVerificationFailure.CAPTIVE_PORTAL_ACTIVE))
+        assertTrue(
+            portalCoordinatorResult.failures.contains(LeakVerificationFailure.CAPTIVE_PORTAL_ACTIVE)
+        )
 
         val tlsCoordinator = connectedCoordinator()
         tlsCoordinator.observe(AutonomyEventType.TUNNEL_READY, elapsedRealtimeMillis = 1)
@@ -387,7 +389,11 @@ class AutonomyCoordinatorTest {
         assertFalse(tlsCoordinator.currentSignals().leakChecksPassed)
         assertFalse(tlsDecision.trafficReleaseEligible)
         assertFalse(tlsCoordinatorResult.passed)
-        assertTrue(tlsCoordinatorResult.failures.contains(LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR))
+        assertTrue(
+            tlsCoordinatorResult.failures.contains(
+                LeakVerificationFailure.HOSTILE_NETWORK_INDICATOR
+            )
+        )
     }
 
     @Test
@@ -596,7 +602,11 @@ class AutonomyCoordinatorTest {
                 elapsedRealtimeMillis = index + 1L
             )
         }
-        assertFalse(coordinator.rankedBridgeCandidates().any { it.transport == Transport.SNOWFLAKE })
+        assertFalse(
+            coordinator.rankedBridgeCandidates().any {
+                it.transport == Transport.SNOWFLAKE
+            }
+        )
 
         coordinator.updateNetworkEnvironment(
             networkAvailable = true,
@@ -604,9 +614,11 @@ class AutonomyCoordinatorTest {
             mobileData = true
         )
 
-        assertTrue(coordinator.rankedBridgeCandidates().any {
-            it.transport == Transport.SNOWFLAKE && !it.knownBlocked
-        })
+        assertTrue(
+            coordinator.rankedBridgeCandidates().any {
+                it.transport == Transport.SNOWFLAKE && !it.knownBlocked
+            }
+        )
     }
 
     @Test
@@ -784,6 +796,7 @@ class AutonomyCoordinatorTest {
         assertFalse(hostile.trafficReleaseEligible)
         assertTrue(hostile.blockTrafficUntilTunnelVerified)
     }
+
     @Test
     fun connectivityEventsClearCachedNetworkTrustEvidence() {
         val coordinator = connectedCoordinator()

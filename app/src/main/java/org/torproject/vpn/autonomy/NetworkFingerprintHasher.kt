@@ -66,7 +66,9 @@ class NetworkFingerprintHasher(private val key: SecretKey) {
     fun fingerprint(input: NetworkFingerprintInput): String {
         val ssid = input.ssid?.takeIf { it.isNotEmpty() }
         val bssid = input.bssid?.trim()?.lowercase(Locale.ROOT)?.takeIf { it.isNotEmpty() }
-        val securityType = input.securityType?.trim()?.lowercase(Locale.ROOT)?.takeIf { it.isNotEmpty() }
+        val securityType = input.securityType?.trim()?.lowercase(Locale.ROOT)?.takeIf {
+            it.isNotEmpty()
+        }
 
         require(ssid != null || bssid != null) {
             "At least one non-empty network identity field is required"

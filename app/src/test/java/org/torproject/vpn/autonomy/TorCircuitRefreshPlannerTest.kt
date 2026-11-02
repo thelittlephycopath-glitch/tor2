@@ -99,7 +99,10 @@ class TorCircuitRefreshPlannerTest {
     @Test
     fun staleOrFutureObservationsAreNotUsed() {
         val stale = planner.assess(
-            telemetry(observedAt = now - TorCircuitRefreshPlanner.DEFAULT_MAXIMUM_OBSERVATION_AGE_MILLIS - 1L),
+            telemetry(
+                observedAt =
+                now - TorCircuitRefreshPlanner.DEFAULT_MAXIMUM_OBSERVATION_AGE_MILLIS - 1L
+            ),
             now
         )
         assertFalse(stale.shouldRefresh)
