@@ -1,0 +1,56 @@
+name: Format Kotlin sources
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tor2-kotlin-format-main
+  cancel-in-progress: false
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Build pinned Android/Rust toolchain
+        run: docker build --pull --file Containerfile --tag tor2-android-builder .
+
+      - name: Format Kotlin sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/tor2-gradle" "${RUNNER_TEMP}/tor2-cargo/registry" "${RUNNER_TEMP}/tor2-cargo/git" "${RUNNER_TEMP}/tor2-maven/repository"
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/build/vpn" \
+            --volume "${RUNNER_TEMP}/tor2-gradle:/root/.gradle" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/registry:/root/.cargo/registry" \
+            --volume "${RUNNER_TEMP}/tor2-cargo/git:/root/.cargo/git" \
+            --volume "${RUNNER_TEMP}/tor2-maven/repository:/root/.m2/repository" \
+            --workdir /build/vpn \
+            tor2-android-builder \
+            bash -lc './gradlew :app:ktlintFormat --no-configuration-cache'
+
+      - name: Commit formatter changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- 'app/src/**/*.kt'
+          if git diff --cached --quiet; then
+            echo "Kotlin sources are already formatted."
+            exit 0
+          fi
+          git commit -m "style: apply ktlint formatting"
+          git push origin HEAD:main
