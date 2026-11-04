@@ -30,9 +30,7 @@ android {
         minSdk = 24
         // Android 16 — https://developer.android.com/about/versions/16/behavior-changes-16
         targetSdk = 36
-        // base version code, must keep incrementing
-        // in productFlavors we multiply by 10 and add abi specific offsets
-        // to generate a set of unique versioncodes for our universal and single abi builds
+        // Base version code; ABI-specific offsets keep split APK version codes unique.
         versionCode = 24
         versionName = "1.9.1Beta-tor2"
 
@@ -88,7 +86,9 @@ android {
             "AndroidGradlePluginVersion",
             "DiscouragedApi",
             "Typos",
-            "OldTargetApi" // https://gitlab.torproject.org/tpo/applications/vpn/-/work_items/506
+            "OldTargetApi", // https://gitlab.torproject.org/tpo/applications/vpn/-/work_items/506
+            // This personal build intentionally targets arm64-v8a only; x86_64 is out of scope.
+            "ChromeOsAbiSupport"
         )
     }
 }
