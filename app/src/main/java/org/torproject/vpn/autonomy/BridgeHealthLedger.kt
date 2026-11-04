@@ -82,8 +82,9 @@ class BridgeHealthLedger(
             measuredLatency.average().toLong().coerceAtLeast(1L)
         }
         var failureStreak = 0
-        for (sample in queue.reversed()) {
-            if (sample.succeeded) break
+        val newestFirst = queue.descendingIterator()
+        while (newestFirst.hasNext()) {
+            if (newestFirst.next().succeeded) break
             failureStreak++
         }
         return Snapshot(
